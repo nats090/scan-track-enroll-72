@@ -18,6 +18,7 @@ const CheckOutPage = () => {
   const [scannerMode, setScannerMode] = useState<'barcode' | 'rfid' | 'manual'>('barcode');
   const [studentId, setStudentId] = useState('');
   const [studentName, setStudentName] = useState('');
+  const [rfidInput, setRfidInput] = useState('');
 
   const findStudent = async (searchId: string) => {
     // First check local storage
@@ -105,6 +106,71 @@ const CheckOutPage = () => {
         description: "Something went wrong. Please try again.",
         variant: "destructive",
       });
+    }
+  };
+
+  const handleRfidInput = async (rfidValue: string) => {
+    if (!rfidValue.trim()) return;
+    
+    try {
+      const student = await findStudent(rfidValue.trim());
+      
+      if (student) {
+        // Check current status before allowing check-out
+        const currentStatus = await attendanceService.getStudentCurrentStatus(student.studentId);
+        
+        if (currentStatus === 'checked-out') {
+          toast({
+            title: "Already Checked Out",
+            description: `${student.name} is not currently checked in.`,
+            variant: "destructive",
+          });
+          setRfidInput(''); // Clear input
+          return;
+        }
+        
+        if (currentStatus === 'unknown') {
+          toast({
+            title: "No Check-in Record",
+            description: `${student.name} has no active check-in record.`,
+            variant: "destructive",
+          });
+          setRfidInput(''); // Clear input
+          return;
+        }
+
+        const newRecord: Omit<AttendanceEntry, 'id'> = {
+          studentId: student.studentId,
+          studentName: student.name,
+          timestamp: new Date(),
+          type: 'check-out',
+          method: 'rfid'
+        };
+        
+        await attendanceService.addAttendanceRecord(newRecord);
+        
+        toast({
+          title: "Goodbye!",
+          description: `${student.name} checked out successfully`,
+          duration: 3000,
+        });
+        
+        setRfidInput(''); // Clear input for next scan
+      } else {
+        toast({
+          title: "Student Not Found",
+          description: "RFID not registered. Please register student first.",
+          variant: "destructive",
+        });
+        setRfidInput(''); // Clear input
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Something went wrong. Please try again.",
+        variant: "destructive",
+      });
+      setRfidInput(''); // Clear input  
     }
   };
 
@@ -246,14 +312,28 @@ const CheckOutPage = () => {
                 <div className="bg-gray-50 rounded-lg p-6 mb-4">
                   <ContactRound size={64} className="mx-auto mb-4 text-gray-600" />
                   <h3 className="text-2xl font-semibold mb-2">Use Your RFID Card</h3>
-                  <p className="text-gray-600 text-lg">Connect your RFID reader and tap your card</p>
+                  <p className="text-gray-600 text-lg mb-4">Tap your RFID card on the scanner or click in the field below</p>
                 </div>
                 
-                <RFIDScanner 
-                  isActive={true} 
-                  mode="check-out"
-                  onRFIDDetected={handleBarcodeDetected}
-                />
+                <div className="max-w-md mx-auto">
+                  <Label htmlFor="rfidInput" className="text-lg font-medium">RFID Scanner Input</Label>
+                  <Input
+                    id="rfidInput"
+                    value={rfidInput}
+                    onChange={(e) => setRfidInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && rfidInput.trim()) {
+                        handleRfidInput(rfidInput);
+                      }
+                    }}
+                    placeholder="Scan RFID card here..."
+                    className="text-center text-lg py-3 mt-2"
+                    autoFocus
+                  />
+                  <p className="text-sm text-gray-500 mt-2 text-center">
+                    RFID scanners will automatically input the card data here. Press Enter or scan will auto-submit.
+                  </p>
+                </div>
               </>
             ) : (
               <div className="bg-gray-50 rounded-lg p-6 text-left max-w-md mx-auto">
