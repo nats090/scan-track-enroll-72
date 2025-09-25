@@ -297,17 +297,17 @@ const CheckOutDashboard = () => {
           </Card>
         </div>
 
-        {/* RFID Scanner Section */}
-        <Card className="mb-8 shadow-lg">
-          <CardHeader className="bg-gradient-to-r from-red-500 to-orange-500 text-white">
-            <CardTitle className="text-2xl text-center flex items-center justify-center gap-3">
+        {/* RFID Scanner Input */}
+        <Card className="mb-8 bg-red-50 border-red-200">
+          <CardHeader>
+            <CardTitle className="text-center text-2xl text-red-700">
               🏷️ RFID Scanner
             </CardTitle>
-            <p className="text-center text-lg">Scan your RFID card or tap to focus input</p>
+            <p className="text-center text-red-600">Scan your RFID card or tap to focus input</p>
           </CardHeader>
-          <CardContent className="p-6">
+          <CardContent>
             <div className="max-w-md mx-auto">
-              <Label htmlFor="rfidInput" className="text-lg font-medium mb-2 block">RFID Input</Label>
+              <Label htmlFor="rfidInput" className="text-lg font-medium">RFID Input</Label>
               <Input
                 id="rfidInput"
                 value={rfidInput}
@@ -318,14 +318,12 @@ const CheckOutDashboard = () => {
                   }
                 }}
                 placeholder="Scan RFID card here..."
-                className="text-center text-lg py-4 border-2 border-red-300 focus:border-red-500"
+                className="text-center text-xl py-4 mt-2 border-2 border-red-300 focus:border-red-500"
                 autoFocus
               />
-              <div className="flex justify-center mt-3">
-                <span className="text-sm text-blue-600 flex items-center gap-1">
-                  📱 RFID scanners will automatically input data here
-                </span>
-              </div>
+              <p className="text-sm text-red-600 mt-2 text-center">
+                🔄 RFID scanners will automatically input data here
+              </p>
             </div>
           </CardContent>
         </Card>
