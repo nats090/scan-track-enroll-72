@@ -24,6 +24,7 @@ const CheckOutDashboard = () => {
   const [searchResults, setSearchResults] = useState<Student[]>([]);
   const [isRFIDActive, setIsRFIDActive] = useState(false);
   const [visitorName, setVisitorName] = useState('');
+  const [rfidInput, setRfidInput] = useState('');
 
   useEffect(() => {
     loadData();
@@ -168,6 +169,73 @@ const CheckOutDashboard = () => {
     }
   };
 
+  const handleRfidInput = async (rfidValue: string) => {
+    if (!rfidValue.trim()) return;
+    
+    try {
+      // Find student by RFID in local data first
+      const student = students.find(s => s.rfid === rfidValue.trim() || s.studentId === rfidValue.trim());
+      
+      if (student) {
+        // Check current status before allowing check-out
+        const currentStatus = await attendanceService.getStudentCurrentStatus(student.studentId);
+        
+        if (currentStatus === 'checked-out') {
+          toast({
+            title: "Already Checked Out",
+            description: `${student.name} is not currently checked in.`,
+            variant: "destructive",
+          });
+          setRfidInput(''); // Clear input
+          return;
+        }
+        
+        if (currentStatus === 'unknown') {
+          toast({
+            title: "No Check-in Record",
+            description: `${student.name} has no active check-in record.`,
+            variant: "destructive",
+          });
+          setRfidInput(''); // Clear input
+          return;
+        }
+
+        const newRecord: Omit<AttendanceEntry, 'id'> = {
+          studentId: student.studentId,
+          studentName: student.name,
+          timestamp: new Date(),
+          type: 'check-out',
+          method: 'rfid'
+        };
+        
+        await attendanceService.addAttendanceRecord(newRecord);
+        
+        toast({
+          title: "Goodbye!",
+          description: `${student.name} checked out successfully`,
+          duration: 3000,
+        });
+        
+        setRfidInput(''); // Clear input for next scan
+        loadData(); // Refresh data
+      } else {
+        toast({
+          title: "Student Not Found",
+          description: "RFID not registered. Please register student first.",
+          variant: "destructive",
+        });
+        setRfidInput(''); // Clear input
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Something went wrong. Please try again.",
+        variant: "destructive",
+      });
+      setRfidInput(''); // Clear input  
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-red-50 to-orange-50 p-4">
       <div className="max-w-7xl mx-auto">
@@ -228,6 +296,39 @@ const CheckOutDashboard = () => {
             </CardHeader>
           </Card>
         </div>
+
+        {/* RFID Scanner Section */}
+        <Card className="mb-8 shadow-lg">
+          <CardHeader className="bg-gradient-to-r from-red-500 to-orange-500 text-white">
+            <CardTitle className="text-2xl text-center flex items-center justify-center gap-3">
+              🏷️ RFID Scanner
+            </CardTitle>
+            <p className="text-center text-lg">Scan your RFID card or tap to focus input</p>
+          </CardHeader>
+          <CardContent className="p-6">
+            <div className="max-w-md mx-auto">
+              <Label htmlFor="rfidInput" className="text-lg font-medium mb-2 block">RFID Input</Label>
+              <Input
+                id="rfidInput"
+                value={rfidInput}
+                onChange={(e) => setRfidInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && rfidInput.trim()) {
+                    handleRfidInput(rfidInput);
+                  }
+                }}
+                placeholder="Scan RFID card here..."
+                className="text-center text-lg py-4 border-2 border-red-300 focus:border-red-500"
+                autoFocus
+              />
+              <div className="flex justify-center mt-3">
+                <span className="text-sm text-blue-600 flex items-center gap-1">
+                  📱 RFID scanners will automatically input data here
+                </span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Action Buttons */}
         <div className="text-center mb-8 space-y-4">
