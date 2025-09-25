@@ -136,34 +136,51 @@ export const attendanceService = {
   },
 
   async getStudentCurrentStatus(studentId: string): Promise<'checked-in' | 'checked-out' | 'unknown'> {
-    // First check local storage for recent records
+    // Get local records for this student
     const localData = await getFromLocalStorage();
-    const localRecords = localData.attendanceRecords
-      .filter(record => record.studentId === studentId)
-      .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+    const localRecords = (localData.attendanceRecords || [])
+      .filter(record => record.studentId === studentId);
 
-    // Try to get latest record from Supabase if online
+    let allRecords = [...localRecords];
+
+    // Try to get records from Supabase if online and merge them
     try {
       if (navigator.onLine) {
         const { data, error } = await supabase
           .from('attendance_records')
-          .select('type, timestamp')
+          .select('*')
           .eq('student_id', studentId)
-          .order('timestamp', { ascending: false })
-          .limit(1)
-          .maybeSingle();
+          .order('timestamp', { ascending: false });
 
         if (!error && data) {
-          return data.type === 'check-in' ? 'checked-in' : 'checked-out';
+          const serverRecords = data.map(record => ({
+            id: record.id,
+            studentId: record.student_id,
+            studentName: record.student_name,
+            timestamp: new Date(record.timestamp),
+            type: record.type as 'check-in' | 'check-out',
+            barcode: record.barcode,
+            method: record.method as 'barcode' | 'biometric' | 'manual',
+            purpose: record.purpose,
+            contact: record.contact,
+            library: (record as any).library as 'notre-dame' | 'ibed' || 'notre-dame'
+          }));
+
+          // Merge server records with local-only records (those with local_ prefix)
+          const localOnly = localRecords.filter(r => r.id?.toString().startsWith('local_'));
+          allRecords = [...serverRecords, ...localOnly];
         }
       }
     } catch (error) {
-      console.log('Using local data for status check');
+      console.log('Using local data only for status check');
     }
 
-    // Fallback to local data
-    if (localRecords.length > 0) {
-      const lastRecord = localRecords[0];
+    // Find the most recent record by timestamp
+    if (allRecords.length > 0) {
+      const sortedRecords = allRecords.sort((a, b) => 
+        new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+      );
+      const lastRecord = sortedRecords[0];
       return lastRecord.type === 'check-in' ? 'checked-in' : 'checked-out';
     }
 
