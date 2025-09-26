@@ -244,6 +244,11 @@ class AutoSyncService {
     }
   }
 
+  public async forceSync() {
+    console.log('🔄 Force sync requested');
+    await this.performSync();
+  }
+
   public destroy() {
     if (this.syncInterval) {
       clearInterval(this.syncInterval);

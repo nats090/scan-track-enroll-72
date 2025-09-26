@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import BackButton from '@/components/BackButton';
 import RFIDDataManager from '@/components/RFIDDataManager';
+import { attendanceService } from '@/services/attendanceService';
 import { supabaseService } from '@/services/supabaseService';
 import { Student } from '@/types/Student';
 import { AttendanceEntry } from '@/types/AttendanceEntry';
@@ -68,11 +69,22 @@ const EnhancedLibraryStaffPage = () => {
       setLoading(true);
       const [studentsData, attendanceData] = await Promise.all([
         supabaseService.getStudents(),
-        supabaseService.getAttendanceRecords()
+        attendanceService.getAttendanceRecords() // Use attendanceService for merged data
       ]);
 
       setStudents(studentsData);
       setAttendanceRecords(attendanceData);
+      
+      // Debug: Check for unsynced records
+      const unsyncedRecords = attendanceData.filter(r => r.id?.toString().startsWith('local_'));
+      if (unsyncedRecords.length > 0) {
+        console.warn(`Found ${unsyncedRecords.length} unsynced attendance records`);
+        toast({
+          title: "Sync Status",
+          description: `${unsyncedRecords.length} records are pending sync to server`,
+          variant: "default",
+        });
+      }
     } catch (error) {
       toast({
         title: "Error",
@@ -300,16 +312,48 @@ const EnhancedLibraryStaffPage = () => {
               <Smartphone className="h-10 w-10" />
               Enhanced Library Staff Panel
             </h1>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={loadData}
-              disabled={loading}
-              className="ml-4"
-            >
-              <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-              Refresh
-            </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={loadData}
+            disabled={loading}
+          >
+            <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
+          <Button onClick={() => {
+            import('@/utils/dataIntegrityCheck').then(module => {
+              module.logDataIntegrityReport().then(report => {
+                toast({
+                  title: "Data Integrity Check",
+                  description: `Local: ${report.localRecords}, Server: ${report.supabaseRecords}, Unsynced: ${report.unsyncedRecords}`,
+                });
+              });
+            });
+          }} variant="outline" size="sm">
+            🔍 Check Data
+          </Button>
+          <Button onClick={async () => {
+            try {
+              const { autoSyncService } = await import('@/services/autoSyncService');
+              await autoSyncService.forceSync();
+              await loadData(); // Refresh after sync
+              toast({
+                title: "Sync Complete",
+                description: "All data has been synchronized with the server",
+              });
+            } catch (error) {
+              toast({
+                title: "Sync Failed", 
+                description: "Could not sync data to server",
+                variant: "destructive"
+              });
+            }
+          }} variant="outline" size="sm">
+            🔄 Force Sync
+          </Button>
+        </div>
           </div>
           <p className="text-xl text-gray-600">Advanced Student Management & Analytics</p>
           
