@@ -45,18 +45,23 @@ const CheckInDashboard = () => {
 
       setStudents(studentsData);
       
-      // Get today's check-ins
+      // Get records from the last 24 hours
+      const last24Hours = new Date(Date.now() - 24 * 60 * 60 * 1000);
+      const recentRecords = attendanceData.filter(record => 
+        new Date(record.timestamp) >= last24Hours
+      );
+      
+      // Get recent check-ins only (last 15 for better visibility)
+      const recentCheckIns = recentRecords
+        .filter(record => record.type === 'check-in')
+        .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+        .slice(0, 15);
+      
+      // Get today's count for the stats card
       const today = new Date().toDateString();
       const todayRecords = attendanceData.filter(record => 
         new Date(record.timestamp).toDateString() === today
       );
-      
-      // Get recent check-ins only (last 10)
-      const recentCheckIns = todayRecords
-        .filter(record => record.type === 'check-in')
-        .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
-        .slice(0, 10);
-      
       const todayCheckInsCount = todayRecords.filter(record => record.type === 'check-in').length;
       
       setRecentCheckIns(recentCheckIns);
@@ -444,9 +449,9 @@ const CheckInDashboard = () => {
           <CardHeader className="bg-green-100">
             <CardTitle className="text-3xl text-center flex items-center justify-center gap-3">
               <Activity size={32} />
-              Recent Check-ins
+              Check-ins (Last 24 Hours)
             </CardTitle>
-            <p className="text-center text-gray-600 text-lg">Live updates every 3 seconds</p>
+            <p className="text-center text-gray-600 text-lg">Live updates - showing last 15 entries from past 24 hours</p>
           </CardHeader>
           <CardContent className="p-6">
             <div className="grid gap-4">
