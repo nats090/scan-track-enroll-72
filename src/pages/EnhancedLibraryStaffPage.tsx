@@ -8,17 +8,20 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { 
   UserPlus, 
-  Edit, 
+  Edit2, 
+  Trash2, 
   Download, 
-  Search, 
-  Smartphone, 
-  Wifi, 
+  Calendar, 
+  BarChart3, 
+  TrendingUp,
+  RefreshCw,
+  Search,
+  RotateCcw,
+  Smartphone,
+  Wifi,
   Activity,
-  BarChart3,
   Clock,
-  Calendar,
-  Users,
-  RefreshCw
+  Users
 } from 'lucide-react';
 import BackButton from '@/components/BackButton';
 import RFIDDataManager from '@/components/RFIDDataManager';
@@ -305,85 +308,116 @@ const EnhancedLibraryStaffPage = () => {
           <BackButton to="/" />
         </div>
         
-        {/* Header with real-time stats */}
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center gap-3 mb-2">
-            <h1 className="text-4xl font-bold text-gray-800 flex items-center gap-3">
+        {/* Header with Action Bar */}
+        <div className="mb-8">
+          {/* Title Section */}
+          <div className="text-center mb-6">
+            <h1 className="text-4xl font-bold text-gray-800 flex items-center justify-center gap-3 mb-2">
               <Smartphone className="h-10 w-10" />
               Enhanced Library Staff Panel
             </h1>
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={loadData}
-            disabled={loading}
-          >
-            <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-            Refresh
-          </Button>
-          <Button onClick={() => {
-            import('@/utils/dataIntegrityCheck').then(module => {
-              module.logDataIntegrityReport().then(report => {
-                toast({
-                  title: "Data Integrity Check",
-                  description: `Local: ${report.localRecords}, Server: ${report.supabaseRecords}, Unsynced: ${report.unsyncedRecords}`,
-                });
-              });
-            });
-          }} variant="outline" size="sm">
-            🔍 Check Data
-          </Button>
-          <Button onClick={async () => {
-            try {
-              const { autoSyncService } = await import('@/services/autoSyncService');
-              await autoSyncService.forceSync();
-              await loadData(); // Refresh after sync
-              toast({
-                title: "Sync Complete",
-                description: "All data has been synchronized with the server",
-              });
-            } catch (error) {
-              toast({
-                title: "Sync Failed", 
-                description: "Could not sync data to server",
-                variant: "destructive"
-              });
-            }
-          }} variant="outline" size="sm">
-            🔄 Force Sync
-          </Button>
-        </div>
+            <p className="text-xl text-gray-600">Advanced Student Management & Analytics</p>
           </div>
-          <p className="text-xl text-gray-600">Advanced Student Management & Analytics</p>
           
-          {/* Real-time stats bar */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6">
-            <Card className="bg-green-500 text-white">
-              <CardContent className="p-4 text-center">
-                <div className="text-2xl font-bold">{todayRecords.length}</div>
-                <p className="text-sm">Today's Visits</p>
-              </CardContent>
-            </Card>
-            <Card className="bg-blue-500 text-white">
-              <CardContent className="p-4 text-center">
-                <div className="text-2xl font-bold">{uniqueStudentsToday}</div>
-                <p className="text-sm">Unique Students</p>
-              </CardContent>
-            </Card>
-            <Card className="bg-orange-500 text-white">
-              <CardContent className="p-4 text-center">
-                <div className="text-2xl font-bold">{visitorsToday}</div>
-                <p className="text-sm">Visitors Today</p>
-              </CardContent>
-            </Card>
-            <Card className="bg-purple-500 text-white">
-              <CardContent className="p-4 text-center">
-                <div className="text-2xl font-bold">{students.length}</div>
-                <p className="text-sm">Total Students</p>
-              </CardContent>
-            </Card>
-          </div>
+          {/* Action Bar */}
+          <Card className="shadow-sm border-0 bg-white/60 backdrop-blur-sm">
+            <CardContent className="py-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-sm text-gray-600">
+                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                  <span>System Online</span>
+                  <span className="text-gray-400">•</span>
+                  <span>Auto-sync every 10s</span>
+                </div>
+                
+                <div className="flex gap-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={loadData}
+                    disabled={loading}
+                    className="gap-2"
+                  >
+                    <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+                    Refresh
+                  </Button>
+                  
+                  <Button 
+                    onClick={() => {
+                      import('@/utils/dataIntegrityCheck').then(module => {
+                        module.logDataIntegrityReport().then(report => {
+                          toast({
+                            title: "Data Integrity Check",
+                            description: `Local: ${report.localRecords}, Server: ${report.supabaseRecords}, Unsynced: ${report.unsyncedRecords}`,
+                          });
+                        });
+                      });
+                    }} 
+                    variant="ghost" 
+                    size="sm"
+                    className="gap-2"
+                  >
+                    <Search className="h-4 w-4" />
+                    Check Data
+                  </Button>
+                  
+                  <Button 
+                    onClick={async () => {
+                      try {
+                        const { autoSyncService } = await import('@/services/autoSyncService');
+                        await autoSyncService.forceSync();
+                        await loadData();
+                        toast({
+                          title: "Sync Complete",
+                          description: "All data has been synchronized with the server",
+                        });
+                      } catch (error) {
+                        toast({
+                          title: "Sync Failed", 
+                          description: "Could not sync data to server",
+                          variant: "destructive"
+                        });
+                      }
+                    }} 
+                    variant="ghost" 
+                    size="sm"
+                    className="gap-2"
+                  >
+                    <RotateCcw className="h-4 w-4" />
+                    Force Sync
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Real-time stats bar */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+          <Card className="bg-green-500 text-white">
+            <CardContent className="p-4 text-center">
+              <div className="text-2xl font-bold">{todayRecords.length}</div>
+              <p className="text-sm">Today's Visits</p>
+            </CardContent>
+          </Card>
+          <Card className="bg-blue-500 text-white">
+            <CardContent className="p-4 text-center">
+              <div className="text-2xl font-bold">{uniqueStudentsToday}</div>
+              <p className="text-sm">Unique Students</p>
+            </CardContent>
+          </Card>
+          <Card className="bg-orange-500 text-white">
+            <CardContent className="p-4 text-center">
+              <div className="text-2xl font-bold">{visitorsToday}</div>
+              <p className="text-sm">Visitors Today</p>
+            </CardContent>
+          </Card>
+          <Card className="bg-purple-500 text-white">
+            <CardContent className="p-4 text-center">
+              <div className="text-2xl font-bold">{students.length}</div>
+              <p className="text-sm">Total Students</p>
+            </CardContent>
+          </Card>
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
@@ -502,7 +536,7 @@ const EnhancedLibraryStaffPage = () => {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Edit className="h-6 w-6" />
+                  <Edit2 className="h-6 w-6" />
                   Student Management
                 </CardTitle>
                 <div className="flex flex-col md:flex-row md:items-center gap-2">
@@ -566,7 +600,7 @@ const EnhancedLibraryStaffPage = () => {
                         variant="outline"
                         size="sm"
                       >
-                        <Edit className="h-4 w-4 mr-1" />
+                        <Edit2 className="h-4 w-4 mr-1" />
                         Edit
                       </Button>
                     </div>
