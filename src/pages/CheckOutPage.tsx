@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -19,6 +19,13 @@ const CheckOutPage = () => {
   const [studentId, setStudentId] = useState('');
   const [studentName, setStudentName] = useState('');
   const [rfidInput, setRfidInput] = useState('');
+
+  const rfidInputRef = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    if (scannerMode === 'rfid') {
+      rfidInputRef.current?.focus();
+    }
+  }, [scannerMode]);
 
   const findStudent = async (searchId: string) => {
     // First check local storage
@@ -320,6 +327,7 @@ const CheckOutPage = () => {
                   <Label htmlFor="rfidInput" className="text-lg font-medium">RFID Scanner Input</Label>
                   <Input
                     id="rfidInput"
+                    ref={rfidInputRef}
                     value={rfidInput}
                     onChange={(e) => setRfidInput(e.target.value)}
                     onKeyDown={(e) => {
