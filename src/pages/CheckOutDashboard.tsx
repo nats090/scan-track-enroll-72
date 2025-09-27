@@ -141,6 +141,24 @@ const CheckOutDashboard = () => {
 
   const handleStudentCheckOut = async (student: Student) => {
     try {
+      const currentStatus = await attendanceService.getStudentCurrentStatus(student.studentId);
+      if (currentStatus === 'checked-out') {
+        toast({
+          title: 'Already Checked Out',
+          description: `${student.name} is not currently checked in.`,
+          variant: 'destructive',
+        });
+        return;
+      }
+      if (currentStatus === 'unknown') {
+        toast({
+          title: 'No Check-in Record',
+          description: `${student.name} has no active check-in record.`,
+          variant: 'destructive',
+        });
+        return;
+      }
+
       const studentRecord: Omit<AttendanceEntry, 'id'> = {
         studentId: student.studentId,
         studentName: student.name,
@@ -150,7 +168,7 @@ const CheckOutDashboard = () => {
       };
 
       await attendanceService.addAttendanceRecord(studentRecord);
-      
+
       toast({
         title: "Goodbye!",
         description: `${student.name} checked out successfully`,

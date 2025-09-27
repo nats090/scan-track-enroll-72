@@ -187,6 +187,16 @@ const CheckInDashboard = () => {
 
   const handleStudentCheckIn = async (student: Student) => {
     try {
+      const currentStatus = await attendanceService.getStudentCurrentStatus(student.studentId);
+      if (currentStatus === 'checked-in') {
+        toast({
+          title: 'Already Checked In',
+          description: `${student.name} is already checked in. Please check out first.`,
+          variant: 'destructive',
+        });
+        return;
+      }
+
       const studentRecord: Omit<AttendanceEntry, 'id'> = {
         studentId: student.studentId,
         studentName: student.name,
@@ -196,7 +206,7 @@ const CheckInDashboard = () => {
       };
 
       await attendanceService.addAttendanceRecord(studentRecord);
-      
+
       toast({
         title: "Welcome!",
         description: `${student.name} checked in successfully`,

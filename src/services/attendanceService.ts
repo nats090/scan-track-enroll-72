@@ -10,7 +10,7 @@ export interface DatabaseAttendanceRecord {
   timestamp: string;
   type: 'check-in' | 'check-out';
   barcode?: string;
-  method: 'barcode' | 'biometric' | 'manual';
+  method: 'barcode' | 'biometric' | 'manual' | 'rfid';
   purpose?: string;
   contact?: string;
   created_at: string;
@@ -40,7 +40,7 @@ export const attendanceService = {
             timestamp: new Date(record.timestamp),
             type: (record as any).type || 'check-in', // Default to check-in for backward compatibility
             barcode: record.barcode,
-            method: record.method as 'barcode' | 'biometric' | 'manual',
+            method: record.method as 'barcode' | 'biometric' | 'manual' | 'rfid',
             purpose: record.purpose,
             contact: record.contact,
             library: (record as any).library as 'notre-dame' | 'ibed' || 'notre-dame'
@@ -64,6 +64,17 @@ export const attendanceService = {
   },
 
   async addAttendanceRecord(record: Omit<AttendanceEntry, 'id'>): Promise<AttendanceEntry> {
+    // Enforce alternating check-in/check-out per student
+    const currentStatus = await this.getStudentCurrentStatus(record.studentId);
+    if (record.type === 'check-in' && currentStatus === 'checked-in') {
+      throw new Error('Student is already checked in. Please check out first.');
+    }
+    if (record.type === 'check-out' && (currentStatus === 'checked-out' || currentStatus === 'unknown')) {
+      throw new Error(currentStatus === 'unknown'
+        ? 'No active check-in found for this student.'
+        : 'Student is already checked out.');
+    }
+
     const newRecord: AttendanceEntry = {
       ...record,
       id: generateId()
@@ -102,7 +113,7 @@ export const attendanceService = {
             timestamp: new Date(data.timestamp),
             type: (data as any).type || 'check-in', // Default to check-in for backward compatibility
             barcode: data.barcode,
-            method: data.method as 'barcode' | 'biometric' | 'manual',
+            method: data.method as 'barcode' | 'biometric' | 'manual' | 'rfid',
             purpose: data.purpose,
             contact: data.contact,
             library: (data as any).library as 'notre-dame' | 'ibed' || 'notre-dame'
@@ -160,7 +171,7 @@ export const attendanceService = {
             timestamp: new Date(record.timestamp),
             type: record.type as 'check-in' | 'check-out',
             barcode: record.barcode,
-            method: record.method as 'barcode' | 'biometric' | 'manual',
+            method: record.method as 'barcode' | 'biometric' | 'manual' | 'rfid',
             purpose: record.purpose,
             contact: record.contact,
             library: (record as any).library as 'notre-dame' | 'ibed' || 'notre-dame'
