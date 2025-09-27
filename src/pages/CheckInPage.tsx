@@ -208,9 +208,10 @@ const CheckInPage = () => {
         duration: 3000,
       });
 
-      // Reset form
+      // Reset form and switch to RFID mode for next user
       setStudentId('');
       setStudentName('');
+      setScannerMode('rfid');
     } catch (error) {
       toast({
         title: "Error",
