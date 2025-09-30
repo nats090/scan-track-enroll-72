@@ -215,13 +215,13 @@ const CheckInPage = () => {
         duration: 2000,
       });
 
-      // Clear form immediately for next entry
+      // Switch to RFID mode and focus input for next user
       setStudentId('');
       setStudentName('');
-      
-      // Keep in manual mode and focus on ID field
+      setScannerMode('rfid');
+      setRfidInput('');
       setTimeout(() => {
-        document.getElementById('studentId')?.focus();
+        rfidInputRef.current?.focus();
       }, 100);
     } catch (error) {
       toast({
