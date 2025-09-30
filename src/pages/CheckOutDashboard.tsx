@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -25,6 +25,7 @@ const CheckOutDashboard = () => {
   const [isRFIDActive, setIsRFIDActive] = useState(false);
   const [visitorName, setVisitorName] = useState('');
   const [rfidInput, setRfidInput] = useState('');
+  const rfidInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     loadData();
@@ -90,6 +91,10 @@ const CheckOutDashboard = () => {
       setVisitorName('');
       setVisitorDialog(false);
       loadData(); // Refresh data
+      // Focus RFID input for next scan
+      setTimeout(() => {
+        rfidInputRef.current?.focus();
+      }, 100);
     } catch (error) {
       toast({
         title: "Error",
@@ -328,6 +333,7 @@ const CheckOutDashboard = () => {
               <Label htmlFor="rfidInput" className="text-lg font-medium">RFID Input</Label>
               <Input
                 id="rfidInput"
+                ref={rfidInputRef}
                 value={rfidInput}
                 onChange={(e) => setRfidInput(e.target.value)}
                 onKeyDown={(e) => {
