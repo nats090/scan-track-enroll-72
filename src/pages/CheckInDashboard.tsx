@@ -37,6 +37,16 @@ const CheckInDashboard = () => {
     loadData();
   }, []);
 
+  // Always refocus RFID input when dialogs close
+  useEffect(() => {
+    if (!studentDialog && !visitorDialog) {
+      const id = window.setTimeout(() => {
+        rfidInputRef.current?.focus();
+      }, 50);
+      return () => window.clearTimeout(id);
+    }
+  }, [studentDialog, visitorDialog]);
+
   const loadData = async () => {
     try {
       const [studentsData, attendanceData] = await Promise.all([
@@ -235,7 +245,14 @@ const CheckInDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 p-4">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 p-4" onKeyDownCapture={(e) => {
+      if (!studentDialog && !visitorDialog) {
+        if (document.activeElement !== rfidInputRef.current) {
+          rfidInputRef.current?.focus();
+        }
+      }
+    }}>
+
       <div className="max-w-7xl mx-auto">
         {/* Back Button */}
         <div className="mb-6">

@@ -31,6 +31,16 @@ const CheckOutDashboard = () => {
     loadData();
   }, []);
 
+  // Always refocus RFID input when dialogs close
+  useEffect(() => {
+    if (!studentDialog && !visitorDialog) {
+      const id = window.setTimeout(() => {
+        rfidInputRef.current?.focus();
+      }, 50);
+      return () => window.clearTimeout(id);
+    }
+  }, [studentDialog, visitorDialog]);
+
   const loadData = async () => {
     try {
       const [studentsData, attendanceData] = await Promise.all([
@@ -183,6 +193,10 @@ const CheckOutDashboard = () => {
       setSearchResults([]);
       setStudentDialog(false);
       loadData(); // Refresh data
+      // Focus RFID input for next scan
+      setTimeout(() => {
+        rfidInputRef.current?.focus();
+      }, 100);
     } catch (error) {
       toast({
         title: "Error",
@@ -260,7 +274,14 @@ const CheckOutDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-red-50 to-orange-50 p-4">
+    <div className="min-h-screen bg-gradient-to-br from-red-50 to-orange-50 p-4" onKeyDownCapture={(e) => {
+      if (!studentDialog && !visitorDialog) {
+        if (document.activeElement !== rfidInputRef.current) {
+          rfidInputRef.current?.focus();
+        }
+      }
+    }}>
+
       <div className="max-w-7xl mx-auto">
         {/* Back Button */}
         <div className="mb-6">
