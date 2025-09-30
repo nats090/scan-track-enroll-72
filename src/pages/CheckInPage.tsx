@@ -212,13 +212,17 @@ const CheckInPage = () => {
       toast({
         title: "Welcome!",
         description: `${finalStudentName} checked in successfully`,
-        duration: 3000,
+        duration: 2000,
       });
 
-      // Auto-refresh page after successful manual entry
+      // Clear form immediately for next entry
+      setStudentId('');
+      setStudentName('');
+      
+      // Keep in manual mode and focus on ID field
       setTimeout(() => {
-        window.location.reload();
-      }, 2000);
+        document.getElementById('studentId')?.focus();
+      }, 100);
     } catch (error) {
       toast({
         title: "Error",
