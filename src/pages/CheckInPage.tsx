@@ -215,10 +215,10 @@ const CheckInPage = () => {
         duration: 3000,
       });
 
-      // Reset form and switch to RFID mode for next user
-      setStudentId('');
-      setStudentName('');
-      setScannerMode('rfid');
+      // Auto-refresh page after successful manual entry
+      setTimeout(() => {
+        window.location.reload();
+      }, 2000);
     } catch (error) {
       toast({
         title: "Error",
