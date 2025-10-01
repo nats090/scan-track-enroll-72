@@ -57,11 +57,10 @@ const CheckOutDashboard = () => {
         new Date(record.timestamp).toDateString() === today
       );
       
-      // Get recent check-outs only (last 10)
+      // Get all check-outs for today
       const recentCheckOuts = todayRecords
         .filter(record => record.type === 'check-out')
-        .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
-        .slice(0, 10);
+        .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
       
       const todayCheckOutsCount = todayRecords.filter(record => record.type === 'check-out').length;
       
@@ -476,7 +475,7 @@ const CheckOutDashboard = () => {
               <Activity size={20} />
               Recent Check-outs
             </CardTitle>
-            <p className="text-sm text-muted-foreground">Showing today's check-outs</p>
+            <p className="text-sm text-muted-foreground">All check-outs from today</p>
           </CardHeader>
           <CardContent>
             <AttendanceTable records={recentCheckOuts} students={students} type="check-out" />

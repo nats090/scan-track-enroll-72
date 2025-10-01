@@ -63,11 +63,10 @@ const CheckInDashboard = () => {
         new Date(record.timestamp) >= last24Hours
       );
       
-      // Get recent check-ins only (last 15 for better visibility)
+      // Get all check-ins from last 24 hours
       const recentCheckIns = recentRecords
         .filter(record => record.type === 'check-in')
-        .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
-        .slice(0, 15);
+        .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
       
       // Get today's count for the stats card
       const today = new Date().toDateString();
@@ -476,7 +475,7 @@ const CheckInDashboard = () => {
               <Activity size={20} />
               Recent Check-ins
             </CardTitle>
-            <p className="text-sm text-muted-foreground">Showing last 15 entries from past 24 hours</p>
+            <p className="text-sm text-muted-foreground">All entries from past 24 hours</p>
           </CardHeader>
           <CardContent>
             <AttendanceTable records={recentCheckIns} students={students} type="check-in" />
