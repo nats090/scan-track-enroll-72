@@ -13,6 +13,7 @@ import { toast } from '@/hooks/use-toast';
 import { format, differenceInHours, differenceInMinutes } from 'date-fns';
 
 import BackButton from '@/components/BackButton';
+import AttendanceTable from '@/components/AttendanceTable';
 
 const CheckOutDashboard = () => {
   const [students, setStudents] = useState<Student[]>([]);
@@ -290,68 +291,57 @@ const CheckOutDashboard = () => {
         
         
         {/* Header */}
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center gap-4 mb-2">
-            <h1 className="text-5xl font-bold text-red-700 flex items-center gap-4">
-              <LogOut size={64} />
-              Library Check Out Dashboard
-            </h1>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={loadData}
-              className="ml-4"
-            >
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Refresh
-            </Button>
-          </div>
-          <p className="text-2xl text-gray-600">Manual & Scanner Entry - Live Updates</p>
-          <div className="flex items-center justify-center gap-2 mt-2">
-            <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
-            <span className="text-red-600 font-semibold">System Online</span>
-          </div>
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-3xl font-bold text-red-700 flex items-center gap-3">
+            <LogOut size={32} />
+            Check Out Dashboard
+          </h1>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={loadData}
+          >
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Refresh
+          </Button>
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <Card className="bg-red-500 text-white shadow-lg">
-            <CardHeader className="text-center">
-              <CardTitle className="text-3xl font-bold">{currentCount}</CardTitle>
-              <p className="text-xl">Today's Check-outs</p>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <Card className="bg-red-500 text-white">
+            <CardHeader className="text-center py-4">
+              <CardTitle className="text-2xl font-bold">{currentCount}</CardTitle>
+              <p className="text-sm">Today's Check-outs</p>
             </CardHeader>
           </Card>
 
-           <Card className="bg-orange-500 text-white shadow-lg">
-            <CardHeader className="text-center">
-              <CardTitle className="text-3xl font-bold">
+          <Card className="bg-orange-500 text-white">
+            <CardHeader className="text-center py-4">
+              <CardTitle className="text-2xl font-bold">
                 {currentCount - recentCheckOuts.filter(r => r.studentId === 'VISITOR').length}
               </CardTitle>
-              <p className="text-xl">Student Check-outs</p>
+              <p className="text-sm">Student Check-outs</p>
             </CardHeader>
           </Card>
 
-          <Card className="bg-purple-500 text-white shadow-lg">
-            <CardHeader className="text-center">
-              <CardTitle className="text-3xl font-bold">
+          <Card className="bg-purple-500 text-white">
+            <CardHeader className="text-center py-4">
+              <CardTitle className="text-2xl font-bold">
                 {format(new Date(), 'HH:mm')}
               </CardTitle>
-              <p className="text-xl">{format(new Date(), 'MMM dd, yyyy')}</p>
+              <p className="text-sm">{format(new Date(), 'MMM dd, yyyy')}</p>
             </CardHeader>
           </Card>
         </div>
 
         {/* RFID Scanner Input */}
-        <Card className="mb-8 bg-red-50 border-red-200">
-          <CardHeader>
-            <CardTitle className="text-center text-2xl text-red-700">
-              🏷️ RFID Scanner
-            </CardTitle>
-            <p className="text-center text-red-600">Scan your RFID card or tap to focus input</p>
+        <Card className="mb-6">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg">🏷️ RFID Scanner</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="max-w-md mx-auto">
-              <Label htmlFor="rfidInput" className="text-lg font-medium">RFID Input</Label>
+            <div className="space-y-2">
+              <Label htmlFor="rfidInput">RFID Input</Label>
               <Input
                 id="rfidInput"
                 ref={rfidInputRef}
@@ -363,26 +353,25 @@ const CheckOutDashboard = () => {
                   }
                 }}
                 placeholder="Scan RFID card here..."
-                className="text-center text-xl py-4 mt-2 border-2 border-red-300 focus:border-red-500"
+                className="text-center"
                 autoFocus
               />
-              <p className="text-sm text-red-600 mt-2 text-center">
-                🔄 RFID scanners will automatically input data here
+              <p className="text-xs text-muted-foreground text-center">
+                RFID scanners will automatically input data here
               </p>
             </div>
           </CardContent>
         </Card>
 
         {/* Action Buttons */}
-        <div className="text-center mb-8 space-y-4">
-          <div className="flex justify-center gap-4">
-            <Dialog open={studentDialog} onOpenChange={setStudentDialog}>
-              <DialogTrigger asChild>
-                <Button size="lg" className="text-xl px-8 py-6 bg-blue-500 hover:bg-blue-600">
-                  <UserMinus className="mr-2" size={24} />
-                  Manual Entry
-                </Button>
-              </DialogTrigger>
+        <div className="flex justify-center gap-3 mb-6">
+          <Dialog open={studentDialog} onOpenChange={setStudentDialog}>
+            <DialogTrigger asChild>
+              <Button className="bg-blue-500 hover:bg-blue-600">
+                <UserMinus className="mr-2" size={18} />
+                Manual Entry
+              </Button>
+            </DialogTrigger>
               <DialogContent className="max-w-md">
                 <DialogHeader>
                   <DialogTitle className="text-2xl text-center">Student Check Out</DialogTitle>
@@ -438,13 +427,13 @@ const CheckOutDashboard = () => {
                     Cancel
                   </Button>
                 </div>
-              </DialogContent>
-            </Dialog>
+            </DialogContent>
+          </Dialog>
 
           <Dialog open={visitorDialog} onOpenChange={setVisitorDialog}>
             <DialogTrigger asChild>
-              <Button size="lg" className="text-xl px-8 py-6 bg-orange-500 hover:bg-orange-600">
-                <UserMinus className="mr-2" size={24} />
+              <Button className="bg-orange-500 hover:bg-orange-600">
+                <UserMinus className="mr-2" size={18} />
                 Visitor Check Out
               </Button>
             </DialogTrigger>
@@ -478,85 +467,21 @@ const CheckOutDashboard = () => {
               </div>
             </DialogContent>
           </Dialog>
-          </div>
         </div>
 
-        {/* Recent Check-outs */}
-        <Card className="shadow-xl">
-          <CardHeader className="bg-red-100">
-            <CardTitle className="text-3xl text-center flex items-center justify-center gap-3">
-              <Activity size={32} />
+        {/* Recent Check-outs Table */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Activity size={20} />
               Recent Check-outs
             </CardTitle>
-            <p className="text-center text-gray-600 text-lg">Live updates every 3 seconds</p>
+            <p className="text-sm text-muted-foreground">Showing today's check-outs</p>
           </CardHeader>
-          <CardContent className="p-6">
-            <div className="grid gap-4">
-              {recentCheckOuts.length > 0 ? recentCheckOuts.map((record, index) => (
-                <div
-                  key={record.id}
-                  className={`flex items-center justify-between p-6 rounded-lg shadow-md transition-all duration-300 ${
-                    index === 0 ? 'bg-red-50 border-l-4 border-red-500' : 'bg-gray-50'
-                  }`}
-                >
-                  <div className="flex items-center gap-4">
-                    <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
-                      record.studentId === 'VISITOR' ? 'bg-orange-500' : 'bg-red-500'
-                    } text-white font-bold text-xl`}>
-                      {record.studentId === 'VISITOR' ? 'V' : record.studentName.charAt(0)}
-                    </div>
-                    <div>
-                      <p className="text-2xl font-semibold">{record.studentName}</p>
-                      <p className="text-lg text-gray-600">
-                        {record.studentId === 'VISITOR' ? 'Visitor' : `ID: ${record.studentId}`}
-                      </p>
-                      <p className="text-sm text-blue-600 font-medium">
-                        Method: {record.method === 'manual' ? 'Manual Entry' : 'Scanner'}
-                      </p>
-                      {record.studentId !== 'VISITOR' && (
-                        <div className="flex items-center gap-2 mt-1">
-                          <Timer size={16} className="text-blue-500" />
-                          <span className="text-sm text-blue-600 font-medium">
-                            Visit duration tracked
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-xl font-semibold text-red-600">
-                      {format(new Date(record.timestamp), 'HH:mm:ss')}
-                    </p>
-                    <p className="text-sm text-gray-500">
-                      {format(new Date(record.timestamp), 'MMM dd')}
-                    </p>
-                  </div>
-                </div>
-              )) : (
-                <div className="text-center py-12">
-                  <Users size={64} className="mx-auto text-gray-400 mb-4" />
-                  <p className="text-2xl text-gray-500">No check-outs today yet</p>
-                  <p className="text-lg text-gray-400">Waiting for RF ID scans...</p>
-                </div>
-              )}
-            </div>
+          <CardContent>
+            <AttendanceTable records={recentCheckOuts} students={students} type="check-out" />
           </CardContent>
         </Card>
-
-        {/* System Status */}
-        <div className="mt-8 text-center">
-          <Card className={`inline-block ${isRFIDActive ? 'bg-red-50 border-red-200' : 'bg-gray-50 border-gray-200'}`}>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <Wifi className={`${isRFIDActive ? 'text-red-500' : 'text-gray-400'}`} size={24} />
-                <span className={`font-semibold ${isRFIDActive ? 'text-red-700' : 'text-gray-600'}`}>
-                  RFID Scanner {isRFIDActive ? 'Connected' : 'Disconnected'}
-                </span>
-                <div className={`w-2 h-2 rounded-full ${isRFIDActive ? 'bg-red-500 animate-pulse' : 'bg-gray-400'}`}></div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
       </div>
     </div>
   );
