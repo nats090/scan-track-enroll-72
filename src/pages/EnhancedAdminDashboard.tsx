@@ -78,7 +78,7 @@ const EnhancedAdminDashboard = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 p-4 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 p-4 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-primary mx-auto"></div>
           <p className="mt-4 text-lg">Loading admin dashboard...</p>
@@ -88,81 +88,76 @@ const EnhancedAdminDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 p-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 p-4">
       <div className="max-w-7xl mx-auto">
         {/* Back Button */}
         <div className="mb-6">
           <BackButton to="/" />
         </div>
         
-        {/* Header */}
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center gap-3 mb-2">
-            <h1 className="text-4xl font-bold text-gray-800 flex items-center gap-3">
-              <BarChart3 size={48} />
+        {/* Header with Action Bar */}
+        <div className="mb-8">
+          {/* Title Section */}
+          <div className="text-center mb-6">
+            <h1 className="text-4xl font-bold text-gray-800 flex items-center justify-center gap-3 mb-2">
+              <BarChart3 className="h-10 w-10" />
               Enhanced Admin Dashboard
             </h1>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={loadData}
-              disabled={loading}
-              className="ml-4"
-            >
-              <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-              Refresh
-            </Button>
+            <p className="text-xl text-gray-600">Real-time Library Analytics & Management</p>
           </div>
-          <p className="text-xl text-gray-600">Real-time Library Analytics & Management</p>
-          <div className="flex items-center justify-center gap-2 mt-2">
-            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-            <span className="text-green-600 font-medium">Live Updates</span>
-          </div>
+          
+          {/* Action Bar */}
+          <Card className="shadow-sm border-0 bg-white/60 backdrop-blur-sm">
+            <CardContent className="py-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-sm text-gray-600">
+                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                  <span>System Online</span>
+                  <span className="text-gray-400">•</span>
+                  <span>Live Analytics</span>
+                </div>
+                
+                <div className="flex gap-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={loadData}
+                    disabled={loading}
+                    className="gap-2"
+                  >
+                    <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+                    Refresh
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
-        {/* Key Metrics */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Students</CardTitle>
-              <Users className="h-6 w-6" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold">{students.length}</div>
-              <p className="text-xs opacity-90">Registered in system</p>
+        {/* Real-time Stats Bar */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+          <Card className="bg-green-500 text-white">
+            <CardContent className="p-4 text-center">
+              <div className="text-2xl font-bold">{todayRecords.length}</div>
+              <p className="text-sm">Today's Visits</p>
             </CardContent>
           </Card>
-
-          <Card className="bg-gradient-to-br from-green-500 to-green-600 text-white">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Today's Visits</CardTitle>
-              <Activity className="h-6 w-6" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold">{todayRecords.length}</div>
-              <p className="text-xs opacity-90">{uniqueStudentsToday} unique students</p>
+          <Card className="bg-blue-500 text-white">
+            <CardContent className="p-4 text-center">
+              <div className="text-2xl font-bold">{uniqueStudentsToday}</div>
+              <p className="text-sm">Unique Students</p>
             </CardContent>
           </Card>
-
-          <Card className="bg-gradient-to-br from-orange-500 to-orange-600 text-white">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Visitors Today</CardTitle>
-              <UserCheck className="h-6 w-6" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold">{visitorsToday}</div>
-              <p className="text-xs opacity-90">Non-student entries</p>
+          <Card className="bg-orange-500 text-white">
+            <CardContent className="p-4 text-center">
+              <div className="text-2xl font-bold">{visitorsToday}</div>
+              <p className="text-sm">Visitors Today</p>
             </CardContent>
           </Card>
-
-          <Card className="bg-gradient-to-br from-purple-500 to-purple-600 text-white">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Peak Hour</CardTitle>
-              <Clock className="h-6 w-6" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold">{peakHour.hour}:00</div>
-              <p className="text-xs opacity-90">{peakHour.count} visits</p>
+          <Card className="bg-purple-500 text-white">
+            <CardContent className="p-4 text-center">
+              <div className="text-2xl font-bold">{students.length}</div>
+              <p className="text-sm">Total Students</p>
             </CardContent>
           </Card>
         </div>
