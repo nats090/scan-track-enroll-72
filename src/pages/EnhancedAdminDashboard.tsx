@@ -100,7 +100,7 @@ const EnhancedAdminDashboard = () => {
           {/* Title Section */}
           <div className="text-center mb-6">
             <h1 className="text-4xl font-bold text-gray-800 flex items-center justify-center gap-3 mb-2">
-              <BarChart3 className="h-10 w-10" />
+              <BarChart3 size={32} />
               Enhanced Admin Dashboard
             </h1>
             <p className="text-xl text-gray-600">Real-time Library Analytics & Management</p>
