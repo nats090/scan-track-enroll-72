@@ -303,13 +303,16 @@ const CheckInDashboard = () => {
         </div>
 
         {/* RFID Scanner Input */}
-        <Card className="mb-6">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg">🏷️ RFID Scanner</CardTitle>
+        <Card className="mb-4">
+          <CardHeader className="py-2">
+            <CardTitle className="text-sm flex items-center gap-1">
+              <span>🏷️</span>
+              <span>RFID Scanner</span>
+            </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              <Label htmlFor="rfidInput">RFID Input</Label>
+          <CardContent className="py-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="rfidInput" className="text-xs">RFID Input</Label>
               <Input
                 id="rfidInput"
                 ref={rfidInputRef}
@@ -321,10 +324,10 @@ const CheckInDashboard = () => {
                   }
                 }}
                 placeholder="Scan RFID card here..."
-                className="text-center"
+                className="text-center h-8 text-sm"
                 autoFocus
               />
-              <p className="text-xs text-muted-foreground text-center">
+              <p className="text-[10px] text-muted-foreground text-center">
                 RFID scanners will automatically input data here
               </p>
             </div>
