@@ -11,7 +11,7 @@ interface BackButtonProps {
 
 const BackButton: React.FC<BackButtonProps> = ({ 
   className = "", 
-  variant = "outline",
+  variant = "ghost",
   to 
 }) => {
   const navigate = useNavigate();
@@ -28,10 +28,11 @@ const BackButton: React.FC<BackButtonProps> = ({
     <Button
       onClick={handleBack}
       variant={variant}
-      className={`flex items-center gap-2 ${className}`}
+      size="sm"
+      className={`flex items-center gap-1.5 hover:gap-2 transition-all duration-200 text-muted-foreground hover:text-foreground ${className}`}
     >
       <ArrowLeft className="h-4 w-4" />
-      Back
+      <span className="font-medium">Back</span>
     </Button>
   );
 };
