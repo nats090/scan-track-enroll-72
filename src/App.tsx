@@ -12,8 +12,6 @@ import CheckInDashboard from "./pages/CheckInDashboard";
 import CheckOutDashboard from "./pages/CheckOutDashboard";
 import EnhancedAdminDashboard from "./pages/EnhancedAdminDashboard";
 import EnhancedLibraryStaffPage from "./pages/EnhancedLibraryStaffPage";
-import AuthPage from "./pages/AuthPage";
-import ProtectedRoute from "@/components/ProtectedRoute";
 import NotFound from "./pages/NotFound";
 
 const App = () => {
@@ -40,27 +38,10 @@ const App = () => {
               <main>
                 <Routes>
                   <Route path="/" element={<HomePage />} />
-                  <Route path="/auth" element={<AuthPage />} />
-                  {/* Public routes - no authentication required */}
                   <Route path="/check-in" element={<CheckInDashboard />} />
                   <Route path="/check-out" element={<CheckOutDashboard />} />
-                  {/* Protected routes - require authentication and roles */}
-                  <Route 
-                    path="/admin" 
-                    element={
-                      <ProtectedRoute requiredRole="admin">
-                        <EnhancedAdminDashboard />
-                      </ProtectedRoute>
-                    } 
-                  />
-                  <Route 
-                    path="/staff" 
-                    element={
-                      <ProtectedRoute requiredRole={['admin', 'librarian']}>
-                        <EnhancedLibraryStaffPage />
-                      </ProtectedRoute>
-                    } 
-                  />
+                  <Route path="/admin" element={<EnhancedAdminDashboard />} />
+                  <Route path="/staff" element={<EnhancedLibraryStaffPage />} />
                   {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                   <Route path="*" element={<NotFound />} />
                 </Routes>

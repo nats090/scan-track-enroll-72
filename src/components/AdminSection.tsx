@@ -1,5 +1,6 @@
 
-import React from 'react';
+import React, { useState } from 'react';
+import AdminPasskey from './AdminPasskey';
 import AdminDataManagement from './AdminDataManagement';
 import ProfileManager from './ProfileManager';
 import DocumentUpload from './DocumentUpload';
@@ -7,7 +8,7 @@ import ThemeCustomizer from './ThemeCustomizer';
 import { Student } from '@/types/Student';
 import { AttendanceEntry } from '@/types/AttendanceEntry';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Settings, UserCog, FileText } from 'lucide-react';
+import { Settings, UserCog, FileText, Palette } from 'lucide-react';
 
 interface AdminSectionProps {
   students: Student[];
@@ -18,6 +19,12 @@ interface AdminSectionProps {
 }
 
 const AdminSection = ({ students, attendanceRecords, onDataImported, onUpdateStudent, onDeleteStudent }: AdminSectionProps) => {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  if (!isAuthenticated) {
+    return <AdminPasskey onAuthenticated={() => setIsAuthenticated(true)} />;
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex justify-end">
