@@ -2,9 +2,27 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { LogIn, LogOut, Settings, Users } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '@/hooks/useAuth';
+import UserMenu from '@/components/UserMenu';
+
 const HomePage = () => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+
   return <div className="min-h-screen bg-gradient-to-br from-background via-muted to-accent/20 p-4 flex items-center justify-center bg-transparent">
+      {/* User Menu / Login Button */}
+      <div className="fixed top-4 right-4 z-50">
+        {user ? (
+          <UserMenu />
+        ) : (
+          <Button onClick={() => navigate('/auth')} variant="default">
+            <LogIn className="mr-2 h-4 w-4" />
+            Login
+          </Button>
+        )}
+      </div>
+
       <div className="max-w-4xl mx-auto">
         <div className="text-center mb-12">
           <h2 className="text-3xl font-bold text-primary mb-2">
