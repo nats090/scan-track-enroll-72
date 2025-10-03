@@ -41,22 +41,10 @@ const App = () => {
                 <Routes>
                   <Route path="/" element={<HomePage />} />
                   <Route path="/auth" element={<AuthPage />} />
-                  <Route 
-                    path="/check-in" 
-                    element={
-                      <ProtectedRoute requiredRole={['admin', 'librarian']}>
-                        <CheckInDashboard />
-                      </ProtectedRoute>
-                    } 
-                  />
-                  <Route 
-                    path="/check-out" 
-                    element={
-                      <ProtectedRoute requiredRole={['admin', 'librarian']}>
-                        <CheckOutDashboard />
-                      </ProtectedRoute>
-                    } 
-                  />
+                  {/* Public routes - no authentication required */}
+                  <Route path="/check-in" element={<CheckInDashboard />} />
+                  <Route path="/check-out" element={<CheckOutDashboard />} />
+                  {/* Protected routes - require authentication and roles */}
                   <Route 
                     path="/admin" 
                     element={

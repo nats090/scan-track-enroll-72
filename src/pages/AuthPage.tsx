@@ -6,8 +6,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { useAuth } from '@/hooks/useAuth';
-import { LogIn, UserPlus, Loader2, AlertCircle, BookOpen } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useAuth, UserRole } from '@/hooks/useAuth';
+import { LogIn, UserPlus, Loader2, AlertCircle, BookOpen, Users } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
 
 const AuthPage = () => {
@@ -24,7 +25,8 @@ const AuthPage = () => {
   const [signupForm, setSignupForm] = useState({
     email: '',
     password: '',
-    confirmPassword: ''
+    confirmPassword: '',
+    requestedRole: 'librarian' as UserRole
   });
 
   // Redirect if already logged in
@@ -82,7 +84,11 @@ const AuthPage = () => {
     setIsLoading(true);
 
     try {
-      const { error: signUpError } = await signUp(signupForm.email, signupForm.password);
+      const { error: signUpError } = await signUp(
+        signupForm.email, 
+        signupForm.password,
+        signupForm.requestedRole
+      );
       
       if (signUpError) {
         setError(signUpError.message);
@@ -94,17 +100,26 @@ const AuthPage = () => {
       } else {
         toast({
           title: "Account Created!",
-          description: "Please check your email to confirm your account. You can also log in now.",
+          description: `Your account has been created with requested role: ${signupForm.requestedRole}. An admin will need to approve your role before you can access staff features.`,
+          duration: 8000
         });
         // Switch to login tab
         setLoginForm({ email: signupForm.email, password: '' });
-        setSignupForm({ email: '', password: '', confirmPassword: '' });
+        setSignupForm({ email: '', password: '', confirmPassword: '', requestedRole: 'librarian' });
       }
     } catch (err) {
       setError('An unexpected error occurred');
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handlePublicAccess = () => {
+    navigate('/');
+    toast({
+      title: "Public Access",
+      description: "You can access check-in and check-out pages without logging in."
+    });
   };
 
   return (
@@ -118,6 +133,27 @@ const AuthPage = () => {
           <h1 className="text-3xl font-bold text-gray-900">Library Management System</h1>
           <p className="text-muted-foreground mt-2">Sign in to access the system</p>
         </div>
+
+        {/* Public Access Button */}
+        <Card className="mb-4 border-2 border-primary/20">
+          <CardContent className="pt-6">
+            <div className="text-center space-y-3">
+              <Users className="h-10 w-10 mx-auto text-primary" />
+              <h3 className="font-semibold text-lg">Public Access</h3>
+              <p className="text-sm text-muted-foreground">
+                For students using check-in/check-out only
+              </p>
+              <Button 
+                onClick={handlePublicAccess}
+                variant="outline" 
+                className="w-full"
+                size="lg"
+              >
+                Continue as Guest
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
 
         <Card>
           <CardHeader>
@@ -207,6 +243,26 @@ const AuthPage = () => {
                   </div>
 
                   <div className="space-y-2">
+                    <Label htmlFor="signup-role">Requested Role</Label>
+                    <Select
+                      value={signupForm.requestedRole}
+                      onValueChange={(value) => setSignupForm({ ...signupForm, requestedRole: value as UserRole })}
+                      disabled={isLoading}
+                    >
+                      <SelectTrigger id="signup-role">
+                        <SelectValue placeholder="Select your role" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="librarian">Library Staff</SelectItem>
+                        <SelectItem value="admin">Administrator</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground">
+                      Select the role you're requesting. An admin will verify and approve it.
+                    </p>
+                  </div>
+
+                  <div className="space-y-2">
                     <Label htmlFor="signup-password">Password</Label>
                     <Input
                       id="signup-password"
@@ -246,9 +302,12 @@ const AuthPage = () => {
                     )}
                   </Button>
 
-                  <p className="text-xs text-muted-foreground text-center">
-                    Note: After signup, an admin must assign you a role to access the system.
-                  </p>
+                  <Alert>
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription className="text-xs">
+                      After signup, an admin must approve your role in Supabase before you can access staff features. You can still use check-in/check-out without approval.
+                    </AlertDescription>
+                  </Alert>
                 </form>
               </TabsContent>
             </Tabs>
