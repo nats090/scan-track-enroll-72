@@ -1,10 +1,16 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { LogIn, LogOut, Settings, Users, Key } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 const HomePage = () => {
   const navigate = useNavigate();
+
+  // Clear TOTP verification when returning to home page
+  useEffect(() => {
+    sessionStorage.removeItem('totp_verified_admin');
+    sessionStorage.removeItem('totp_verified_librarian');
+  }, []);
 
   return <div className="min-h-screen bg-gradient-to-br from-background via-muted to-accent/20 p-4 flex items-center justify-center bg-transparent relative">
       <div className="absolute top-4 right-4">
