@@ -1,0 +1,19 @@
+{
+  "name": "library-authenticator",
+  "version": "1.0.0",
+  "description": "Library System Authenticator App",
+  "main": "index.html",
+  "scripts": {
+    "android": "cap run android",
+    "ios": "cap run ios",
+    "sync": "cap sync"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^7.4.1"
+  },
+  "dependencies": {
+    "@capacitor/core": "^7.4.1",
+    "@capacitor/android": "^7.4.1",
+    "@capacitor/ios": "^7.4.1"
+  }
+}

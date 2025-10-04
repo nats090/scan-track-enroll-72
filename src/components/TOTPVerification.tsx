@@ -114,10 +114,7 @@ const TOTPVerification = ({ role, secret, onVerified }: TOTPVerificationProps) =
           </Button>
 
           <div className="text-center text-sm text-muted-foreground">
-            <p>Don't have the authenticator app?</p>
-            <a href="/#/authenticator" className="text-primary hover:underline">
-              Open Authenticator App
-            </a>
+            <p>Use your authenticator app to get the code</p>
           </div>
         </CardContent>
       </Card>
