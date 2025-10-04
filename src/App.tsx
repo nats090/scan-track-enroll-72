@@ -10,8 +10,9 @@ import { LibraryProvider } from "@/contexts/LibraryContext";
 import HomePage from "./pages/HomePage";
 import CheckInDashboard from "./pages/CheckInDashboard";
 import CheckOutDashboard from "./pages/CheckOutDashboard";
-import EnhancedAdminDashboard from "./pages/EnhancedAdminDashboard";
-import EnhancedLibraryStaffPage from "./pages/EnhancedLibraryStaffPage";
+import ProtectedAdminPage from "./pages/ProtectedAdminPage";
+import ProtectedStaffPage from "./pages/ProtectedStaffPage";
+import AuthenticatorApp from "./pages/AuthenticatorApp";
 import NotFound from "./pages/NotFound";
 
 const App = () => {
@@ -40,8 +41,9 @@ const App = () => {
                   <Route path="/" element={<HomePage />} />
                   <Route path="/check-in" element={<CheckInDashboard />} />
                   <Route path="/check-out" element={<CheckOutDashboard />} />
-                  <Route path="/admin" element={<EnhancedAdminDashboard />} />
-                  <Route path="/staff" element={<EnhancedLibraryStaffPage />} />
+                  <Route path="/admin" element={<ProtectedAdminPage />} />
+                  <Route path="/staff" element={<ProtectedStaffPage />} />
+                  <Route path="/authenticator" element={<AuthenticatorApp />} />
                   {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                   <Route path="*" element={<NotFound />} />
                 </Routes>

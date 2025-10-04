@@ -1,10 +1,22 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { LogIn, LogOut, Settings, Users } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { LogIn, LogOut, Settings, Users, Key } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
 const HomePage = () => {
-  return <div className="min-h-screen bg-gradient-to-br from-background via-muted to-accent/20 p-4 flex items-center justify-center bg-transparent">
+  const navigate = useNavigate();
+
+  return <div className="min-h-screen bg-gradient-to-br from-background via-muted to-accent/20 p-4 flex items-center justify-center bg-transparent relative">
+      <div className="absolute top-4 right-4">
+        <Button
+          variant="outline"
+          onClick={() => navigate('/authenticator')}
+          className="gap-2"
+        >
+          <Key className="h-4 w-4" />
+          Authenticator App
+        </Button>
+      </div>
       <div className="max-w-4xl mx-auto">
         <div className="text-center mb-12">
           <h2 className="text-3xl font-bold text-primary mb-2">
