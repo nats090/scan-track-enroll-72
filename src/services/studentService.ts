@@ -278,29 +278,5 @@ export const studentService = {
       rfid: data.rfid || '',
       library: data.library as 'notre-dame' | 'ibed' || 'notre-dame'
     };
-  },
-
-  async deleteStudent(id: string): Promise<void> {
-    try {
-      if (navigator.onLine) {
-        const { error } = await supabase
-          .from('students')
-          .delete()
-          .eq('id', id);
-
-        if (error) {
-          console.error('Error deleting student from Supabase:', error);
-          throw error;
-        }
-      }
-    } catch (error) {
-      console.error('Error deleting student:', error);
-      throw error;
-    } finally {
-      // Remove from local storage
-      const localData = await getFromLocalStorage();
-      const updatedStudents = localData.students.filter(s => s.id !== id);
-      await saveToLocalStorage({ students: updatedStudents });
-    }
   }
 };

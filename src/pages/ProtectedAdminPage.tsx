@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import TOTPVerification from '@/components/TOTPVerification';
-import EnhancedAdminPage from './EnhancedAdminPage';
+import EnhancedAdminDashboard from './EnhancedAdminDashboard';
 
 const ProtectedAdminPage = () => {
   const [isVerified, setIsVerified] = useState(false);
@@ -60,7 +60,7 @@ const ProtectedAdminPage = () => {
     );
   }
 
-  return <EnhancedAdminPage />;
+  return <EnhancedAdminDashboard />;
 };
 
 export default ProtectedAdminPage;
