@@ -56,39 +56,6 @@ export type Database = {
         }
         Relationships: []
       }
-      audit_logs: {
-        Row: {
-          action: string
-          created_at: string
-          id: string
-          new_data: Json | null
-          old_data: Json | null
-          record_id: string | null
-          table_name: string | null
-          user_id: string | null
-        }
-        Insert: {
-          action: string
-          created_at?: string
-          id?: string
-          new_data?: Json | null
-          old_data?: Json | null
-          record_id?: string | null
-          table_name?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          action?: string
-          created_at?: string
-          id?: string
-          new_data?: Json | null
-          old_data?: Json | null
-          record_id?: string | null
-          table_name?: string | null
-          user_id?: string | null
-        }
-        Relationships: []
-      }
       document_links: {
         Row: {
           created_at: string
@@ -173,30 +140,6 @@ export type Database = {
         }
         Relationships: []
       }
-      totp_attempts: {
-        Row: {
-          attempted_at: string
-          id: string
-          ip_address: string
-          role: string
-          success: boolean
-        }
-        Insert: {
-          attempted_at?: string
-          id?: string
-          ip_address: string
-          role: string
-          success?: boolean
-        }
-        Update: {
-          attempted_at?: string
-          id?: string
-          ip_address?: string
-          role?: string
-          success?: boolean
-        }
-        Relationships: []
-      }
       totp_secrets: {
         Row: {
           created_at: string
@@ -218,27 +161,6 @@ export type Database = {
           role?: string
           secret?: string
           updated_at?: string
-        }
-        Relationships: []
-      }
-      user_roles: {
-        Row: {
-          created_at: string
-          id: string
-          role: Database["public"]["Enums"]["app_role1"]
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          role: Database["public"]["Enums"]["app_role1"]
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          role?: Database["public"]["Enums"]["app_role1"]
-          user_id?: string
         }
         Relationships: []
       }

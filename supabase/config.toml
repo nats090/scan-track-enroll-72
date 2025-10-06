@@ -1,4 +1,1 @@
 project_id = "bsygexfvkbcnsurlgeiu"
-
-[functions.verify-totp]
-verify_jwt = false
