@@ -12,17 +12,7 @@ const HomePage = () => {
     sessionStorage.removeItem('totp_verified_librarian');
   }, []);
 
-  return <div className="min-h-screen bg-gradient-to-br from-background via-muted to-accent/20 p-4 flex items-center justify-center bg-transparent relative">
-      <div className="absolute top-4 right-4">
-        <Button
-          variant="outline"
-          onClick={() => navigate('/authenticator')}
-          className="gap-2"
-        >
-          <Key className="h-4 w-4" />
-          Authenticator App
-        </Button>
-      </div>
+  return <div className="min-h-screen bg-gradient-to-br from-background via-muted to-accent/20 p-4 flex items-center justify-center bg-transparent">
       <div className="max-w-4xl mx-auto">
         <div className="text-center mb-12">
           <h2 className="text-3xl font-bold text-primary mb-2">
