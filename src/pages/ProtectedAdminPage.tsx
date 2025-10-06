@@ -1,45 +1,32 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 import TOTPVerification from '@/components/TOTPVerification';
 import EnhancedAdminPage from './EnhancedAdminPage';
 
 const ProtectedAdminPage = () => {
   const [isVerified, setIsVerified] = useState(false);
-  const [secret, setSecret] = useState('');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     checkVerification();
-    loadSecret();
   }, []);
 
   const checkVerification = () => {
-    const verified = sessionStorage.getItem('totp_verified_admin');
-    if (verified) {
-      // Check if verification is still valid (within 1 hour)
-      const verifiedTime = parseInt(verified);
+    const verifiedToken = sessionStorage.getItem('totp_verified_admin');
+    const expiresAt = sessionStorage.getItem('totp_expires_admin');
+    
+    if (verifiedToken && expiresAt) {
+      // Check if verification is still valid
       const now = Date.now();
-      const oneHour = 60 * 60 * 1000;
+      const expires = parseInt(expiresAt);
       
-      if (now - verifiedTime < oneHour) {
+      if (now < expires) {
         setIsVerified(true);
       } else {
         sessionStorage.removeItem('totp_verified_admin');
+        sessionStorage.removeItem('totp_expires_admin');
       }
     }
     setLoading(false);
-  };
-
-  const loadSecret = async () => {
-    const { data } = await supabase
-      .from('totp_secrets')
-      .select('secret')
-      .eq('role', 'admin')
-      .single();
-
-    if (data) {
-      setSecret(data.secret);
-    }
   };
 
   if (loading) {
@@ -54,7 +41,6 @@ const ProtectedAdminPage = () => {
     return (
       <TOTPVerification
         role="admin"
-        secret={secret}
         onVerified={() => setIsVerified(true)}
       />
     );
