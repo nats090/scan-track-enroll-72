@@ -139,7 +139,10 @@ const form = useForm<RegistrationForm>({
     const nameValid = !!data.name && data.name.trim().split(/\s+/).length >= 2;
     const emailValid = !data.email || /^[A-Za-z0-9._%+-]+@(gmail\.com|ndkc\.edu\.ph)$/.test(data.email);
     const studentIdValid = /^\d{4}-\d{3,4}$/.test(data.studentId || '');
-    const courseValid = data.userType === 'teacher' || !!data.course?.trim();
+    
+    // Course is required except for teachers and IBED elementary/junior-high students
+    const isIbedElemOrJH = data.studentType === 'ibed' && (data.level === 'elementary' || data.level === 'junior-high');
+    const courseValid = data.userType === 'teacher' || isIbedElemOrJH || !!data.course?.trim();
     const yearValid = data.userType === 'teacher' || !!data.year?.trim();
 
     if (!nameValid) {
@@ -175,9 +178,8 @@ const form = useForm<RegistrationForm>({
       department: data.department === 'none' ? undefined : data.department,
       level: data.level === 'none' ? undefined : data.level as 'elementary' | 'junior-high' | 'senior-high' | 'college',
       shift: (data.level === 'senior-high' && data.shift !== 'none') ? data.shift as 'morning' | 'afternoon' : undefined,
-      course: data.userType === 'teacher' ? 'Teacher' : data.course,
+      course: data.userType === 'teacher' ? 'Teacher' : (data.course || undefined),
       year: data.year,
-      contactNumber: data.contactNumber,
       profilePicture: profilePicture || undefined,
       rfid: rfidData || undefined,
       userType: data.userType,
@@ -408,8 +410,9 @@ const form = useForm<RegistrationForm>({
                   />
                 )}
 
-                {/* Department/Strand Selection */}
-                {watchedUserType === 'student' && (
+                {/* Department/Strand Selection - not shown for IBED elementary/junior-high */}
+                {watchedUserType === 'student' && 
+                 !(watchedStudentType === 'ibed' && (watchedLevel === 'elementary' || watchedLevel === 'junior-high')) && (
                   <FormField
                     control={form.control}
                     name="department"
@@ -474,8 +477,9 @@ const form = useForm<RegistrationForm>({
                   />
                 )}
 
-                {/* Course - not shown for teachers */}
-                {watchedUserType === 'student' && (
+                {/* Course - not shown for teachers or IBED elementary/junior-high */}
+                {watchedUserType === 'student' && 
+                 !(watchedStudentType === 'ibed' && (watchedLevel === 'elementary' || watchedLevel === 'junior-high')) && (
                   <FormField
                     control={form.control}
                     name="course"
@@ -542,20 +546,6 @@ const form = useForm<RegistrationForm>({
                     )}
                   />
                 ) : null}
-
-                <FormField
-                  control={form.control}
-                  name="contactNumber"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Contact Number</FormLabel>
-                      <FormControl>
-                        <Input type="tel" placeholder="Enter contact number" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
 
                 <FormField
                   control={form.control}
