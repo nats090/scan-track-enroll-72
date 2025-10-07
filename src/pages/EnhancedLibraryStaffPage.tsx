@@ -60,6 +60,8 @@ const EnhancedLibraryStaffPage = () => {
   const [reportFilter, setReportFilter] = useState({
     period: 'today',
     course: '',
+    userType: 'all',
+    studentId: '',
     reportType: 'attendance'
   });
 
@@ -194,12 +196,30 @@ const EnhancedLibraryStaffPage = () => {
         break;
     }
 
+    // Filter by user type
+    if (reportFilter.userType && reportFilter.userType !== "all") {
+      if (reportFilter.userType === "visitor") {
+        filtered = filtered.filter(record => record.studentId === 'VISITOR');
+      } else if (reportFilter.userType === "student") {
+        filtered = filtered.filter(record => record.studentId !== 'VISITOR' && record.purpose !== 'Teacher');
+      } else if (reportFilter.userType === "teacher") {
+        filtered = filtered.filter(record => record.purpose === 'Teacher');
+      }
+    }
+
     // Filter by course if selected
     if (reportFilter.course && reportFilter.course !== "all") {
       filtered = filtered.filter(record => {
         const student = students.find(s => s.studentId === record.studentId);
         return student?.course === reportFilter.course;
       });
+    }
+
+    // Filter by specific student
+    if (reportFilter.studentId && reportFilter.studentId !== "all") {
+      filtered = filtered.filter(record => 
+        record.studentId === reportFilter.studentId
+      );
     }
 
     return filtered;
@@ -692,14 +712,14 @@ const EnhancedLibraryStaffPage = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                   <div>
                     <Label>Report Type</Label>
                      <Select value={reportFilter.reportType} onValueChange={(value) => setReportFilter({...reportFilter, reportType: value})}>
                        <SelectTrigger>
                          <SelectValue placeholder="Select report type" />
                        </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="bg-background z-50">
                         <SelectItem value="attendance">Attendance Report</SelectItem>
                         <SelectItem value="analytics">Analytics Report</SelectItem>
                       </SelectContent>
@@ -711,7 +731,7 @@ const EnhancedLibraryStaffPage = () => {
                        <SelectTrigger>
                          <SelectValue placeholder="Select period" />
                        </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="bg-background z-50">
                         <SelectItem value="today">Today</SelectItem>
                         <SelectItem value="yesterday">Yesterday</SelectItem>
                         <SelectItem value="week">This Week</SelectItem>
@@ -720,18 +740,51 @@ const EnhancedLibraryStaffPage = () => {
                     </Select>
                   </div>
                   <div>
-                    <Label>Specific Course/Program (Optional)</Label>
-                     <Select value={reportFilter.course} onValueChange={(value) => setReportFilter({...reportFilter, course: value})}>
+                    <Label>User Type</Label>
+                    <Select value={reportFilter.userType} onValueChange={(value) => setReportFilter({...reportFilter, userType: value, studentId: '', course: ''})}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-background z-50">
+                        <SelectItem value="all">All Users</SelectItem>
+                        <SelectItem value="student">Students</SelectItem>
+                        <SelectItem value="teacher">Teachers</SelectItem>
+                        <SelectItem value="visitor">Visitors</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label>Specific Person / Course</Label>
+                     <Select value={reportFilter.studentId || reportFilter.course} onValueChange={(value) => {
+                       if (value === 'all') {
+                         setReportFilter({...reportFilter, studentId: '', course: ''});
+                       } else if (students.find(s => s.studentId === value)) {
+                         setReportFilter({...reportFilter, studentId: value, course: ''});
+                       } else {
+                         setReportFilter({...reportFilter, course: value, studentId: ''});
+                       }
+                     }}>
                        <SelectTrigger>
-                         <SelectValue placeholder="All courses" />
+                         <SelectValue placeholder="All" />
                        </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All Courses</SelectItem>
-                         {Array.from(new Set(students.map(s => s.course).filter(Boolean))).sort().map((course) => (
-                           <SelectItem key={course} value={course!}>
-                             {course}
-                           </SelectItem>
-                         ))}
+                      <SelectContent className="bg-background z-50 max-h-[300px]">
+                        <SelectItem value="all">All</SelectItem>
+                        {reportFilter.userType === 'visitor' ? (
+                          <SelectItem value="VISITOR">All Visitors</SelectItem>
+                        ) : reportFilter.userType === 'student' || reportFilter.userType === 'all' ? (
+                          <>
+                            {Array.from(new Set(students.map(s => s.course).filter(Boolean))).sort().map((course) => (
+                              <SelectItem key={`course-${course}`} value={course!}>
+                                📚 {course} (Course)
+                              </SelectItem>
+                            ))}
+                            {students.map(student => (
+                              <SelectItem key={student.id} value={student.studentId}>
+                                👤 {student.name} {student.course ? `(${student.course})` : ''}
+                              </SelectItem>
+                            ))}
+                          </>
+                        ) : null}
                       </SelectContent>
                     </Select>
                   </div>

@@ -56,6 +56,7 @@ const EnhancedAdminPage = () => {
   const [reportFilter, setReportFilter] = useState({
     period: 'today',
     studentId: '',
+    userType: 'all',
     reportType: 'attendance'
   });
 
@@ -206,6 +207,18 @@ const EnhancedAdminPage = () => {
         break;
     }
 
+    // Filter by user type
+    if (reportFilter.userType && reportFilter.userType !== "all") {
+      if (reportFilter.userType === "visitor") {
+        filtered = filtered.filter(record => record.studentId === 'VISITOR');
+      } else if (reportFilter.userType === "student") {
+        filtered = filtered.filter(record => record.studentId !== 'VISITOR' && record.purpose !== 'Teacher');
+      } else if (reportFilter.userType === "teacher") {
+        filtered = filtered.filter(record => record.purpose === 'Teacher');
+      }
+    }
+
+    // Filter by specific student
     if (reportFilter.studentId && reportFilter.studentId !== "all") {
       filtered = filtered.filter(record => 
         record.studentId === reportFilter.studentId
@@ -657,14 +670,14 @@ const EnhancedAdminPage = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                   <div>
                     <Label>Report Type</Label>
                     <Select value={reportFilter.reportType} onValueChange={(value) => setReportFilter({...reportFilter, reportType: value})}>
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="bg-background z-50">
                         <SelectItem value="attendance">Attendance Report</SelectItem>
                         <SelectItem value="analytics">Analytics Report</SelectItem>
                       </SelectContent>
@@ -676,7 +689,7 @@ const EnhancedAdminPage = () => {
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="bg-background z-50">
                         <SelectItem value="today">Today</SelectItem>
                         <SelectItem value="yesterday">Yesterday</SelectItem>
                         <SelectItem value="week">This Week</SelectItem>
@@ -685,18 +698,42 @@ const EnhancedAdminPage = () => {
                     </Select>
                   </div>
                   <div>
-                    <Label>Student</Label>
+                    <Label>User Type</Label>
+                    <Select value={reportFilter.userType} onValueChange={(value) => setReportFilter({...reportFilter, userType: value, studentId: ''})}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-background z-50">
+                        <SelectItem value="all">All Users</SelectItem>
+                        <SelectItem value="student">Students</SelectItem>
+                        <SelectItem value="teacher">Teachers</SelectItem>
+                        <SelectItem value="visitor">Visitors</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label>Specific Person</Label>
                     <Select value={reportFilter.studentId} onValueChange={(value) => setReportFilter({...reportFilter, studentId: value})}>
                       <SelectTrigger>
-                        <SelectValue placeholder="All Students" />
+                        <SelectValue placeholder="All" />
                       </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All Students</SelectItem>
-                        {students.map(student => (
-                          <SelectItem key={student.id} value={student.studentId}>
-                            {student.name}
-                          </SelectItem>
-                        ))}
+                      <SelectContent className="bg-background z-50 max-h-[300px]">
+                        <SelectItem value="all">All</SelectItem>
+                        {reportFilter.userType === 'visitor' ? (
+                          <SelectItem value="VISITOR">All Visitors</SelectItem>
+                        ) : (
+                          students
+                            .filter(student => {
+                              if (reportFilter.userType === 'all') return true;
+                              if (reportFilter.userType === 'student') return true;
+                              return false;
+                            })
+                            .map(student => (
+                              <SelectItem key={student.id} value={student.studentId}>
+                                {student.name} {student.course ? `(${student.course})` : ''}
+                              </SelectItem>
+                            ))
+                        )}
                       </SelectContent>
                     </Select>
                   </div>
