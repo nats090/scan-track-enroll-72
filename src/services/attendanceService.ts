@@ -14,6 +14,8 @@ export interface DatabaseAttendanceRecord {
   purpose?: string;
   contact?: string;
   created_at: string;
+  course?: string;
+  year?: string;
 }
 
 // Generate unique ID for offline mode
@@ -43,7 +45,9 @@ export const attendanceService = {
             method: record.method as 'barcode' | 'biometric' | 'manual' | 'rfid',
             purpose: record.purpose,
             contact: record.contact,
-            library: (record as any).library as 'notre-dame' | 'ibed' || 'notre-dame'
+            library: (record as any).library as 'notre-dame' | 'ibed' || 'notre-dame',
+            course: (record as any).course,
+            year: (record as any).year
           }));
 
           // Preserve any offline-only (local_*) records until they are synced
@@ -99,7 +103,9 @@ export const attendanceService = {
             method: record.method,
             purpose: record.purpose,
             contact: record.contact,
-            library: record.library || 'notre-dame'
+            library: record.library || 'notre-dame',
+            course: record.course,
+            year: record.year
           })
           .select()
           .single();
@@ -116,7 +122,9 @@ export const attendanceService = {
             method: data.method as 'barcode' | 'biometric' | 'manual' | 'rfid',
             purpose: data.purpose,
             contact: data.contact,
-            library: (data as any).library as 'notre-dame' | 'ibed' || 'notre-dame'
+            library: (data as any).library as 'notre-dame' | 'ibed' || 'notre-dame',
+            course: (data as any).course,
+            year: (data as any).year
           };
           const updatedWithServerId = updatedRecords.map(r => 
             r.id === newRecord.id ? serverRecord : r
@@ -174,7 +182,9 @@ export const attendanceService = {
             method: record.method as 'barcode' | 'biometric' | 'manual' | 'rfid',
             purpose: record.purpose,
             contact: record.contact,
-            library: (record as any).library as 'notre-dame' | 'ibed' || 'notre-dame'
+            library: (record as any).library as 'notre-dame' | 'ibed' || 'notre-dame',
+            course: (record as any).course,
+            year: (record as any).year
           }));
 
           // Merge server records with local-only records (those with local_ prefix)

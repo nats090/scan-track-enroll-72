@@ -21,8 +21,17 @@ const AttendanceTable: React.FC<AttendanceTableProps> = ({ records, students, ty
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
   const endIndex = startIndex + ITEMS_PER_PAGE;
   const currentRecords = records.slice(startIndex, endIndex);
-  const getStudentInfo = (studentId: string) => {
-    const student = students.find(s => s.studentId === studentId);
+  const getStudentInfo = (record: AttendanceEntry) => {
+    // Use course/year from attendance record if available (stored at check-in time)
+    // Fall back to looking up in students table for old records
+    if (record.course || record.year) {
+      return {
+        course: record.course || 'N/A',
+        year: record.year || 'N/A'
+      };
+    }
+    
+    const student = students.find(s => s.studentId === record.studentId);
     return {
       course: student?.course || 'N/A',
       year: student?.year || 'N/A'
@@ -45,7 +54,7 @@ const AttendanceTable: React.FC<AttendanceTableProps> = ({ records, students, ty
           <TableBody>
             {currentRecords.length > 0 ? (
               currentRecords.map((record) => {
-                const studentInfo = record.studentId !== 'VISITOR' ? getStudentInfo(record.studentId) : { course: 'Visitor', year: '-' };
+                const studentInfo = record.studentId !== 'VISITOR' ? getStudentInfo(record) : { course: 'Visitor', year: '-' };
                 return (
                   <TableRow key={record.id}>
                     <TableCell className="font-medium">{record.studentName}</TableCell>

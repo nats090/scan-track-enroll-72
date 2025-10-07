@@ -90,7 +90,9 @@ const CheckOutPage = () => {
           timestamp: new Date(),
           type: 'check-out',
           barcode: barcode,
-          method: 'barcode'
+          method: 'barcode',
+          course: student.course,
+          year: student.year
         };
         
         await attendanceService.addAttendanceRecord(newRecord);
@@ -151,7 +153,9 @@ const CheckOutPage = () => {
           studentName: student.name,
           timestamp: new Date(),
           type: 'check-out',
-          method: 'rfid'
+          method: 'rfid',
+          course: student.course,
+          year: student.year
         };
         
         await attendanceService.addAttendanceRecord(newRecord);
@@ -232,7 +236,9 @@ const CheckOutPage = () => {
         studentName: finalStudentName,
         timestamp: new Date(),
         type: 'check-out',
-        method: 'manual'
+        method: 'manual',
+        course: student?.course,
+        year: student?.year
       };
       
       await attendanceService.addAttendanceRecord(newRecord);

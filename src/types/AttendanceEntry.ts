@@ -10,4 +10,6 @@ export interface AttendanceEntry {
   purpose?: string;
   contact?: string;
   library?: 'notre-dame' | 'ibed'; // Multi-library support
+  course?: string; // Student's course at check-in time
+  year?: string; // Student's year at check-in time
 }

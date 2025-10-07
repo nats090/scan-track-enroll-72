@@ -169,7 +169,9 @@ const CheckInDashboard = () => {
           studentName: student.name,
           timestamp: new Date(),
           type: 'check-in',
-          method: 'rfid'
+          method: 'rfid',
+          course: student.course,
+          year: student.year
         };
         
         await attendanceService.addAttendanceRecord(newRecord);
@@ -217,7 +219,9 @@ const CheckInDashboard = () => {
         studentName: student.name,
         timestamp: new Date(),
         type: 'check-in',
-        method: 'manual'
+        method: 'manual',
+        course: student.course,
+        year: student.year
       };
 
       await attendanceService.addAttendanceRecord(studentRecord);
