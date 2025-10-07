@@ -232,6 +232,13 @@ const EnhancedAdminPage = () => {
   const generateAdvancedReport = () => {
     const filteredRecords = getFilteredRecords();
     
+    // Helper function to determine user type
+    const getUserType = (record: AttendanceEntry) => {
+      if (record.studentId === 'VISITOR') return 'Visitor';
+      if (record.purpose === 'Teacher') return 'Teacher';
+      return 'Student';
+    };
+    
     if (reportFilter.reportType === 'analytics') {
       const uniqueStudents = new Set(filteredRecords.map(r => r.studentId)).size;
       const visitors = filteredRecords.filter(r => r.studentId === 'VISITOR').length;
@@ -251,14 +258,14 @@ const EnhancedAdminPage = () => {
         ['Average Visits/Day', avgVisitsPerDay.toFixed(1)],
         [''],
         ['Detailed Records'],
-        ['Student Name', 'Student ID', 'Date', 'Time', 'Type']
+        ['Student Name', 'Student ID', 'Date', 'Time', 'User Type']
       ].concat(
         filteredRecords.map(record => [
           record.studentName,
           record.studentId,
           format(new Date(record.timestamp), 'yyyy-MM-dd'),
           format(new Date(record.timestamp), 'HH:mm:ss'),
-          record.studentId === 'VISITOR' ? 'Visitor' : 'Student'
+          getUserType(record)
         ])
       ).map(row => row.join(',')).join('\n');
 
@@ -271,12 +278,13 @@ const EnhancedAdminPage = () => {
       window.URL.revokeObjectURL(url);
     } else {
       const csvContent = [
-        ['Student Name', 'Student ID', 'Date', 'Time', 'Purpose', 'Contact'],
+        ['Student Name', 'Student ID', 'Date', 'Time', 'User Type', 'Purpose', 'Contact'],
         ...filteredRecords.map(record => [
           record.studentName,
           record.studentId,
           format(new Date(record.timestamp), 'yyyy-MM-dd'),
           format(new Date(record.timestamp), 'HH:mm:ss'),
+          getUserType(record),
           record.purpose || 'Library Visit',
           record.contact || 'N/A'
         ])
