@@ -1,7 +1,7 @@
 {
   "appId": "com.library.authenticator.admin",
   "appName": "Library Admin Auth",
-  "webDir": ".",
+  "webDir": "www",
   "plugins": {
     "SplashScreen": {
       "launchShowDuration": 1000,

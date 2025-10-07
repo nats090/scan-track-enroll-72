@@ -1,7 +1,7 @@
 {
   "appId": "com.library.authenticator.staff",
   "appName": "Library Staff Auth",
-  "webDir": ".",
+  "webDir": "www",
   "plugins": {
     "SplashScreen": {
       "launchShowDuration": 1000,

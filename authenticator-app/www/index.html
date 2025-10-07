@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Library Authenticator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, hsl(120, 60%, 20%) 0%, hsl(120, 40%, 35%) 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+        }
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+        .header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        .timer-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .timer {
+            font-size: 48px;
+            font-weight: bold;
+            color: hsl(120, 60%, 20%);
+        }
+        .timer-label {
+            font-size: 14px;
+            color: #666;
+            margin-top: 8px;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: #e0e0e0;
+            border-radius: 2px;
+            margin-top: 12px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background: hsl(120, 60%, 20%);
+            transition: width 1s linear;
+        }
+        .code-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .role-label {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .code-display {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .code {
+            font-size: 32px;
+            font-weight: bold;
+            color: #333;
+            letter-spacing: 4px;
+        }
+        .copy-btn {
+            background: hsl(120, 60%, 20%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 20px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .copy-btn:active {
+            background: hsl(120, 60%, 15%);
+        }
+        .admin-card .copy-btn {
+            background: hsl(120, 60%, 20%);
+        }
+        .admin-card .copy-btn:active {
+            background: hsl(120, 60%, 15%);
+        }
+        .staff-card .copy-btn {
+            background: hsl(39, 100%, 50%);
+        }
+        .staff-card .copy-btn:active {
+            background: hsl(39, 100%, 45%);
+        }
+        .copied {
+            background: #10b981 !important;
+        }
+        .info-card {
+            background: rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 16px;
+            margin-top: auto;
+        }
+        .info-card p {
+            color: white;
+            font-size: 14px;
+            line-height: 1.6;
+            opacity: 0.9;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🔐 Library Authenticator</h1>
+        <p>Admin Access - All Roles</p>
+    </div>
+
+    <div class="timer-card">
+        <div class="timer" id="timer">30</div>
+        <div class="timer-label">seconds until refresh</div>
+        <div class="progress-bar">
+            <div class="progress-fill" id="progress"></div>
+        </div>
+    </div>
+
+    <div class="code-card admin-card">
+        <div class="role-label">Administrator</div>
+        <div class="code-display">
+            <div class="code" id="admin-code">------</div>
+            <button class="copy-btn" onclick="copyCode('admin')">Copy</button>
+        </div>
+    </div>
+
+    <div class="code-card staff-card">
+        <div class="role-label">Library Staff</div>
+        <div class="code-display">
+            <div class="code" id="librarian-code">------</div>
+            <button class="copy-btn" onclick="copyCode('librarian')">Copy</button>
+        </div>
+    </div>
+
+    <div class="info-card">
+        <p>✓ Works offline<br>✓ Codes refresh every 30 seconds<br>✓ Secure authentication for library system</p>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/otpauth@9.4.1/dist/otpauth.umd.min.js"></script>
+    <script>
+        // TOTP secrets - these should match your database
+        const SECRETS = {
+            admin: 'JBSWY3DPEHPK3PXP',
+            librarian: 'JBSWY3DPEHPK3PXQ'
+        };
+
+        let codes = {};
+
+        function generateCode(secret) {
+            try {
+                const totp = new OTPAuth.TOTP({
+                    secret: secret,
+                    digits: 6,
+                    period: 30
+                });
+                return totp.generate();
+            } catch (error) {
+                console.error('Error generating code:', error);
+                return '------';
+            }
+        }
+
+        function updateCodes() {
+            codes.admin = generateCode(SECRETS.admin);
+            codes.librarian = generateCode(SECRETS.librarian);
+            
+            document.getElementById('admin-code').textContent = codes.admin;
+            document.getElementById('librarian-code').textContent = codes.librarian;
+        }
+
+        function updateTimer() {
+            const now = Math.floor(Date.now() / 1000);
+            const timeLeft = 30 - (now % 30);
+            const progress = (timeLeft / 30) * 100;
+            
+            document.getElementById('timer').textContent = timeLeft;
+            document.getElementById('progress').style.width = progress + '%';
+            
+            if (timeLeft === 30) {
+                updateCodes();
+            }
+        }
+
+        function copyCode(role) {
+            const code = codes[role];
+            const btn = event.target;
+            
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(code).then(() => {
+                    btn.textContent = 'Copied!';
+                    btn.classList.add('copied');
+                    setTimeout(() => {
+                        btn.textContent = 'Copy';
+                        btn.classList.remove('copied');
+                    }, 2000);
+                });
+            } else {
+                // Fallback for older browsers
+                const textarea = document.createElement('textarea');
+                textarea.value = code;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+                
+                btn.textContent = 'Copied!';
+                btn.classList.add('copied');
+                setTimeout(() => {
+                    btn.textContent = 'Copy';
+                    btn.classList.remove('copied');
+                }, 2000);
+            }
+        }
+
+        // Initialize
+        updateCodes();
+        updateTimer();
+        
+        // Update every second
+        setInterval(updateTimer, 1000);
+    </script>
+</body>
+</html>
