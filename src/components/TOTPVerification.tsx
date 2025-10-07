@@ -7,6 +7,7 @@ import { Shield, AlertCircle, QrCode } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import QRCode from 'qrcode';
 import { Separator } from '@/components/ui/separator';
+import { supabase } from '@/integrations/supabase/client';
 
 interface TOTPVerificationProps {
   role: 'admin' | 'librarian';
@@ -19,8 +20,9 @@ const TOTPVerification = ({ role, secret, onVerified }: TOTPVerificationProps) =
   const [error, setError] = useState('');
   const [qrCodeUrl, setQrCodeUrl] = useState('');
   const [currentCode, setCurrentCode] = useState('');
+  const [sessionId, setSessionId] = useState('');
 
-  // Generate QR code with current TOTP
+  // Generate QR code with current TOTP and create verification session
   useEffect(() => {
     if (!secret) return;
 
@@ -34,8 +36,25 @@ const TOTPVerification = ({ role, secret, onVerified }: TOTPVerificationProps) =
       const code = totp.generate();
       setCurrentCode(code);
 
-      // Format: role:code (e.g., "admin:123456")
-      const qrData = `${role}:${code}`;
+      // Generate unique session ID
+      const newSessionId = `${role}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      setSessionId(newSessionId);
+
+      // Create verification session in database
+      const { error: dbError } = await supabase
+        .from('verification_sessions')
+        .insert({
+          session_id: newSessionId,
+          role: role,
+          verified: false
+        });
+
+      if (dbError) {
+        console.error('Error creating verification session:', dbError);
+      }
+
+      // Format: sessionId:role:code (e.g., "abc123:admin:123456")
+      const qrData = `${newSessionId}:${role}:${code}`;
       
       try {
         const url = await QRCode.toDataURL(qrData, {
@@ -58,6 +77,38 @@ const TOTPVerification = ({ role, secret, onVerified }: TOTPVerificationProps) =
     const interval = setInterval(generateQR, 30000);
     return () => clearInterval(interval);
   }, [secret, role]);
+
+  // Poll for verification from mobile app
+  useEffect(() => {
+    if (!sessionId) return;
+
+    const pollForVerification = async () => {
+      const { data, error } = await supabase
+        .from('verification_sessions')
+        .select('verified')
+        .eq('session_id', sessionId)
+        .single();
+
+      if (data?.verified) {
+        // Mobile app has verified! Proceed with login
+        sessionStorage.setItem(`totp_verified_${role}`, Date.now().toString());
+        onVerified();
+      }
+    };
+
+    // Poll every 2 seconds
+    const pollInterval = setInterval(pollForVerification, 2000);
+
+    // Stop polling after 5 minutes
+    const timeout = setTimeout(() => {
+      clearInterval(pollInterval);
+    }, 5 * 60 * 1000);
+
+    return () => {
+      clearInterval(pollInterval);
+      clearTimeout(timeout);
+    };
+  }, [sessionId, role, onVerified]);
 
   const verifyCode = () => {
     try {
