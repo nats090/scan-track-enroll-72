@@ -579,53 +579,213 @@ const EnhancedLibraryStaffPage = () => {
                 {/* Edit User Modal */}
                 {editingStudent && (
                   <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-                    <Card className="w-full max-w-md">
+                    <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto">
                       <CardHeader>
                         <CardTitle>Edit User Information</CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-4">
-                        <div>
-                          <Label>Name</Label>
-                          <Input
-                            value={editingStudent.name}
-                            onChange={(e) => setEditingStudent({...editingStudent, name: e.target.value})}
-                          />
-                        </div>
-                        <div>
-                          <Label>Student ID</Label>
-                          <Input
-                            value={editingStudent.studentId}
-                            onChange={(e) => setEditingStudent({...editingStudent, studentId: e.target.value})}
-                          />
-                        </div>
-                        <div>
-                          <Label>Email</Label>
-                          <Input
-                            value={editingStudent.email || ''}
-                            onChange={(e) => setEditingStudent({...editingStudent, email: e.target.value})}
-                          />
-                        </div>
-                        <div>
-                          <Label>Course</Label>
-                          <Input
-                            value={editingStudent.course || ''}
-                            onChange={(e) => setEditingStudent({...editingStudent, course: e.target.value})}
-                          />
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <Label>User Type</Label>
+                            <Select
+                              value={editingStudent.userType || 'student'}
+                              onValueChange={(value: 'student' | 'teacher') => 
+                                setEditingStudent({
+                                  ...editingStudent, 
+                                  userType: value,
+                                  course: value === 'teacher' ? 'Teacher' : editingStudent.course,
+                                  year: value === 'teacher' ? 'N/A' : editingStudent.year
+                                })
+                              }
+                            >
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="student">👨‍🎓 Student</SelectItem>
+                                <SelectItem value="teacher">👨‍🏫 Teacher</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+
+                          {editingStudent.userType === 'student' && (
+                            <div>
+                              <Label>Student Type</Label>
+                              <Select
+                                value={editingStudent.studentType || 'college'}
+                                onValueChange={(value: 'ibed' | 'college') => 
+                                  setEditingStudent({...editingStudent, studentType: value})
+                                }
+                              >
+                                <SelectTrigger>
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="ibed">🏫 IBED</SelectItem>
+                                  <SelectItem value="college">🎓 COLLEGE</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          )}
+
+                          <div>
+                            <Label>Name</Label>
+                            <Input
+                              value={editingStudent.name}
+                              onChange={(e) => setEditingStudent({...editingStudent, name: e.target.value})}
+                            />
+                          </div>
+
+                          <div>
+                            <Label>{editingStudent.userType === 'teacher' ? 'Teacher ID' : 'Student ID'}</Label>
+                            <Input
+                              value={editingStudent.studentId}
+                              onChange={(e) => setEditingStudent({...editingStudent, studentId: e.target.value})}
+                            />
+                          </div>
+
+                          {editingStudent.userType === 'student' && (
+                            <div>
+                              <Label>Level</Label>
+                              <Select
+                                value={editingStudent.level || 'college'}
+                                onValueChange={(value) => 
+                                  setEditingStudent({...editingStudent, level: value as any})
+                                }
+                              >
+                                <SelectTrigger>
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {editingStudent.studentType === 'ibed' ? (
+                                    <>
+                                      <SelectItem value="elementary">Elementary</SelectItem>
+                                      <SelectItem value="junior-high">Junior High</SelectItem>
+                                      <SelectItem value="senior-high">Senior High</SelectItem>
+                                    </>
+                                  ) : (
+                                    <SelectItem value="college">College</SelectItem>
+                                  )}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          )}
+
+                          {editingStudent.userType === 'student' && 
+                           !(editingStudent.studentType === 'ibed' && 
+                             (editingStudent.level === 'elementary' || editingStudent.level === 'junior-high')) && (
+                            <div>
+                              <Label>{editingStudent.level === 'senior-high' ? 'Strand' : 'Department'}</Label>
+                              <Input
+                                value={editingStudent.department || ''}
+                                onChange={(e) => setEditingStudent({...editingStudent, department: e.target.value})}
+                                placeholder={editingStudent.level === 'senior-high' ? 'Enter strand' : 'Enter department'}
+                              />
+                            </div>
+                          )}
+
+                          {editingStudent.userType === 'student' && 
+                           editingStudent.level === 'senior-high' && (
+                            <div>
+                              <Label>Shift</Label>
+                              <Select
+                                value={editingStudent.shift || 'morning'}
+                                onValueChange={(value: 'morning' | 'afternoon') => 
+                                  setEditingStudent({...editingStudent, shift: value})
+                                }
+                              >
+                                <SelectTrigger>
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="morning">Morning Shift</SelectItem>
+                                  <SelectItem value="afternoon">Afternoon Shift</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          )}
+
+                          {editingStudent.userType === 'student' && 
+                           !(editingStudent.studentType === 'ibed' && 
+                             (editingStudent.level === 'elementary' || editingStudent.level === 'junior-high')) && (
+                            <div>
+                              <Label>Course/Program</Label>
+                              <Input
+                                value={editingStudent.course || ''}
+                                onChange={(e) => setEditingStudent({...editingStudent, course: e.target.value})}
+                              />
+                            </div>
+                          )}
+
+                          {editingStudent.userType === 'student' && (
+                            <div>
+                              <Label>Year</Label>
+                              {editingStudent.studentType === 'ibed' ? (
+                                <Select
+                                  value={editingStudent.year || ''}
+                                  onValueChange={(value) => 
+                                    setEditingStudent({...editingStudent, year: value})
+                                  }
+                                >
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Select year" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="Kinder">Kinder</SelectItem>
+                                    <SelectItem value="Grade 1">Grade 1</SelectItem>
+                                    <SelectItem value="Grade 2">Grade 2</SelectItem>
+                                    <SelectItem value="Grade 3">Grade 3</SelectItem>
+                                    <SelectItem value="Grade 4">Grade 4</SelectItem>
+                                    <SelectItem value="Grade 5">Grade 5</SelectItem>
+                                    <SelectItem value="Grade 6">Grade 6</SelectItem>
+                                    <SelectItem value="Grade 7">Grade 7</SelectItem>
+                                    <SelectItem value="Grade 8">Grade 8</SelectItem>
+                                    <SelectItem value="Grade 9">Grade 9</SelectItem>
+                                    <SelectItem value="Grade 10">Grade 10</SelectItem>
+                                    <SelectItem value="Grade 11">Grade 11</SelectItem>
+                                    <SelectItem value="Grade 12">Grade 12</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              ) : (
+                                <Select
+                                  value={editingStudent.year || ''}
+                                  onValueChange={(value) => 
+                                    setEditingStudent({...editingStudent, year: value})
+                                  }
+                                >
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Select year" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="1st Year">1st Year</SelectItem>
+                                    <SelectItem value="2nd Year">2nd Year</SelectItem>
+                                    <SelectItem value="3rd Year">3rd Year</SelectItem>
+                                    <SelectItem value="4th Year">4th Year</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              )}
+                            </div>
+                          )}
+
+                          <div>
+                            <Label>Email</Label>
+                            <Input
+                              value={editingStudent.email || ''}
+                              onChange={(e) => setEditingStudent({...editingStudent, email: e.target.value})}
+                            />
+                          </div>
+
+                          <div>
+                            <Label>RFID Key</Label>
+                            <Input
+                              value={editingStudent.rfid || ''}
+                              onChange={(e) => setEditingStudent({...editingStudent, rfid: e.target.value})}
+                              placeholder="Scan or enter RFID key"
+                            />
+                          </div>
                         </div>
                         
-                        {/* RFID Section */}
-                        <div>
-                          <Label htmlFor="editRfid">RFID Key</Label>
-                          <Input
-                            id="editRfid"
-                            value={editingStudent.rfid || ''}
-                            onChange={(e) => setEditingStudent({...editingStudent, rfid: e.target.value})}
-                            placeholder="Scan or enter RFID key"
-                            className="mt-1"
-                          />
-                        </div>
-                        
-                        <div className="flex gap-2">
+                        <div className="flex gap-2 pt-4">
                           <Button onClick={handleEditStudent} className="flex-1">
                             Save Changes
                           </Button>
@@ -636,11 +796,11 @@ const EnhancedLibraryStaffPage = () => {
                           >
                             Cancel
                           </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </div>
-                )}
+                         </div>
+                       </CardContent>
+                     </Card>
+                   </div>
+                 )}
               </CardContent>
             </Card>
           </TabsContent>
