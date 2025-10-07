@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import BackButton from '@/components/BackButton';
 import RFIDDataManager from '@/components/RFIDDataManager';
+// Import StudentRegistration component
 import StudentRegistration from '@/components/StudentRegistration';
 import { attendanceService } from '@/services/attendanceService';
 import { supabaseService } from '@/services/supabaseService';
@@ -456,26 +457,16 @@ const EnhancedAdminPage = () => {
           </TabsList>
 
           <TabsContent value="add-student">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <UserPlus className="h-6 w-6" />
-                  Add New User (Student or Teacher)
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <StudentRegistration
-                  onStudentRegistered={(student) => {
-                    toast({
-                      title: "Success",
-                      description: `${student.userType === 'teacher' ? 'Teacher' : 'Student'} ${student.name} has been registered`,
-                    });
-                    setActiveTab('edit-students');
-                  }}
-                  onClose={() => {}}
-                />
-              </CardContent>
-            </Card>
+            <StudentRegistration
+              onStudentRegistered={(student) => {
+                toast({
+                  title: "Success",
+                  description: `${student.userType === 'teacher' ? 'Teacher' : 'Student'} ${student.name} has been registered`,
+                });
+                setActiveTab('edit-students');
+              }}
+              onClose={() => {}}
+            />
           </TabsContent>
 
           <TabsContent value="edit-students">

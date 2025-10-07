@@ -1,4 +1,4 @@
-
+// StudentRegistration Component - Handles student and teacher registration
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
