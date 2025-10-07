@@ -10,6 +10,7 @@ export const syncService = {
     const localData = await getFromLocalStorage();
     let studentsAdded = 0;
     let recordsAdded = 0;
+    const studentsToKeep: any[] = [];
 
     console.log('Starting sync from local storage to Supabase...');
 
@@ -20,14 +21,27 @@ export const syncService = {
         if (!existingStudent) {
           await studentService.addStudent(student);
           studentsAdded++;
-          console.log(`Synced student: ${student.name}`);
+          console.log(`✅ Synced new student: ${student.name} (${student.studentId})`);
+        } else {
+          console.log(`⚠️ Student ${student.name} with ID ${student.studentId} already exists as "${existingStudent.name}" - skipping duplicate`);
+          // Don't keep this student in offline storage since it's a duplicate
+          continue;
         }
-      } catch (error) {
+      } catch (error: any) {
+        // Check if it's a duplicate key error
+        if (error?.message?.includes('duplicate key') || error?.code === '23505') {
+          console.error(`❌ Duplicate student ID detected: ${student.name} (${student.studentId}) - removing from sync queue`);
+          // Don't keep this student in offline storage
+          continue;
+        }
         console.error(`Failed to sync student ${student.name}:`, error);
+        // Keep this student for retry on other errors
+        studentsToKeep.push(student);
       }
     }
 
     // Sync attendance records
+    const recordsToKeep: any[] = [];
     for (const record of localData.attendanceRecords) {
       try {
         const timestamp = typeof record.timestamp === 'string' ? new Date(record.timestamp) : record.timestamp;
@@ -37,15 +51,31 @@ export const syncService = {
           timestamp
         });
         recordsAdded++;
-        console.log(`Synced attendance record for: ${record.studentName}`);
-      } catch (error) {
+        console.log(`✅ Synced attendance record for: ${record.studentName}`);
+        // Don't keep successfully synced records
+      } catch (error: any) {
+        // Check if it's a duplicate or already exists
+        if (error?.message?.includes('duplicate') || error?.code === '23505') {
+          console.log(`⚠️ Attendance record already synced for ${record.studentName} - removing from queue`);
+          continue;
+        }
         console.error(`Failed to sync attendance record for ${record.studentName}:`, error);
+        // Keep this record for retry on other errors
+        recordsToKeep.push(record);
       }
     }
 
-    saveToLocalStorage({ lastSync: new Date().toISOString() });
+    // Update localStorage with only unsynced records
+    saveToLocalStorage({ 
+      students: studentsToKeep,
+      attendanceRecords: recordsToKeep,
+      lastSync: new Date().toISOString() 
+    });
 
-    console.log(`Sync completed: ${studentsAdded} students, ${recordsAdded} records added`);
+    console.log(`✅ Sync completed: ${studentsAdded} students, ${recordsAdded} records added`);
+    if (studentsToKeep.length > 0 || recordsToKeep.length > 0) {
+      console.log(`⏳ ${studentsToKeep.length} students and ${recordsToKeep.length} records kept for retry`);
+    }
     return { studentsAdded, recordsAdded };
   },
 
