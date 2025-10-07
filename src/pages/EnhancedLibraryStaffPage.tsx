@@ -59,7 +59,7 @@ const EnhancedLibraryStaffPage = () => {
   // Report filter states
   const [reportFilter, setReportFilter] = useState({
     period: 'today',
-    studentId: '',
+    course: '',
     reportType: 'attendance'
   });
 
@@ -194,11 +194,12 @@ const EnhancedLibraryStaffPage = () => {
         break;
     }
 
-    // Filter by student if selected
-    if (reportFilter.studentId && reportFilter.studentId !== "all") {
-      filtered = filtered.filter(record => 
-        record.studentId === reportFilter.studentId
-      );
+    // Filter by course if selected
+    if (reportFilter.course && reportFilter.course !== "all") {
+      filtered = filtered.filter(record => {
+        const student = students.find(s => s.studentId === record.studentId);
+        return student?.course === reportFilter.course;
+      });
     }
 
     return filtered;
@@ -719,16 +720,16 @@ const EnhancedLibraryStaffPage = () => {
                     </Select>
                   </div>
                   <div>
-                    <Label>Specific Student (Optional)</Label>
-                     <Select value={reportFilter.studentId} onValueChange={(value) => setReportFilter({...reportFilter, studentId: value})}>
+                    <Label>Specific Course/Program (Optional)</Label>
+                     <Select value={reportFilter.course} onValueChange={(value) => setReportFilter({...reportFilter, course: value})}>
                        <SelectTrigger>
-                         <SelectValue placeholder="All students" />
+                         <SelectValue placeholder="All courses" />
                        </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="all">All Students</SelectItem>
-                         {students.slice(0, 20).map((student) => (
-                           <SelectItem key={student.id} value={student.studentId || 'no-id'}>
-                             {student.name} ({student.studentId || 'No ID'})
+                        <SelectItem value="all">All Courses</SelectItem>
+                         {Array.from(new Set(students.map(s => s.course).filter(Boolean))).sort().map((course) => (
+                           <SelectItem key={course} value={course!}>
+                             {course}
                            </SelectItem>
                          ))}
                       </SelectContent>
