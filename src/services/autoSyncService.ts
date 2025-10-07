@@ -12,6 +12,11 @@ class AutoSyncService {
   constructor() {
     this.setupOnlineListener();
     this.startAutoSync();
+    // Immediately check for pending offline data on startup
+    if (this.isOnline) {
+      console.log('App started online - checking for pending offline data');
+      this.performSync();
+    }
   }
 
   private setupOnlineListener() {
@@ -38,11 +43,19 @@ class AutoSyncService {
 
   private async performSync() {
     try {
+      const localData = await getFromLocalStorage();
+      const pendingStudents = localData.students.filter(s => s.id.toString().startsWith('local_'));
+      const pendingRecords = localData.attendanceRecords.filter(r => r.id.toString().startsWith('local_'));
+      
+      if (pendingStudents.length > 0 || pendingRecords.length > 0) {
+        console.log(`📤 Syncing ${pendingStudents.length} students and ${pendingRecords.length} attendance records to server...`);
+      }
+      
       await this.syncLocalToSupabase();
       await this.syncSupabaseToLocal();
       console.log('Auto-sync completed successfully');
     } catch (error) {
-      console.error('Auto-sync failed:', error);
+      console.error('❌ Auto-sync failed:', error);
     }
   }
 
@@ -99,6 +112,8 @@ class AutoSyncService {
     const localRecords = localData.attendanceRecords.filter(r => r.id.toString().startsWith('local_'));
     for (const record of localRecords) {
       try {
+        console.log(`📤 Uploading attendance record: ${record.studentName} (${record.type}) at ${record.timestamp}`);
+        
         const { data, error } = await supabase
           .from('attendance_records')
           .insert({
@@ -115,7 +130,12 @@ class AutoSyncService {
           .select()
           .single();
 
-        if (!error && data) {
+        if (error) {
+          console.error(`❌ Failed to sync attendance record:`, error);
+          throw error;
+        }
+
+        if (data) {
           // Replace local record with server version
           const updatedRecords = localData.attendanceRecords.map(r =>
             r.id === record.id ? {
@@ -133,10 +153,11 @@ class AutoSyncService {
           );
           localData.attendanceRecords = updatedRecords;
           syncCount++;
-          console.log(`Synced attendance record for: ${record.studentName}`);
+          console.log(`✅ Successfully synced attendance record for: ${record.studentName} (${record.type})`);
         }
       } catch (error) {
-        console.error('Failed to sync attendance record:', error);
+        console.error('❌ Failed to sync attendance record:', error);
+        // Keep the record in local storage for retry
       }
     }
     // Sync updates to existing students that were edited offline (_dirty flag)
@@ -182,12 +203,12 @@ class AutoSyncService {
     }
 
     if (syncCount > 0) {
-      saveToLocalStorage({
+      await saveToLocalStorage({
         students: localData.students,
         attendanceRecords: localData.attendanceRecords,
         lastSync: new Date().toISOString()
       });
-      console.log(`Auto-sync completed: ${syncCount} items uploaded to server`);
+      console.log(`✅ Auto-sync completed: ${syncCount} items uploaded to server`);
     }
   }
 
