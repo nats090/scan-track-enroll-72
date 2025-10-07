@@ -127,6 +127,80 @@
             line-height: 1.6;
             opacity: 0.9;
         }
+        .scanner-btn {
+            width: 100%;
+            background: white;
+            color: hsl(120, 60%, 20%);
+            border: none;
+            border-radius: 12px;
+            padding: 16px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .scanner-btn:active {
+            opacity: 0.9;
+        }
+        .scanner-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.9);
+            z-index: 1000;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .scanner-modal.active {
+            display: flex;
+        }
+        #scanner-video {
+            width: 100%;
+            max-width: 400px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+        .scanner-controls {
+            display: flex;
+            gap: 12px;
+        }
+        .close-scanner {
+            background: white;
+            color: #333;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 24px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .scan-result {
+            background: white;
+            color: #333;
+            padding: 16px;
+            border-radius: 8px;
+            margin-top: 12px;
+            text-align: center;
+            font-weight: 600;
+        }
+        .scan-result.success {
+            background: #10b981;
+            color: white;
+        }
+        .scan-result.error {
+            background: #ef4444;
+            color: white;
+        }
     </style>
 </head>
 <body>
@@ -142,6 +216,11 @@
             <div class="progress-fill" id="progress"></div>
         </div>
     </div>
+
+    <button class="scanner-btn" onclick="openScanner()">
+        <span>📷</span>
+        <span>Scan QR Code</span>
+    </button>
 
     <div class="code-card admin-card">
         <div class="role-label">Administrator</div>
@@ -163,7 +242,16 @@
         <p>✓ Works offline<br>✓ Codes refresh every 30 seconds<br>✓ Secure authentication for library system</p>
     </div>
 
+    <div class="scanner-modal" id="scanner-modal">
+        <video id="scanner-video" autoplay playsinline></video>
+        <div class="scanner-controls">
+            <button class="close-scanner" onclick="closeScanner()">Close Scanner</button>
+        </div>
+        <div id="scan-result"></div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/otpauth@9.4.1/dist/otpauth.umd.min.js"></script>
+    <script src="https://unpkg.com/@zxing/library@0.21.3/umd/index.min.js"></script>
     <script>
         // TOTP secrets - these should match your database
         const SECRETS = {
@@ -245,6 +333,106 @@
         
         // Update every second
         setInterval(updateTimer, 1000);
+
+        // QR Scanner functionality
+        let codeReader = null;
+        let currentStream = null;
+
+        async function openScanner() {
+            const modal = document.getElementById('scanner-modal');
+            const video = document.getElementById('scanner-video');
+            const resultDiv = document.getElementById('scan-result');
+            
+            modal.classList.add('active');
+            resultDiv.textContent = '';
+            resultDiv.className = 'scan-result';
+            
+            try {
+                codeReader = new ZXing.BrowserQRCodeReader();
+                const videoInputDevices = await codeReader.listVideoInputDevices();
+                
+                if (videoInputDevices.length === 0) {
+                    resultDiv.textContent = 'No camera found';
+                    resultDiv.className = 'scan-result error';
+                    return;
+                }
+                
+                // Use back camera if available
+                const selectedDeviceId = videoInputDevices.find(device => 
+                    device.label.toLowerCase().includes('back') || 
+                    device.label.toLowerCase().includes('rear')
+                )?.deviceId || videoInputDevices[0].deviceId;
+                
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: { deviceId: selectedDeviceId }
+                });
+                
+                currentStream = stream;
+                video.srcObject = stream;
+                
+                // Start scanning
+                codeReader.decodeFromVideoDevice(selectedDeviceId, 'scanner-video', (result, err) => {
+                    if (result) {
+                        handleScannedCode(result.getText());
+                    }
+                });
+            } catch (error) {
+                console.error('Scanner error:', error);
+                resultDiv.textContent = 'Camera access denied';
+                resultDiv.className = 'scan-result error';
+            }
+        }
+
+        function closeScanner() {
+            const modal = document.getElementById('scanner-modal');
+            const video = document.getElementById('scanner-video');
+            
+            if (currentStream) {
+                currentStream.getTracks().forEach(track => track.stop());
+                currentStream = null;
+            }
+            
+            if (codeReader) {
+                codeReader.reset();
+            }
+            
+            video.srcObject = null;
+            modal.classList.remove('active');
+        }
+
+        function handleScannedCode(scannedData) {
+            const resultDiv = document.getElementById('scan-result');
+            
+            try {
+                // Parse the scanned QR code (format: admin:123456 or librarian:123456)
+                const [role, scannedCode] = scannedData.split(':');
+                
+                if (!role || !scannedCode) {
+                    resultDiv.textContent = 'Invalid QR code format';
+                    resultDiv.className = 'scan-result error';
+                    return;
+                }
+                
+                // Verify against current codes
+                const currentCode = codes[role];
+                
+                if (scannedCode === currentCode) {
+                    resultDiv.textContent = '✓ Access Granted!';
+                    resultDiv.className = 'scan-result success';
+                    
+                    setTimeout(() => {
+                        closeScanner();
+                    }, 2000);
+                } else {
+                    resultDiv.textContent = 'Code expired or invalid';
+                    resultDiv.className = 'scan-result error';
+                }
+            } catch (error) {
+                console.error('Scan error:', error);
+                resultDiv.textContent = 'Error reading QR code';
+                resultDiv.className = 'scan-result error';
+            }
+        }
     </script>
 </body>
 </html>
