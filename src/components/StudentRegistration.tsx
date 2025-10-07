@@ -308,11 +308,20 @@ const form = useForm<RegistrationForm>({
                   name="name"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Full Name</FormLabel>
+                      <FormLabel>Full Name *</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter full name" {...field} required pattern="^[^\\s]+\\s+[^\\s]+.*$" title="Enter at least first and last name" />
+                        <Input 
+                          placeholder="Enter first and last name (e.g., Juan Dela Cruz)" 
+                          {...field} 
+                          required 
+                          pattern="^[^\\s]+\\s+[^\\s]+.*$" 
+                          title="Please enter at least first name and last name separated by space" 
+                        />
                       </FormControl>
                       <FormMessage />
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Please enter at least first and last name (e.g., "Juan Cruz")
+                      </p>
                     </FormItem>
                   )}
                 />
