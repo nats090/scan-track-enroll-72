@@ -331,9 +331,14 @@ const form = useForm<RegistrationForm>({
                     <FormItem>
                       <FormLabel>{watchedUserType === 'teacher' ? 'Teacher ID' : 'Student ID'}</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter ID (e.g., 2021-033)" {...field} required pattern="^\\d{4}-\\d{3,4}$" title="Format: YYYY-XXX or YYYY-XXXX (e.g., 2021-033)" />
+                        <Input 
+                          placeholder="Format: YYYY-XXX or YYYY-XXXX (e.g., 2021-033)" 
+                          {...field}
+                          onBlur={() => field.onChange((field.value || '').trim())}
+                        />
                       </FormControl>
                       <FormMessage />
+                      <p className="text-xs text-muted-foreground mt-1">Format: YYYY-XXX or YYYY-XXXX (e.g., 2021-033)</p>
                     </FormItem>
                   )}
                 />
