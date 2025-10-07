@@ -312,10 +312,8 @@ const form = useForm<RegistrationForm>({
                       <FormControl>
                         <Input 
                           placeholder="Enter first and last name (e.g., Juan Dela Cruz)" 
-                          {...field} 
-                          required 
-                          pattern="^[^\\s]+\\s+[^\\s]+.*$" 
-                          title="Please enter at least first name and last name separated by space" 
+                          {...field}
+                          onBlur={() => field.onChange((field.value || '').trim())}
                         />
                       </FormControl>
                       <FormMessage />
