@@ -42,6 +42,7 @@ const EnhancedAdminPage = () => {
   const [activeTab, setActiveTab] = useState('add-student');
   const [courseFilter, setCourseFilter] = useState<string>('all');
   const [yearFilter, setYearFilter] = useState<string>('all');
+  const [userTypeFilter, setUserTypeFilter] = useState<string>('all');
   
   const [newStudent, setNewStudent] = useState({
     name: '',
@@ -314,7 +315,14 @@ const EnhancedAdminPage = () => {
       student.studentId.toLowerCase().includes(searchTerm.toLowerCase())
     )
     .filter(student => (courseFilter === 'all' || (student.course || student.department || '').toLowerCase() === courseFilter.toLowerCase()))
-    .filter(student => (yearFilter === 'all' || (student.year || '').toLowerCase() === yearFilter.toLowerCase()));
+    .filter(student => (yearFilter === 'all' || (student.year || '').toLowerCase() === yearFilter.toLowerCase()))
+    .filter(student => {
+      if (userTypeFilter === 'all') return true;
+      if (userTypeFilter === 'teacher') return student.userType === 'teacher';
+      if (userTypeFilter === 'college') return student.userType === 'student' && student.studentType === 'college';
+      if (userTypeFilter === 'ibed') return student.userType === 'student' && student.studentType === 'ibed';
+      return true;
+    });
 
   const todayRecords = attendanceRecords.filter(record => 
     new Date(record.timestamp).toDateString() === new Date().toDateString()
@@ -483,6 +491,17 @@ const EnhancedAdminPage = () => {
                       onChange={(e) => setSearchTerm(e.target.value)}
                     />
                   </div>
+                  <Select value={userTypeFilter} onValueChange={setUserTypeFilter}>
+                    <SelectTrigger className="w-full md:w-48">
+                      <SelectValue placeholder="Filter by user type" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-background z-50">
+                      <SelectItem value="all">All Users</SelectItem>
+                      <SelectItem value="college">🎓 College Students</SelectItem>
+                      <SelectItem value="ibed">🏫 IBED Students</SelectItem>
+                      <SelectItem value="teacher">👨‍🏫 Teachers</SelectItem>
+                    </SelectContent>
+                  </Select>
                   <Select value={courseFilter} onValueChange={setCourseFilter}>
                     <SelectTrigger className="w-full md:w-48">
                       <SelectValue placeholder="Filter by course" />
