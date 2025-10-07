@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import BackButton from '@/components/BackButton';
 import RFIDDataManager from '@/components/RFIDDataManager';
+import StudentRegistration from '@/components/StudentRegistration';
 import { attendanceService } from '@/services/attendanceService';
 import { supabaseService } from '@/services/supabaseService';
 import { Student } from '@/types/Student';
@@ -447,7 +448,7 @@ const EnhancedAdminPage = () => {
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="grid w-full grid-cols-5">
-            <TabsTrigger value="add-student">Add Student</TabsTrigger>
+            <TabsTrigger value="add-student">Add User</TabsTrigger>
             <TabsTrigger value="edit-students">Manage Students</TabsTrigger>
             <TabsTrigger value="rfid-manager">RFID Manager</TabsTrigger>
             <TabsTrigger value="reports">Advanced Reports</TabsTrigger>
@@ -459,91 +460,20 @@ const EnhancedAdminPage = () => {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <UserPlus className="h-6 w-6" />
-                  Add New Student
+                  Add New User (Student or Teacher)
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="name">Student Name *</Label>
-                    <Input
-                      id="name"
-                      value={newStudent.name}
-                      onChange={(e) => setNewStudent({...newStudent, name: e.target.value})}
-                      placeholder="Enter full name"
-                      className="text-lg p-3"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="studentId">Student ID *</Label>
-                    <Input
-                      id="studentId"
-                      value={newStudent.studentId}
-                      onChange={(e) => setNewStudent({...newStudent, studentId: e.target.value})}
-                      placeholder="Enter student ID (for RF ID)"
-                      className="text-lg p-3"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="email">Email *</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      value={newStudent.email}
-                      onChange={(e) => setNewStudent({...newStudent, email: e.target.value})}
-                      placeholder="Enter email"
-                      className="text-lg p-3"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="course">Course *</Label>
-                    <Input
-                      id="course"
-                      value={newStudent.course}
-                      onChange={(e) => setNewStudent({...newStudent, course: e.target.value})}
-                      placeholder="Enter course/program"
-                      className="text-lg p-3"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="year">Year *</Label>
-                    <Select value={newStudent.year} onValueChange={(value) => setNewStudent({...newStudent, year: value})}>
-                      <SelectTrigger className="text-lg p-3">
-                        <SelectValue placeholder="Select year" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="1st Year">1st Year</SelectItem>
-                        <SelectItem value="2nd Year">2nd Year</SelectItem>
-                        <SelectItem value="3rd Year">3rd Year</SelectItem>
-                        <SelectItem value="4th Year">4th Year</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label htmlFor="contactNumber">Contact Number *</Label>
-                    <Input
-                      id="contactNumber"
-                      value={newStudent.contactNumber}
-                      onChange={(e) => setNewStudent({...newStudent, contactNumber: e.target.value})}
-                      placeholder="Enter contact number"
-                      className="text-lg p-3"
-                    />
-                  </div>
-                  <div className="md:col-span-2">
-                    <Label htmlFor="rfid">RFID Tag (Optional)</Label>
-                    <Input
-                      id="rfid"
-                      value={newStudent.rfid}
-                      onChange={(e) => setNewStudent({...newStudent, rfid: e.target.value})}
-                      placeholder="Tap RFID card to scan"
-                      className="text-lg p-3"
-                    />
-                  </div>
-                </div>
-                <Button onClick={handleAddStudent} size="lg" className="w-full">
-                  <UserPlus className="mr-2 h-5 w-5" />
-                  Add Student
-                </Button>
+              <CardContent>
+                <StudentRegistration
+                  onStudentRegistered={(student) => {
+                    toast({
+                      title: "Success",
+                      description: `${student.userType === 'teacher' ? 'Teacher' : 'Student'} ${student.name} has been registered`,
+                    });
+                    setActiveTab('edit-students');
+                  }}
+                  onClose={() => {}}
+                />
               </CardContent>
             </Card>
           </TabsContent>

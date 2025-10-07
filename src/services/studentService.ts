@@ -102,7 +102,10 @@ export const studentService = {
             contact_number: (student as any).contactNumber,
             biometric_data: student.biometricData,
             rfid: student.rfid,
-            library: student.library || 'notre-dame'
+            library: student.library || 'notre-dame',
+            user_type: student.userType || 'student',
+            student_type: student.studentType || 'college',
+            level: student.level
           })
           .select()
           .single();
@@ -120,7 +123,10 @@ export const studentService = {
             contactNumber: (data as any).contact_number || '',
             biometricData: data.biometric_data || '',
             rfid: data.rfid || '',
-            library: data.library as 'notre-dame' | 'ibed' || 'notre-dame'
+            library: data.library as 'notre-dame' | 'ibed' || 'notre-dame',
+            userType: (data as any).user_type as 'student' | 'teacher' || 'student',
+            studentType: (data as any).student_type as 'ibed' | 'college' || 'college',
+            level: student.level
           };
           const updatedWithServerId = updatedStudents.map(s => 
             s.id === newStudent.id ? serverStudent : s

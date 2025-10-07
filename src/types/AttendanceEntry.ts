@@ -12,4 +12,7 @@ export interface AttendanceEntry {
   library?: 'notre-dame' | 'ibed'; // Multi-library support
   course?: string; // Student's course at check-in time
   year?: string; // Student's year at check-in time
+  userType?: 'student' | 'teacher'; // User type
+  studentType?: 'ibed' | 'college'; // Student type: IBED or COLLEGE
+  level?: string; // Education level
 }

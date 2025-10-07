@@ -100,7 +100,10 @@ const CheckOutPage = () => {
           barcode: barcode,
           method: 'barcode',
           course: student.course,
-          year: student.year
+          year: student.year,
+          userType: student.userType || 'student',
+          studentType: student.studentType,
+          level: student.level
         };
         
         await attendanceService.addAttendanceRecord(newRecord);

@@ -105,7 +105,10 @@ export const attendanceService = {
             contact: record.contact,
             library: record.library || 'notre-dame',
             course: record.course,
-            year: record.year
+            year: record.year,
+            user_type: record.userType || 'student',
+            student_type: record.studentType,
+            level: record.level
           })
           .select()
           .single();
@@ -124,7 +127,10 @@ export const attendanceService = {
             contact: data.contact,
             library: (data as any).library as 'notre-dame' | 'ibed' || 'notre-dame',
             course: (data as any).course,
-            year: (data as any).year
+            year: (data as any).year,
+            userType: (data as any).user_type as 'student' | 'teacher',
+            studentType: (data as any).student_type as 'ibed' | 'college',
+            level: (data as any).level
           };
           const updatedWithServerId = updatedRecords.map(r => 
             r.id === newRecord.id ? serverRecord : r

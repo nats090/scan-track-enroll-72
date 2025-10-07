@@ -21,13 +21,16 @@ export type Database = {
           course: string | null
           created_at: string
           id: string
+          level: string | null
           library: string | null
           method: string
           purpose: string | null
           student_id: string
           student_name: string
+          student_type: string | null
           timestamp: string
           type: string
+          user_type: string | null
           year: string | null
         }
         Insert: {
@@ -36,13 +39,16 @@ export type Database = {
           course?: string | null
           created_at?: string
           id?: string
+          level?: string | null
           library?: string | null
           method: string
           purpose?: string | null
           student_id: string
           student_name: string
+          student_type?: string | null
           timestamp?: string
           type?: string
+          user_type?: string | null
           year?: string | null
         }
         Update: {
@@ -51,13 +57,16 @@ export type Database = {
           course?: string | null
           created_at?: string
           id?: string
+          level?: string | null
           library?: string | null
           method?: string
           purpose?: string | null
           student_id?: string
           student_name?: string
+          student_type?: string | null
           timestamp?: string
           type?: string
+          user_type?: string | null
           year?: string | null
         }
         Relationships: []
@@ -139,12 +148,15 @@ export type Database = {
           created_at: string
           email: string | null
           id: string
+          level: string | null
           library: string | null
           name: string
           qr_code: string | null
           rfid: string | null
           student_id: string
+          student_type: string | null
           updated_at: string
+          user_type: string | null
           year: string | null
         }
         Insert: {
@@ -154,12 +166,15 @@ export type Database = {
           created_at?: string
           email?: string | null
           id?: string
+          level?: string | null
           library?: string | null
           name: string
           qr_code?: string | null
           rfid?: string | null
           student_id: string
+          student_type?: string | null
           updated_at?: string
+          user_type?: string | null
           year?: string | null
         }
         Update: {
@@ -169,12 +184,15 @@ export type Database = {
           created_at?: string
           email?: string | null
           id?: string
+          level?: string | null
           library?: string | null
           name?: string
           qr_code?: string | null
           rfid?: string | null
           student_id?: string
+          student_type?: string | null
           updated_at?: string
+          user_type?: string | null
           year?: string | null
         }
         Relationships: []

@@ -17,4 +17,6 @@ export interface Student {
   contactNumber?: string;
   registrationDate?: Date;
   library?: 'notre-dame' | 'ibed'; // Multi-library support
+  userType?: 'student' | 'teacher'; // User type: student or teacher
+  studentType?: 'ibed' | 'college'; // Student type: IBED or COLLEGE (only for students)
 }
