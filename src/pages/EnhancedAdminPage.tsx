@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { 
   UserPlus, 
   Edit2, 
@@ -575,24 +576,24 @@ const EnhancedAdminPage = () => {
               </CardContent>
             </Card>
 
-            {editingStudent && (
-              <Card className="mt-4">
-                <CardHeader>
-                  <CardTitle>Edit User</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
+            <Dialog open={!!editingStudent} onOpenChange={(open) => !open && setEditingStudent(null)}>
+              <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle>Edit User Information</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <Label>User Type</Label>
                       <Select
-                        value={editingStudent.userType || 'student'}
+                        value={editingStudent?.userType || 'student'}
                         onValueChange={(value: 'student' | 'teacher') => 
-                          setEditingStudent({
+                          setEditingStudent(editingStudent ? {
                             ...editingStudent, 
                             userType: value,
                             course: value === 'teacher' ? 'Teacher' : editingStudent.course,
                             year: value === 'teacher' ? 'N/A' : editingStudent.year
-                          })
+                          } : null)
                         }
                       >
                         <SelectTrigger>
@@ -605,13 +606,13 @@ const EnhancedAdminPage = () => {
                       </Select>
                     </div>
 
-                    {editingStudent.userType === 'student' && (
+                    {editingStudent?.userType === 'student' && (
                       <div>
                         <Label>Student Type</Label>
                         <Select
-                          value={editingStudent.studentType || 'college'}
+                          value={editingStudent?.studentType || 'college'}
                           onValueChange={(value: 'ibed' | 'college') => 
-                            setEditingStudent({...editingStudent, studentType: value})
+                            setEditingStudent(editingStudent ? {...editingStudent, studentType: value} : null)
                           }
                         >
                           <SelectTrigger>
@@ -628,32 +629,32 @@ const EnhancedAdminPage = () => {
                     <div>
                       <Label>Name</Label>
                       <Input
-                        value={editingStudent.name}
-                        onChange={(e) => setEditingStudent({...editingStudent, name: e.target.value})}
+                        value={editingStudent?.name || ''}
+                        onChange={(e) => setEditingStudent(editingStudent ? {...editingStudent, name: e.target.value} : null)}
                       />
                     </div>
                     <div>
-                      <Label>{editingStudent.userType === 'teacher' ? 'Teacher ID' : 'Student ID'}</Label>
+                      <Label>{editingStudent?.userType === 'teacher' ? 'Teacher ID' : 'Student ID'}</Label>
                       <Input
-                        value={editingStudent.studentId}
-                        onChange={(e) => setEditingStudent({...editingStudent, studentId: e.target.value})}
+                        value={editingStudent?.studentId || ''}
+                        onChange={(e) => setEditingStudent(editingStudent ? {...editingStudent, studentId: e.target.value} : null)}
                       />
                     </div>
 
-                    {editingStudent.userType === 'student' && (
+                    {editingStudent?.userType === 'student' && (
                       <div>
                         <Label>Level</Label>
                         <Select
-                          value={editingStudent.level || 'college'}
+                          value={editingStudent?.level || 'college'}
                           onValueChange={(value) => 
-                            setEditingStudent({...editingStudent, level: value as any})
+                            setEditingStudent(editingStudent ? {...editingStudent, level: value as any} : null)
                           }
                         >
                           <SelectTrigger>
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            {editingStudent.studentType === 'ibed' ? (
+                            {editingStudent?.studentType === 'ibed' ? (
                               <>
                                 <SelectItem value="elementary">Elementary</SelectItem>
                                 <SelectItem value="junior-high">Junior High</SelectItem>
@@ -667,27 +668,27 @@ const EnhancedAdminPage = () => {
                       </div>
                     )}
 
-                    {editingStudent.userType === 'student' && 
-                     !(editingStudent.studentType === 'ibed' && 
-                       (editingStudent.level === 'elementary' || editingStudent.level === 'junior-high')) && (
+                    {editingStudent?.userType === 'student' && 
+                     !(editingStudent?.studentType === 'ibed' && 
+                       (editingStudent?.level === 'elementary' || editingStudent?.level === 'junior-high')) && (
                       <div>
-                        <Label>{editingStudent.level === 'senior-high' ? 'Strand' : 'Department'}</Label>
+                        <Label>{editingStudent?.level === 'senior-high' ? 'Strand' : 'Department'}</Label>
                         <Input
-                          value={editingStudent.department || ''}
-                          onChange={(e) => setEditingStudent({...editingStudent, department: e.target.value})}
-                          placeholder={editingStudent.level === 'senior-high' ? 'Enter strand' : 'Enter department'}
+                          value={editingStudent?.department || ''}
+                          onChange={(e) => setEditingStudent(editingStudent ? {...editingStudent, department: e.target.value} : null)}
+                          placeholder={editingStudent?.level === 'senior-high' ? 'Enter strand' : 'Enter department'}
                         />
                       </div>
                     )}
 
-                    {editingStudent.userType === 'student' && 
-                     editingStudent.level === 'senior-high' && (
+                    {editingStudent?.userType === 'student' && 
+                     editingStudent?.level === 'senior-high' && (
                       <div>
                         <Label>Shift</Label>
                         <Select
-                          value={editingStudent.shift || 'morning'}
+                          value={editingStudent?.shift || 'morning'}
                           onValueChange={(value: 'morning' | 'afternoon') => 
-                            setEditingStudent({...editingStudent, shift: value})
+                            setEditingStudent(editingStudent ? {...editingStudent, shift: value} : null)
                           }
                         >
                           <SelectTrigger>
@@ -701,26 +702,26 @@ const EnhancedAdminPage = () => {
                       </div>
                     )}
 
-                    {editingStudent.userType === 'student' && 
-                     !(editingStudent.studentType === 'ibed' && 
-                       (editingStudent.level === 'elementary' || editingStudent.level === 'junior-high')) && (
+                    {editingStudent?.userType === 'student' && 
+                     !(editingStudent?.studentType === 'ibed' && 
+                       (editingStudent?.level === 'elementary' || editingStudent?.level === 'junior-high')) && (
                       <div>
                         <Label>Course/Program</Label>
                         <Input
-                          value={editingStudent.course || ''}
-                          onChange={(e) => setEditingStudent({...editingStudent, course: e.target.value})}
+                          value={editingStudent?.course || ''}
+                          onChange={(e) => setEditingStudent(editingStudent ? {...editingStudent, course: e.target.value} : null)}
                         />
                       </div>
                     )}
 
-                    {editingStudent.userType === 'student' && (
+                    {editingStudent?.userType === 'student' && (
                       <div>
                         <Label>Year</Label>
-                        {editingStudent.studentType === 'ibed' ? (
+                        {editingStudent?.studentType === 'ibed' ? (
                           <Select
-                            value={editingStudent.year || ''}
+                            value={editingStudent?.year || ''}
                             onValueChange={(value) => 
-                              setEditingStudent({...editingStudent, year: value})
+                              setEditingStudent(editingStudent ? {...editingStudent, year: value} : null)
                             }
                           >
                             <SelectTrigger>
@@ -744,9 +745,9 @@ const EnhancedAdminPage = () => {
                           </Select>
                         ) : (
                           <Select
-                            value={editingStudent.year || ''}
+                            value={editingStudent?.year || ''}
                             onValueChange={(value) => 
-                              setEditingStudent({...editingStudent, year: value})
+                              setEditingStudent(editingStudent ? {...editingStudent, year: value} : null)
                             }
                           >
                             <SelectTrigger>
@@ -766,27 +767,27 @@ const EnhancedAdminPage = () => {
                     <div>
                       <Label>Email</Label>
                       <Input
-                        value={editingStudent.email || ''}
-                        onChange={(e) => setEditingStudent({...editingStudent, email: e.target.value})}
+                        value={editingStudent?.email || ''}
+                        onChange={(e) => setEditingStudent(editingStudent ? {...editingStudent, email: e.target.value} : null)}
                       />
                     </div>
 
                     <div>
                       <Label>RFID</Label>
                       <Input
-                        value={editingStudent.rfid || ''}
-                        onChange={(e) => setEditingStudent({...editingStudent, rfid: e.target.value})}
+                        value={editingStudent?.rfid || ''}
+                        onChange={(e) => setEditingStudent(editingStudent ? {...editingStudent, rfid: e.target.value} : null)}
                         placeholder="Scan or enter RFID"
                       />
                     </div>
                   </div>
-                  <div className="flex gap-2">
-                    <Button onClick={handleEditStudent}>Save Changes</Button>
-                    <Button variant="outline" onClick={() => setEditingStudent(null)}>Cancel</Button>
+                  <div className="flex gap-2 pt-4">
+                    <Button onClick={handleEditStudent} className="flex-1">Save Changes</Button>
+                    <Button variant="outline" onClick={() => setEditingStudent(null)} className="flex-1">Cancel</Button>
                   </div>
-                </CardContent>
-              </Card>
-            )}
+                </div>
+              </DialogContent>
+            </Dialog>
           </TabsContent>
 
           <TabsContent value="rfid-manager">
