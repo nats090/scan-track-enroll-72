@@ -24,17 +24,19 @@ const TOTPVerification = ({ role, secret, onVerified }: TOTPVerificationProps) =
         period: 30,
       });
 
-      const isValid = totp.validate({ token: code, window: 1 }) !== null;
+      // Use larger window for validation (allows for time drift)
+      const isValid = totp.validate({ token: code, window: 2 }) !== null;
 
       if (isValid) {
         // Store verification in sessionStorage (cleared when browser closes)
         sessionStorage.setItem(`totp_verified_${role}`, Date.now().toString());
         onVerified();
       } else {
-        setError('Invalid code. Please try again.');
+        setError('Invalid code. Please check your device time and try again.');
         setCode('');
       }
     } catch (err) {
+      console.error('TOTP verification error:', err);
       setError('Error verifying code. Please try again.');
       setCode('');
     }
@@ -53,13 +55,14 @@ const TOTPVerification = ({ role, secret, onVerified }: TOTPVerificationProps) =
           period: 30,
         });
 
-        const isValid = totp.validate({ token: value, window: 1 }) !== null;
+        // Use larger window for validation (allows for time drift)
+        const isValid = totp.validate({ token: value, window: 2 }) !== null;
 
         if (isValid) {
           sessionStorage.setItem(`totp_verified_${role}`, Date.now().toString());
           onVerified();
         } else {
-          setError('Invalid code. Please try again.');
+          setError('Invalid code. Please check your device time and try again.');
           setCode('');
         }
       }, 100);
