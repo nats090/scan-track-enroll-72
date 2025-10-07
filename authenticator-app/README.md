@@ -1,6 +1,6 @@
-# Library Authenticator App
+# Library Admin Authenticator App
 
-A standalone mobile authenticator app for the Library System, similar to Steam Guard. Works completely offline.
+A standalone mobile authenticator app for Admin access to the Library System. Shows codes for both Administrator and Library Staff roles. Works completely offline.
 
 ## Features
 - ✓ Generates 6-digit TOTP codes every 30 seconds

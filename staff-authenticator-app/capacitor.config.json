@@ -1,11 +1,11 @@
 {
-  "appId": "com.library.authenticator.admin",
-  "appName": "Library Admin Auth",
+  "appId": "com.library.authenticator.staff",
+  "appName": "Library Staff Auth",
   "webDir": ".",
   "plugins": {
     "SplashScreen": {
       "launchShowDuration": 1000,
-      "backgroundColor": "#2d5016",
+      "backgroundColor": "#f59e0b",
       "showSpinner": false,
       "launchAutoHide": true
     }
