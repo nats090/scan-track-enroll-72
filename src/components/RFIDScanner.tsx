@@ -9,6 +9,7 @@ import { toast } from '@/hooks/use-toast';
 import { attendanceService } from '@/services/attendanceService';
 import { studentService } from '@/services/studentService';
 import { getFromLocalStorage } from '@/utils/offlineStorage';
+import { useLibrary } from '@/contexts/LibraryContext';
 
 // Web Serial API type definitions
 interface SerialOptions {
@@ -64,6 +65,7 @@ const RFIDScanner: React.FC<RFIDScannerProps> = ({
   onCheckOut,
   onRegister
 }) => {
+  const { currentLibrary } = useLibrary();
   const [manualRFID, setManualRFID] = useState(currentRFID || '');
   const [isScanning, setIsScanning] = useState(false);
   const [rfidReaderStatus, setRfidReaderStatus] = useState<'ready' | 'scanning' | 'error' | 'offline'>('offline');
@@ -277,19 +279,25 @@ const RFIDScanner: React.FC<RFIDScannerProps> = ({
   const findStudent = async (searchId: string) => {
     // First check local storage
     const localData = await getFromLocalStorage();
-    const localStudent = localData.students.find(s =>
-      s.studentId === searchId || s.id === searchId || s.rfid === searchId
+    const localStudents = localData.students.filter(s =>
+      (s.studentId === searchId || s.id === searchId || s.rfid === searchId) &&
+      (!s.library || s.library === currentLibrary)
     );
     
-    if (localStudent) {
-      return localStudent;
+    // Return most recent local match
+    if (localStudents.length > 0) {
+      return localStudents.sort((a, b) => {
+        const dateA = a.registrationDate ? new Date(a.registrationDate).getTime() : 0;
+        const dateB = b.registrationDate ? new Date(b.registrationDate).getTime() : 0;
+        return dateB - dateA;
+      })[0];
     }
 
     // Try online lookup if available
     try {
       if (navigator.onLine) {
         // Try finding by RFID
-        const student = await studentService.findStudentByRFID(searchId);
+        const student = await studentService.findStudentByRFID(searchId, currentLibrary);
         return student;
       }
     } catch (error) {

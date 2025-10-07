@@ -13,8 +13,10 @@ import { attendanceService } from '@/services/attendanceService';
 import { studentService } from '@/services/studentService';
 import { AttendanceEntry } from '@/types/AttendanceEntry';
 import { getFromLocalStorage } from '@/utils/offlineStorage';
+import { useLibrary } from '@/contexts/LibraryContext';
 
 const CheckInPage = () => {
+  const { currentLibrary } = useLibrary();
   const [scannerMode, setScannerMode] = useState<'barcode' | 'rfid' | 'manual'>('barcode');
   const [studentId, setStudentId] = useState('');
   const [studentName, setStudentName] = useState('');
@@ -30,23 +32,29 @@ const CheckInPage = () => {
   const findStudent = async (searchId: string) => {
     // First check local storage
     const localData = await getFromLocalStorage();
-    const localStudent = localData.students.find(s =>
-      s.studentId === searchId || s.id === searchId || s.rfid === searchId
+    const localStudents = localData.students.filter(s =>
+      (s.studentId === searchId || s.id === searchId || s.rfid === searchId) &&
+      (!s.library || s.library === currentLibrary)
     );
     
-    if (localStudent) {
-      return localStudent;
+    // Return most recent local match
+    if (localStudents.length > 0) {
+      return localStudents.sort((a, b) => {
+        const dateA = a.registrationDate ? new Date(a.registrationDate).getTime() : 0;
+        const dateB = b.registrationDate ? new Date(b.registrationDate).getTime() : 0;
+        return dateB - dateA;
+      })[0];
     }
 
     // Try online lookup if available
     try {
       if (navigator.onLine) {
         // Try finding by barcode/student ID first
-        let student = await studentService.findStudentByBarcode(searchId);
+        let student = await studentService.findStudentByBarcode(searchId, currentLibrary);
         
         // If not found by barcode, try RFID
         if (!student) {
-          student = await studentService.findStudentByRFID(searchId);
+          student = await studentService.findStudentByRFID(searchId, currentLibrary);
         }
         
         return student;

@@ -193,12 +193,19 @@ export const studentService = {
     return { ...(localData.students.find(s => s.id === id) as any), ...studentData, id } as Student;
   },
 
-  async findStudentByBarcode(barcode: string): Promise<Student | null> {
-    const { data, error } = await supabase
+  async findStudentByBarcode(barcode: string, library?: 'notre-dame' | 'ibed'): Promise<Student | null> {
+    let query = supabase
       .from('students')
       .select('*')
       .or(`student_id.eq.${barcode},id.eq.${barcode}`)
-      .maybeSingle();
+      .order('created_at', { ascending: false }); // Get most recent first
+
+    // Filter by library if provided
+    if (library) {
+      query = query.eq('library', library);
+    }
+
+    const { data, error } = await query.limit(1).maybeSingle();
 
     if (error) {
       console.error('Error finding student by barcode:', error);
@@ -251,12 +258,19 @@ export const studentService = {
     };
   },
 
-  async findStudentByRFID(rfidData: string): Promise<Student | null> {
-    const { data, error } = await supabase
+  async findStudentByRFID(rfidData: string, library?: 'notre-dame' | 'ibed'): Promise<Student | null> {
+    let query = supabase
       .from('students')
       .select('*')
       .eq('rfid', rfidData)
-      .maybeSingle();
+      .order('created_at', { ascending: false }); // Get most recent first
+
+    // Filter by library if provided
+    if (library) {
+      query = query.eq('library', library);
+    }
+
+    const { data, error } = await query.limit(1).maybeSingle();
 
     if (error) {
       console.error('Error finding student by RFID:', error);
