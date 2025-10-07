@@ -207,7 +207,7 @@ const form = useForm<RegistrationForm>({
   };
 
   return (
-    <Card className="w-full max-w-2xl mx-auto">
+    <Card className="w-full max-w-6xl mx-auto">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <UserPlus className="h-5 w-5" />
@@ -218,22 +218,23 @@ const form = useForm<RegistrationForm>({
         <div className="space-y-6">
           <OfflineIndicator />
           
-          {/* Profile Picture Upload */}
-          <div>
-            <Label className="text-base font-medium">Profile Picture</Label>
-            <div className="mt-2">
-              <ImageUpload
-                currentImage={profilePicture || undefined}
-                onImageChange={setProfilePicture}
-              />
-            </div>
-          </div>
-
-
           {/* Registration Form */}
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                {/* Profile Picture Upload - Takes 1 column */}
+                <div className="lg:col-span-1">
+                  <Label className="text-base font-medium">Profile Picture</Label>
+                  <div className="mt-2">
+                    <ImageUpload
+                      currentImage={profilePicture || undefined}
+                      onImageChange={setProfilePicture}
+                    />
+                  </div>
+                </div>
+
+                {/* Form fields - Takes 3 columns */}
+                <div className="lg:col-span-3 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {/* User Type Selection */}
                 <FormField
                   control={form.control}
@@ -560,7 +561,7 @@ const form = useForm<RegistrationForm>({
                   control={form.control}
                   name="email"
                   render={({ field }) => (
-                    <FormItem className="md:col-span-2">
+                    <FormItem className="md:col-span-2 lg:col-span-2">
                       <FormLabel>Email</FormLabel>
                       <FormControl>
                         <Input type="email" placeholder="Enter email (gmail.com or ndkc.edu.ph)" {...field} pattern="^[A-Za-z0-9._%+-]+@(gmail\\.com|ndkc\\.edu\\.ph)$" title="Use gmail.com or ndkc.edu.ph email" />
@@ -580,16 +581,17 @@ const form = useForm<RegistrationForm>({
                     onChange={(e) => setRfidData(e.target.value)}
                   />
                 </div>
+                </div>
               </div>
 
               <div className="flex gap-2 pt-4">
-                <Button type="button" variant="outline" onClick={onClose} className="flex-1">
+                <Button type="button" variant="outline" onClick={onClose} className="flex-1 max-w-xs">
                   Cancel
                 </Button>
-                <Button type="submit" className="flex-1">
+                <Button type="submit" className="flex-1 max-w-xs">
                   Register {watchedUserType === 'teacher' ? 'Teacher' : 'Student'}
                 </Button>
-                </div>
+              </div>
             </form>
           </Form>
         </div>
