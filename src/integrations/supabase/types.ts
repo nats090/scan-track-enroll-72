@@ -266,11 +266,42 @@ export type Database = {
         }
         Relationships: []
       }
+      verification_sessions: {
+        Row: {
+          created_at: string
+          expires_at: string
+          id: string
+          role: string
+          session_id: string
+          verified: boolean
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          role: string
+          session_id: string
+          verified?: boolean
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          role?: string
+          session_id?: string
+          verified?: boolean
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      clean_expired_verification_sessions: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role1"]
