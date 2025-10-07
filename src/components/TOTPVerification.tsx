@@ -1,10 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { TOTP } from 'otpauth';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
-import { Shield, AlertCircle } from 'lucide-react';
+import { Shield, AlertCircle, QrCode } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import QRCode from 'qrcode';
+import { Separator } from '@/components/ui/separator';
 
 interface TOTPVerificationProps {
   role: 'admin' | 'librarian';
@@ -15,6 +17,47 @@ interface TOTPVerificationProps {
 const TOTPVerification = ({ role, secret, onVerified }: TOTPVerificationProps) => {
   const [code, setCode] = useState('');
   const [error, setError] = useState('');
+  const [qrCodeUrl, setQrCodeUrl] = useState('');
+  const [currentCode, setCurrentCode] = useState('');
+
+  // Generate QR code with current TOTP
+  useEffect(() => {
+    if (!secret) return;
+
+    const generateQR = async () => {
+      const totp = new TOTP({
+        secret: secret,
+        digits: 6,
+        period: 30,
+      });
+
+      const code = totp.generate();
+      setCurrentCode(code);
+
+      // Format: role:code (e.g., "admin:123456")
+      const qrData = `${role}:${code}`;
+      
+      try {
+        const url = await QRCode.toDataURL(qrData, {
+          width: 256,
+          margin: 2,
+          color: {
+            dark: '#000000',
+            light: '#ffffff'
+          }
+        });
+        setQrCodeUrl(url);
+      } catch (err) {
+        console.error('Error generating QR code:', err);
+      }
+    };
+
+    generateQR();
+    
+    // Regenerate QR code every 30 seconds
+    const interval = setInterval(generateQR, 30000);
+    return () => clearInterval(interval);
+  }, [secret, role]);
 
   const verifyCode = () => {
     try {
@@ -70,54 +113,85 @@ const TOTPVerification = ({ role, secret, onVerified }: TOTPVerificationProps) =
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-background">
-      <Card className="w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-background via-muted to-accent/20">
+      <Card className="w-full max-w-md bg-card border-border">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
             <Shield className="h-12 w-12 text-primary" />
           </div>
-          <CardTitle className="text-2xl">
+          <CardTitle className="text-2xl text-card-foreground">
             {role === 'admin' ? 'Admin' : 'Library Staff'} Access
           </CardTitle>
-          <CardDescription>
-            Enter the 6-digit code from your authenticator app
+          <CardDescription className="text-muted-foreground">
+            Enter the 6-digit code from your authenticator app or scan the QR code
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex justify-center">
-            <InputOTP
-              maxLength={6}
-              value={code}
-              onChange={handleCodeChange}
+        <CardContent className="space-y-6">
+          {/* TOTP Input */}
+          <div className="space-y-4">
+            <div className="flex justify-center">
+              <InputOTP
+                maxLength={6}
+                value={code}
+                onChange={handleCodeChange}
+              >
+                <InputOTPGroup>
+                  <InputOTPSlot index={0} />
+                  <InputOTPSlot index={1} />
+                  <InputOTPSlot index={2} />
+                  <InputOTPSlot index={3} />
+                  <InputOTPSlot index={4} />
+                  <InputOTPSlot index={5} />
+                </InputOTPGroup>
+              </InputOTP>
+            </div>
+
+            {error && (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+
+            <Button
+              className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
+              onClick={verifyCode}
+              disabled={code.length !== 6}
             >
-              <InputOTPGroup>
-                <InputOTPSlot index={0} />
-                <InputOTPSlot index={1} />
-                <InputOTPSlot index={2} />
-                <InputOTPSlot index={3} />
-                <InputOTPSlot index={4} />
-                <InputOTPSlot index={5} />
-              </InputOTPGroup>
-            </InputOTP>
+              Verify Code
+            </Button>
           </div>
 
-          {error && (
-            <Alert variant="destructive">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
+          <div className="relative">
+            <Separator className="bg-border" />
+            <div className="absolute inset-0 flex items-center justify-center">
+              <span className="bg-card px-2 text-muted-foreground text-sm">OR</span>
+            </div>
+          </div>
 
-          <Button
-            className="w-full"
-            onClick={verifyCode}
-            disabled={code.length !== 6}
-          >
-            Verify Code
-          </Button>
-
-          <div className="text-center text-sm text-muted-foreground">
-            <p>Use your authenticator app to get the code</p>
+          {/* QR Code */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-center gap-2 text-muted-foreground">
+              <QrCode className="h-4 w-4" />
+              <span className="text-sm font-medium">Scan with Authenticator App</span>
+            </div>
+            
+            {qrCodeUrl && (
+              <div className="flex justify-center">
+                <div className="bg-white p-4 rounded-lg border-2 border-border">
+                  <img 
+                    src={qrCodeUrl} 
+                    alt="Authentication QR Code" 
+                    className="w-48 h-48"
+                  />
+                </div>
+              </div>
+            )}
+            
+            <div className="text-center text-xs text-muted-foreground">
+              <p>QR code refreshes every 30 seconds</p>
+              <p className="mt-1">Open your Library Authenticator App and scan this code</p>
+            </div>
           </div>
         </CardContent>
       </Card>

@@ -13,6 +13,7 @@ import CheckOutDashboard from "./pages/CheckOutDashboard";
 import ProtectedAdminPage from "./pages/ProtectedAdminPage";
 import ProtectedStaffPage from "./pages/ProtectedStaffPage";
 import AuthenticatorApp from "./pages/AuthenticatorApp";
+import StaffAuthenticatorApp from "./pages/StaffAuthenticatorApp";
 import NotFound from "./pages/NotFound";
 
 const App = () => {
@@ -44,6 +45,7 @@ const App = () => {
                   <Route path="/admin" element={<ProtectedAdminPage />} />
                   <Route path="/staff" element={<ProtectedStaffPage />} />
                   <Route path="/authenticator" element={<AuthenticatorApp />} />
+                  <Route path="/staff-authenticator" element={<StaffAuthenticatorApp />} />
                   {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                   <Route path="*" element={<NotFound />} />
                 </Routes>
