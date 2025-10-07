@@ -12,6 +12,8 @@ import CheckInDashboard from "./pages/CheckInDashboard";
 import CheckOutDashboard from "./pages/CheckOutDashboard";
 import ProtectedAdminPage from "./pages/ProtectedAdminPage";
 import ProtectedStaffPage from "./pages/ProtectedStaffPage";
+import ProtectedCheckInPage from "./pages/ProtectedCheckInPage";
+import ProtectedCheckOutPage from "./pages/ProtectedCheckOutPage";
 import AuthenticatorApp from "./pages/AuthenticatorApp";
 import NotFound from "./pages/NotFound";
 
@@ -39,8 +41,8 @@ const App = () => {
               <main>
                 <Routes>
                   <Route path="/" element={<HomePage />} />
-                  <Route path="/check-in" element={<CheckInDashboard />} />
-                  <Route path="/check-out" element={<CheckOutDashboard />} />
+                  <Route path="/check-in" element={<ProtectedCheckInPage />} />
+                  <Route path="/check-out" element={<ProtectedCheckOutPage />} />
                   <Route path="/admin" element={<ProtectedAdminPage />} />
                   <Route path="/staff" element={<ProtectedStaffPage />} />
                   <Route path="/authenticator" element={<AuthenticatorApp />} />
