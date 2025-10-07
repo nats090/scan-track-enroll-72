@@ -288,7 +288,8 @@ const EnhancedAdminPage = () => {
           format(new Date(record.timestamp), 'HH:mm:ss'),
           getUserType(record),
           record.purpose || 'Library Visit',
-          record.contact || 'N/A'
+          // Only show contact for visitors (security: protect student/teacher data)
+          record.studentId === 'VISITOR' ? (record.contact || 'N/A') : 'Private'
         ])
       ].map(row => row.join(',')).join('\n');
 
@@ -450,7 +451,7 @@ const EnhancedAdminPage = () => {
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="add-student">Add User</TabsTrigger>
-            <TabsTrigger value="edit-students">Manage Students</TabsTrigger>
+            <TabsTrigger value="edit-students">Manage Users</TabsTrigger>
             <TabsTrigger value="rfid-manager">RFID Manager</TabsTrigger>
             <TabsTrigger value="reports">Advanced Reports</TabsTrigger>
             <TabsTrigger value="analytics">Live Analytics</TabsTrigger>
@@ -472,7 +473,7 @@ const EnhancedAdminPage = () => {
           <TabsContent value="edit-students">
             <Card>
               <CardHeader>
-                <CardTitle>Manage Students</CardTitle>
+                <CardTitle>Manage Users</CardTitle>
                 <div className="flex flex-col md:flex-row gap-2 mt-4">
                   <div className="flex items-center gap-2 flex-1">
                     <Search className="h-4 w-4 text-gray-400" />
@@ -486,23 +487,22 @@ const EnhancedAdminPage = () => {
                     <SelectTrigger className="w-full md:w-48">
                       <SelectValue placeholder="Filter by course" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="bg-background z-50">
                       <SelectItem value="all">All Courses</SelectItem>
-                      <SelectItem value="bsit">BSIT</SelectItem>
-                      <SelectItem value="bscs">BSCS</SelectItem>
-                      <SelectItem value="bsis">BSIS</SelectItem>
+                      {[...new Set(students.map(s => (s.course || s.department || '').trim()).filter(Boolean))].map((course) => (
+                        <SelectItem key={course} value={course}>{course}</SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                   <Select value={yearFilter} onValueChange={setYearFilter}>
                     <SelectTrigger className="w-full md:w-48">
                       <SelectValue placeholder="Filter by year" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="bg-background z-50">
                       <SelectItem value="all">All Years</SelectItem>
-                      <SelectItem value="1st year">1st Year</SelectItem>
-                      <SelectItem value="2nd year">2nd Year</SelectItem>
-                      <SelectItem value="3rd year">3rd Year</SelectItem>
-                      <SelectItem value="4th year">4th Year</SelectItem>
+                      {[...new Set(students.map(s => (s.year || '').trim()).filter(Boolean))].map((year) => (
+                        <SelectItem key={year} value={year}>{year}</SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
@@ -515,6 +515,8 @@ const EnhancedAdminPage = () => {
                         <h3 className="font-semibold text-lg">{student.name}</h3>
                         <div className="flex flex-wrap gap-2 mt-1">
                           <Badge variant="secondary">ID: {student.studentId}</Badge>
+                          {student.userType && <Badge variant="outline">{student.userType === 'teacher' ? '👨‍🏫 Teacher' : '👨‍🎓 Student'}</Badge>}
+                          {student.studentType && <Badge variant="outline">{student.studentType === 'ibed' ? '🏫 IBED' : '🎓 College'}</Badge>}
                           {student.course && <Badge variant="outline">{student.course}</Badge>}
                           {student.year && <Badge variant="outline">{student.year}</Badge>}
                         </div>
@@ -545,7 +547,7 @@ const EnhancedAdminPage = () => {
             {editingStudent && (
               <Card className="mt-4">
                 <CardHeader>
-                  <CardTitle>Edit Student</CardTitle>
+                  <CardTitle>Edit User</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

@@ -278,7 +278,8 @@ const EnhancedLibraryStaffPage = () => {
           format(new Date(record.timestamp), 'HH:mm:ss'),
           getUserType(record),
           record.purpose || 'Library Visit',
-          record.contact || 'N/A'
+          // Only show contact for visitors (security: protect student/teacher data)
+          record.studentId === 'VISITOR' ? (record.contact || 'N/A') : 'Private'
         ])
       ].map(row => row.join(',')).join('\n');
 
@@ -446,7 +447,7 @@ const EnhancedLibraryStaffPage = () => {
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="add-student">Add User</TabsTrigger>
-            <TabsTrigger value="edit-students">Manage Students</TabsTrigger>
+            <TabsTrigger value="edit-students">Manage Users</TabsTrigger>
             <TabsTrigger value="rfid-manager">RFID Manager</TabsTrigger>
             <TabsTrigger value="reports">Advanced Reports</TabsTrigger>
             <TabsTrigger value="analytics">Live Analytics</TabsTrigger>
@@ -466,31 +467,31 @@ const EnhancedLibraryStaffPage = () => {
             />
           </TabsContent>
 
-          {/* Enhanced Student Management */}
+          {/* Enhanced User Management */}
           <TabsContent value="edit-students">
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Edit2 className="h-6 w-6" />
-                  Student Management
+                  User Management
                 </CardTitle>
                 <div className="flex flex-col md:flex-row md:items-center gap-2">
                   <div className="flex items-center gap-2">
                     <Search className="h-4 w-4" />
                     <Input
-                      placeholder="Search by name or student ID..."
+                      placeholder="Search by name or ID..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                       className="max-w-sm"
                     />
-                    <Badge variant="outline">{filteredStudents.length} students</Badge>
+                    <Badge variant="outline">{filteredStudents.length} users</Badge>
                   </div>
                   <div className="flex items-center gap-2 md:ml-auto">
                     <Select value={courseFilter} onValueChange={setCourseFilter}>
                       <SelectTrigger className="w-[180px]">
                         <SelectValue placeholder="Filter course" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="bg-background z-50">
                         <SelectItem value="all">All Courses</SelectItem>
                         {[...new Set(students.map(s => (s.course || s.department || '').trim()).filter(Boolean))].map((course) => (
                           <SelectItem key={course} value={course}>{course}</SelectItem>
@@ -501,7 +502,7 @@ const EnhancedLibraryStaffPage = () => {
                       <SelectTrigger className="w-[150px]">
                         <SelectValue placeholder="Filter year" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="bg-background z-50">
                         <SelectItem value="all">All Years</SelectItem>
                         {[...new Set(students.map(s => (s.year || '').trim()).filter(Boolean))].map((year) => (
                           <SelectItem key={year} value={year}>{year}</SelectItem>
@@ -524,8 +525,10 @@ const EnhancedLibraryStaffPage = () => {
                             <p className="font-semibold text-lg">{student.name}</p>
                             <p className="text-sm text-gray-600">ID: {student.studentId}</p>
                             <div className="flex gap-2 mt-1">
+                              {student.userType && <Badge variant="outline">{student.userType === 'teacher' ? '👨‍🏫 Teacher' : '👨‍🎓 Student'}</Badge>}
+                              {student.studentType && <Badge variant="outline">{student.studentType === 'ibed' ? '🏫 IBED' : '🎓 College'}</Badge>}
                               {student.course && <Badge variant="outline">{student.course}</Badge>}
-                              {student.year && <Badge variant="outline">{student.year}th Year</Badge>}
+                              {student.year && <Badge variant="outline">{student.year}</Badge>}
                             </div>
                           </div>
                         </div>
@@ -542,12 +545,12 @@ const EnhancedLibraryStaffPage = () => {
                   ))}
                 </div>
 
-                {/* Edit Student Modal */}
+                {/* Edit User Modal */}
                 {editingStudent && (
                   <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
                     <Card className="w-full max-w-md">
                       <CardHeader>
-                        <CardTitle>Edit Student Information</CardTitle>
+                        <CardTitle>Edit User Information</CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-4">
                         <div>
