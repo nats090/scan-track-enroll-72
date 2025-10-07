@@ -241,6 +241,16 @@ const EnhancedAdminPage = () => {
       if (record.purpose === 'Teacher') return 'Teacher';
       return 'Student';
     };
+
+    // Helper function to determine category (COLLEGE/IBED/TEACHER/VISITOR)
+    const getUserCategory = (record: AttendanceEntry) => {
+      if (record.studentId === 'VISITOR') return 'VISITOR';
+      if (record.userType === 'teacher') return 'TEACHER';
+      if (record.userType === 'student') {
+        return record.studentType === 'ibed' ? 'IBED' : 'COLLEGE';
+      }
+      return 'N/A';
+    };
     
     if (reportFilter.reportType === 'analytics') {
       const uniqueStudents = new Set(filteredRecords.map(r => r.studentId)).size;
@@ -261,14 +271,15 @@ const EnhancedAdminPage = () => {
         ['Average Visits/Day', avgVisitsPerDay.toFixed(1)],
         [''],
         ['Detailed Records'],
-        ['Student Name', 'Student ID', 'Date', 'Time', 'User Type']
+        ['Student Name', 'Student ID', 'Date', 'Time', 'User Type', 'Category']
       ].concat(
         filteredRecords.map(record => [
           record.studentName,
           record.studentId,
           format(new Date(record.timestamp), 'yyyy-MM-dd'),
           format(new Date(record.timestamp), 'HH:mm:ss'),
-          getUserType(record)
+          getUserType(record),
+          getUserCategory(record)
         ])
       ).map(row => row.join(',')).join('\n');
 
@@ -281,13 +292,14 @@ const EnhancedAdminPage = () => {
       window.URL.revokeObjectURL(url);
     } else {
       const csvContent = [
-        ['Student Name', 'Student ID', 'Date', 'Time', 'User Type', 'Purpose', 'Contact'],
+        ['Student Name', 'Student ID', 'Date', 'Time', 'User Type', 'Category', 'Purpose', 'Contact'],
         ...filteredRecords.map(record => [
           record.studentName,
           record.studentId,
           format(new Date(record.timestamp), 'yyyy-MM-dd'),
           format(new Date(record.timestamp), 'HH:mm:ss'),
           getUserType(record),
+          getUserCategory(record),
           record.purpose || 'Library Visit',
           // Only show contact for visitors (security: protect student/teacher data)
           record.studentId === 'VISITOR' ? (record.contact || 'N/A') : 'Private'
