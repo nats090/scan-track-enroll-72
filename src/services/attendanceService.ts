@@ -68,8 +68,8 @@ export const attendanceService = {
   },
 
   async addAttendanceRecord(record: Omit<AttendanceEntry, 'id'>): Promise<AttendanceEntry> {
-    // Enforce alternating check-in/check-out per student
-    const currentStatus = await this.getStudentCurrentStatus(record.studentId);
+    // Enforce alternating check-in/check-out per student using unique database ID
+    const currentStatus = await this.getStudentCurrentStatus(record.studentDatabaseId || record.studentId);
     if (record.type === 'check-in' && currentStatus === 'checked-in') {
       throw new Error('Student is already checked in. Please check out first.');
     }
@@ -160,11 +160,14 @@ export const attendanceService = {
     return new Date(data.timestamp);
   },
 
-  async getStudentCurrentStatus(studentId: string): Promise<'checked-in' | 'checked-out' | 'unknown'> {
-    // Get local records for this student
+  async getStudentCurrentStatus(studentIdentifier: string): Promise<'checked-in' | 'checked-out' | 'unknown'> {
+    // Get local records for this student (using unique database ID or student ID as fallback)
     const localData = await getFromLocalStorage();
     const localRecords = (localData.attendanceRecords || [])
-      .filter(record => record.studentId === studentId);
+      .filter(record => 
+        record.studentDatabaseId === studentIdentifier || 
+        record.studentId === studentIdentifier
+      );
 
     let allRecords = [...localRecords];
 
@@ -174,12 +177,13 @@ export const attendanceService = {
         const { data, error } = await supabase
           .from('attendance_records')
           .select('*')
-          .eq('student_id', studentId)
+          .eq('student_id', studentIdentifier)
           .order('timestamp', { ascending: false });
 
         if (!error && data) {
           const serverRecords = data.map(record => ({
             id: record.id,
+            studentDatabaseId: (record as any).student_database_id,
             studentId: record.student_id,
             studentName: record.student_name,
             timestamp: new Date(record.timestamp),

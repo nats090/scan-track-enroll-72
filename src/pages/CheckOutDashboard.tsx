@@ -156,7 +156,7 @@ const CheckOutDashboard = () => {
 
   const handleStudentCheckOut = async (student: Student) => {
     try {
-      const currentStatus = await attendanceService.getStudentCurrentStatus(student.studentId);
+      const currentStatus = await attendanceService.getStudentCurrentStatus(student.id);
       if (currentStatus === 'checked-out') {
         toast({
           title: 'Already Checked Out',
@@ -175,6 +175,7 @@ const CheckOutDashboard = () => {
       }
 
       const studentRecord: Omit<AttendanceEntry, 'id'> = {
+        studentDatabaseId: student.id,
         studentId: student.studentId,
         studentName: student.name,
         timestamp: new Date(),
@@ -219,8 +220,8 @@ const CheckOutDashboard = () => {
       const student = students.find(s => s.rfid === rfidValue.trim() || s.studentId === rfidValue.trim());
       
       if (student) {
-        // Check current status before allowing check-out
-        const currentStatus = await attendanceService.getStudentCurrentStatus(student.studentId);
+        // Check current status before allowing check-out (using unique database ID)
+        const currentStatus = await attendanceService.getStudentCurrentStatus(student.id);
         
         if (currentStatus === 'checked-out') {
           toast({
@@ -243,6 +244,7 @@ const CheckOutDashboard = () => {
         }
 
         const newRecord: Omit<AttendanceEntry, 'id'> = {
+          studentDatabaseId: student.id,
           studentId: student.studentId,
           studentName: student.name,
           timestamp: new Date(),

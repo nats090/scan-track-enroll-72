@@ -1,6 +1,7 @@
 
 export interface AttendanceEntry {
   id: string;
+  studentDatabaseId?: string; // Unique database ID for the student (to handle duplicate student IDs)
   studentId: string;
   studentName: string;
   timestamp: Date;

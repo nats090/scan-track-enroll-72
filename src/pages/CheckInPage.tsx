@@ -73,8 +73,8 @@ const CheckInPage = () => {
       const student = await findStudent(rfidValue.trim());
       
       if (student) {
-        // Check current status before allowing check-in
-        const currentStatus = await attendanceService.getStudentCurrentStatus(student.studentId);
+        // Check current status before allowing check-in (using unique database ID)
+        const currentStatus = await attendanceService.getStudentCurrentStatus(student.id);
         
         if (currentStatus === 'checked-in') {
           toast({
@@ -87,6 +87,7 @@ const CheckInPage = () => {
         }
 
         const newRecord: Omit<AttendanceEntry, 'id'> = {
+          studentDatabaseId: student.id,
           studentId: student.studentId,
           studentName: student.name,
           timestamp: new Date(),
@@ -131,8 +132,8 @@ const CheckInPage = () => {
       const student = await findStudent(barcode);
       
       if (student) {
-        // Check current status before allowing check-in
-        const currentStatus = await attendanceService.getStudentCurrentStatus(student.studentId);
+        // Check current status before allowing check-in (using unique database ID)
+        const currentStatus = await attendanceService.getStudentCurrentStatus(student.id);
         
         if (currentStatus === 'checked-in') {
           toast({
@@ -144,6 +145,7 @@ const CheckInPage = () => {
         }
 
         const newRecord: Omit<AttendanceEntry, 'id'> = {
+          studentDatabaseId: student.id,
           studentId: student.studentId,
           studentName: student.name,
           timestamp: new Date(),
@@ -197,8 +199,8 @@ const CheckInPage = () => {
       if (student) {
         finalStudentName = student.name;
         
-        // Check current status before allowing check-in
-        const currentStatus = await attendanceService.getStudentCurrentStatus(student.studentId);
+        // Check current status before allowing check-in (using unique database ID)
+        const currentStatus = await attendanceService.getStudentCurrentStatus(student.id);
         
         if (currentStatus === 'checked-in') {
           toast({
@@ -218,6 +220,7 @@ const CheckInPage = () => {
       }
 
       const newRecord: Omit<AttendanceEntry, 'id'> = {
+        studentDatabaseId: student?.id,
         studentId: studentId.trim(),
         studentName: finalStudentName,
         timestamp: new Date(),

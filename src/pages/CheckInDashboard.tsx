@@ -151,8 +151,8 @@ const CheckInDashboard = () => {
       );
       
       if (student) {
-        // Check current status before allowing check-in
-        const currentStatus = await attendanceService.getStudentCurrentStatus(student.studentId);
+        // Check current status before allowing check-in (using unique database ID)
+        const currentStatus = await attendanceService.getStudentCurrentStatus(student.id);
         
         if (currentStatus === 'checked-in') {
           toast({
@@ -165,6 +165,7 @@ const CheckInDashboard = () => {
         }
 
         const newRecord: Omit<AttendanceEntry, 'id'> = {
+          studentDatabaseId: student.id,
           studentId: student.studentId,
           studentName: student.name,
           timestamp: new Date(),
@@ -204,7 +205,7 @@ const CheckInDashboard = () => {
 
   const handleStudentCheckIn = async (student: Student) => {
     try {
-      const currentStatus = await attendanceService.getStudentCurrentStatus(student.studentId);
+      const currentStatus = await attendanceService.getStudentCurrentStatus(student.id);
       if (currentStatus === 'checked-in') {
         toast({
           title: 'Already Checked In',
@@ -215,6 +216,7 @@ const CheckInDashboard = () => {
       }
 
       const studentRecord: Omit<AttendanceEntry, 'id'> = {
+        studentDatabaseId: student.id,
         studentId: student.studentId,
         studentName: student.name,
         timestamp: new Date(),
