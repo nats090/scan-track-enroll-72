@@ -70,6 +70,28 @@ export const studentService = {
   },
 
   async addStudent(student: Omit<Student, 'id'>): Promise<Student> {
+    // Check if RFID is already in use
+    if (student.rfid && student.rfid.trim()) {
+      try {
+        if (navigator.onLine) {
+          const { data: existingStudent } = await supabase
+            .from('students')
+            .select('id, name, student_id')
+            .eq('rfid', student.rfid)
+            .maybeSingle();
+
+          if (existingStudent) {
+            throw new Error(`RFID is already assigned to ${existingStudent.name} (ID: ${existingStudent.student_id})`);
+          }
+        }
+      } catch (error: any) {
+        if (error.message.includes('RFID is already assigned')) {
+          throw error;
+        }
+        console.log('Could not verify RFID uniqueness:', error);
+      }
+    }
+
     // For now, we'll store the combined department info in the course field
     let courseInfo = student.department || '';
     if (student.level) {
