@@ -35,6 +35,8 @@ import { AttendanceEntry } from '@/types/AttendanceEntry';
 import { toast } from '@/components/ui/use-toast';
 import { format, startOfDay, endOfDay, subDays, subWeeks, subMonths } from 'date-fns';
 import { ChartTimeSeries, ChartCourseDistribution } from '@/components/analytics/ReportCharts';
+import StudentPagination from '@/components/StudentPagination';
+import AttendanceTable from '@/components/AttendanceTable';
 
 const EnhancedAdminPage = () => {
   const [students, setStudents] = useState<Student[]>([]);
@@ -45,6 +47,8 @@ const EnhancedAdminPage = () => {
   const [courseFilter, setCourseFilter] = useState<string>('all');
   const [yearFilter, setYearFilter] = useState<string>('all');
   const [userTypeFilter, setUserTypeFilter] = useState<string>('all');
+  const [studentPage, setStudentPage] = useState(1);
+  const [studentsPerPage, setStudentsPerPage] = useState(25);
   
   const [newStudent, setNewStudent] = useState({
     name: '',
@@ -338,6 +342,12 @@ const EnhancedAdminPage = () => {
       return true;
     });
 
+  // Pagination logic
+  const totalPages = Math.ceil(filteredStudents.length / studentsPerPage);
+  const startIndex = (studentPage - 1) * studentsPerPage;
+  const endIndex = startIndex + studentsPerPage;
+  const paginatedStudents = filteredStudents.slice(startIndex, endIndex);
+
   const todayRecords = attendanceRecords.filter(record => 
     new Date(record.timestamp).toDateString() === new Date().toDateString()
   );
@@ -541,45 +551,59 @@ const EnhancedAdminPage = () => {
                 </div>
               </CardHeader>
               <CardContent>
-                <ScrollArea className="h-[600px]">
+                <ScrollArea className="h-[500px]">
                   <div className="space-y-3 pr-4">
-                    {filteredStudents.map((student) => (
-                      <div key={student.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                      <div className="flex-1">
-                        <h3 className="font-semibold text-lg">{student.name}</h3>
-                        <div className="flex flex-wrap gap-2 mt-1">
-                          <Badge variant="secondary">ID: {student.studentId}</Badge>
-                          {student.userType && <Badge variant="outline">{student.userType === 'teacher' ? '👨‍🏫 Teacher' : '👨‍🎓 Student'}</Badge>}
-                          {student.studentType && <Badge variant="outline">{student.studentType === 'ibed' ? '🏫 IBED' : '🎓 College'}</Badge>}
-                          {student.course && <Badge variant="outline">{student.course}</Badge>}
-                          {student.year && <Badge variant="outline">{student.year}</Badge>}
+                    {paginatedStudents.length > 0 ? (
+                      paginatedStudents.map((student) => (
+                        <div key={student.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                          <div className="flex-1">
+                            <h3 className="font-semibold text-lg">{student.name}</h3>
+                            <div className="flex flex-wrap gap-2 mt-1">
+                              <Badge variant="secondary">ID: {student.studentId}</Badge>
+                              {student.userType && <Badge variant="outline">{student.userType === 'teacher' ? '👨‍🏫 Teacher' : '👨‍🎓 Student'}</Badge>}
+                              {student.studentType && <Badge variant="outline">{student.studentType === 'ibed' ? '🏫 IBED' : '🎓 College'}</Badge>}
+                              {student.course && <Badge variant="outline">{student.course}</Badge>}
+                              {student.year && <Badge variant="outline">{student.year}</Badge>}
+                            </div>
+                            <p className="text-sm text-gray-600 mt-1">{student.email}</p>
+                          </div>
+                          <div className="flex gap-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setEditingStudent(student)}
+                            >
+                              <Edit2 className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDeleteStudent(student.id)}
+                            >
+                              <Trash2 className="h-4 w-4 text-red-500" />
+                            </Button>
+                          </div>
                         </div>
-                        <p className="text-sm text-gray-600 mt-1">{student.email}</p>
+                      ))
+                    ) : (
+                      <div className="text-center py-8 text-muted-foreground">
+                        No students found matching your filters
                       </div>
-                      <div className="flex gap-2">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setEditingStudent(student)}
-                        >
-                          <Edit2 className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDeleteStudent(student.id)}
-                        >
-                          <Trash2 className="h-4 w-4 text-red-500" />
-                        </Button>
-                      </div>
-                      </div>
-                    ))}
+                    )}
                   </div>
                 </ScrollArea>
-                {filteredStudents.length === 0 && (
-                  <div className="text-center py-8 text-muted-foreground">
-                    No students found matching your filters
-                  </div>
+                {filteredStudents.length > 0 && (
+                  <StudentPagination
+                    currentPage={studentPage}
+                    totalPages={totalPages}
+                    itemsPerPage={studentsPerPage}
+                    totalItems={filteredStudents.length}
+                    onPageChange={(page) => setStudentPage(page)}
+                    onItemsPerPageChange={(perPage) => {
+                      setStudentsPerPage(perPage);
+                      setStudentPage(1);
+                    }}
+                  />
                 )}
               </CardContent>
             </Card>

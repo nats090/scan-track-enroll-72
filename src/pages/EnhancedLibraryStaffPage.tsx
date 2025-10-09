@@ -35,6 +35,7 @@ import { AttendanceEntry } from '@/types/AttendanceEntry';
 import { toast } from '@/components/ui/use-toast';
 import { format, startOfDay, endOfDay, subDays, subWeeks, subMonths } from 'date-fns';
 import { ChartTimeSeries, ChartCourseDistribution } from '@/components/analytics/ReportCharts';
+import StudentPagination from '@/components/StudentPagination';
 
 const EnhancedLibraryStaffPage = () => {
   const [students, setStudents] = useState<Student[]>([]);
@@ -46,6 +47,8 @@ const EnhancedLibraryStaffPage = () => {
   const [courseFilter, setCourseFilter] = useState<string>('all');
   const [yearFilter, setYearFilter] = useState<string>('all');
   const [userTypeFilter, setUserTypeFilter] = useState<string>('all');
+  const [studentPage, setStudentPage] = useState(1);
+  const [studentsPerPage, setStudentsPerPage] = useState(25);
   
   // Form states
   const [newStudent, setNewStudent] = useState({
@@ -327,6 +330,12 @@ const EnhancedLibraryStaffPage = () => {
       return true;
     });
 
+  // Pagination logic
+  const totalPages = Math.ceil(filteredStudents.length / studentsPerPage);
+  const startIndex = (studentPage - 1) * studentsPerPage;
+  const endIndex = startIndex + studentsPerPage;
+  const paginatedStudents = filteredStudents.slice(startIndex, endIndex);
+
   // Quick stats
   const todayRecords = attendanceRecords.filter(record => 
     new Date(record.timestamp).toDateString() === new Date().toDateString()
@@ -545,8 +554,9 @@ const EnhancedLibraryStaffPage = () => {
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4 max-h-96 overflow-y-auto">
-                  {filteredStudents.map((student) => (
+                <div className="space-y-4 max-h-[500px] overflow-y-auto">
+                  {paginatedStudents.length > 0 ? (
+                    paginatedStudents.map((student) => (
                     <div key={student.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border">
                       <div className="flex-1">
                         <div className="flex items-center gap-3">
@@ -574,11 +584,31 @@ const EnhancedLibraryStaffPage = () => {
                         Edit
                       </Button>
                     </div>
-                  ))}
+                  ))
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground">
+                    No students found matching your filters
+                  </div>
+                )}
                 </div>
+                {filteredStudents.length > 0 && (
+                  <StudentPagination
+                    currentPage={studentPage}
+                    totalPages={totalPages}
+                    itemsPerPage={studentsPerPage}
+                    totalItems={filteredStudents.length}
+                    onPageChange={(page) => setStudentPage(page)}
+                    onItemsPerPageChange={(perPage) => {
+                      setStudentsPerPage(perPage);
+                      setStudentPage(1);
+                    }}
+                  />
+                )}
+              </CardContent>
+            </Card>
 
-                {/* Edit User Dialog */}
-                <Dialog open={!!editingStudent} onOpenChange={(open) => !open && setEditingStudent(null)}>
+            {/* Edit User Dialog */}
+            <Dialog open={!!editingStudent} onOpenChange={(open) => !open && setEditingStudent(null)}>
                   <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
                       <DialogTitle>Edit User Information</DialogTitle>
@@ -800,8 +830,6 @@ const EnhancedLibraryStaffPage = () => {
                     </div>
                   </DialogContent>
                 </Dialog>
-              </CardContent>
-            </Card>
           </TabsContent>
 
           {/* RFID Manager Tab */}

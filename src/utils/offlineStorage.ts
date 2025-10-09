@@ -15,10 +15,23 @@ const isElectron = () => {
 };
 
 export const saveToLocalStorage = async (data: Partial<OfflineData>) => {
+  // Filter to keep only recent data (last 30 days) to prevent browser storage limits
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+  
+  const filteredData = {
+    ...data,
+    attendanceRecords: data.attendanceRecords?.filter(record => {
+      const recordDate = record.timestamp instanceof Date ? record.timestamp : new Date(record.timestamp);
+      // Keep recent records OR unsynced local records
+      return recordDate >= thirtyDaysAgo || record.id?.toString().startsWith('local_');
+    })
+  };
+
   // Use file system storage if in Electron, otherwise fallback to localStorage
   if (isElectron()) {
     try {
-      await saveToFileSystem(data);
+      await saveToFileSystem(filteredData);
       return;
     } catch (error) {
       console.warn('Failed to save to file system, falling back to localStorage:', error);
@@ -28,7 +41,7 @@ export const saveToLocalStorage = async (data: Partial<OfflineData>) => {
   // Fallback to browser localStorage
   try {
     const existing = await getFromLocalStorage();
-    const updated = { ...existing, ...data };
+    const updated = { ...existing, ...filteredData };
     
     // Serialize data properly for localStorage
     const serializedData = {
@@ -50,7 +63,7 @@ export const saveToLocalStorage = async (data: Partial<OfflineData>) => {
     
     if (existingString !== newString) {
       localStorage.setItem(STORAGE_KEY, newString);
-      console.log('Data saved to browser localStorage');
+      console.log(`Data saved to localStorage (${updated.attendanceRecords?.length || 0} attendance records)`);
     }
   } catch (error) {
     console.error('Failed to save to localStorage:', error);
