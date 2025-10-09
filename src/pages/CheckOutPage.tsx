@@ -238,10 +238,11 @@ const CheckOutPage = () => {
           });
           return;
         }
-      } else if (!finalStudentName) {
+      } else {
+        // Student not found - cannot check out without registration
         toast({
-          title: "Error",
-          description: "Student not found. Please enter student name or register first.",
+          title: "Student Not Found",
+          description: "Cannot check out. Student must be registered first.",
           variant: "destructive",
         });
         return;

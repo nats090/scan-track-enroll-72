@@ -93,8 +93,22 @@ const CheckInDashboard = () => {
         return;
       }
 
+      // Use visitor name as unique identifier (prefixed to distinguish from student IDs)
+      const visitorId = `VISITOR_${visitorData.name.toUpperCase().replace(/\s+/g, '_')}`;
+      
+      // Check if visitor is already checked in
+      const currentStatus = await attendanceService.getStudentCurrentStatus(visitorId);
+      if (currentStatus === 'checked-in') {
+        toast({
+          title: "Already Checked In",
+          description: `Visitor ${visitorData.name} is already checked in.`,
+          variant: "destructive",
+        });
+        return;
+      }
+
       const visitorRecord: Omit<AttendanceEntry, 'id'> = {
-        studentId: 'VISITOR',
+        studentId: visitorId,
         studentName: visitorData.name,
         timestamp: new Date(),
         type: 'check-in',
@@ -172,7 +186,10 @@ const CheckInDashboard = () => {
           type: 'check-in',
           method: 'rfid',
           course: student.course,
-          year: student.year
+          year: student.year,
+          userType: student.userType || 'student',
+          studentType: student.studentType,
+          level: student.level
         };
         
         await attendanceService.addAttendanceRecord(newRecord);

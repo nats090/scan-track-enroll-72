@@ -82,8 +82,30 @@ const CheckOutDashboard = () => {
         return;
       }
 
+      // Use visitor name as identifier (must match check-in)
+      const visitorId = `VISITOR_${visitorName.toUpperCase().replace(/\s+/g, '_')}`;
+      
+      // Check if visitor is checked in
+      const currentStatus = await attendanceService.getStudentCurrentStatus(visitorId);
+      if (currentStatus === 'checked-out') {
+        toast({
+          title: "Already Checked Out",
+          description: `Visitor ${visitorName} is not currently checked in.`,
+          variant: "destructive",
+        });
+        return;
+      }
+      if (currentStatus === 'unknown') {
+        toast({
+          title: "No Check-in Record",
+          description: `Visitor ${visitorName} has no active check-in record.`,
+          variant: "destructive",
+        });
+        return;
+      }
+
       const visitorRecord: Omit<AttendanceEntry, 'id'> = {
-        studentId: 'VISITOR',
+        studentId: visitorId,
         studentName: visitorName,
         timestamp: new Date(),
         type: 'check-out',
@@ -251,7 +273,10 @@ const CheckOutDashboard = () => {
           type: 'check-out',
           method: 'rfid',
           course: student.course,
-          year: student.year
+          year: student.year,
+          userType: student.userType || 'student',
+          studentType: student.studentType,
+          level: student.level
         };
         
         await attendanceService.addAttendanceRecord(newRecord);

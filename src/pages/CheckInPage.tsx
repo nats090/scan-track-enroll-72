@@ -210,10 +210,11 @@ const CheckInPage = () => {
           });
           return;
         }
-      } else if (!finalStudentName) {
+      } else {
+        // Student not found - require registration first
         toast({
-          title: "Error",
-          description: "Student not found. Please enter student name or register first.",
+          title: "Student Not Found",
+          description: "Please register this student first before checking in.",
           variant: "destructive",
         });
         return;
