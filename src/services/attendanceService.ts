@@ -176,11 +176,22 @@ export const attendanceService = {
     // Try to get records from Supabase if online and merge them
     try {
       if (navigator.onLine) {
-        const { data, error } = await supabase
+        // Check if studentIdentifier is a UUID (database ID) or a student ID string
+        const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(studentIdentifier);
+        
+        let query = supabase
           .from('attendance_records')
           .select('*')
-          .eq('student_id', studentIdentifier)
           .order('timestamp', { ascending: false });
+        
+        // Query by the appropriate column
+        if (isUUID) {
+          query = query.eq('student_database_id', studentIdentifier);
+        } else {
+          query = query.eq('student_id', studentIdentifier);
+        }
+        
+        const { data, error } = await query;
 
         if (!error && data) {
           const serverRecords = data.map(record => ({
