@@ -95,6 +95,7 @@ export const attendanceService = {
         const { data, error } = await supabase
           .from('attendance_records')
           .insert({
+            student_database_id: record.studentDatabaseId,
             student_id: record.studentId,
             student_name: record.studentName,
             timestamp: record.timestamp.toISOString(),
@@ -117,6 +118,7 @@ export const attendanceService = {
           // Update local record with server ID
           const serverRecord = {
             id: data.id,
+            studentDatabaseId: (data as any).student_database_id,
             studentId: data.student_id,
             studentName: data.student_name,
             timestamp: new Date(data.timestamp),

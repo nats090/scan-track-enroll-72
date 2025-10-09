@@ -25,6 +25,7 @@ export type Database = {
           library: string | null
           method: string
           purpose: string | null
+          student_database_id: string | null
           student_id: string
           student_name: string
           student_type: string | null
@@ -43,6 +44,7 @@ export type Database = {
           library?: string | null
           method: string
           purpose?: string | null
+          student_database_id?: string | null
           student_id: string
           student_name: string
           student_type?: string | null
@@ -61,6 +63,7 @@ export type Database = {
           library?: string | null
           method?: string
           purpose?: string | null
+          student_database_id?: string | null
           student_id?: string
           student_name?: string
           student_type?: string | null
@@ -69,7 +72,15 @@ export type Database = {
           user_type?: string | null
           year?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "attendance_records_student_database_id_fkey"
+            columns: ["student_database_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       audit_logs: {
         Row: {
