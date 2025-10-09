@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { 
   UserPlus, 
@@ -540,9 +541,10 @@ const EnhancedAdminPage = () => {
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="space-y-3">
-                  {filteredStudents.map((student) => (
-                    <div key={student.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                <ScrollArea className="h-[600px]">
+                  <div className="space-y-3 pr-4">
+                    {filteredStudents.map((student) => (
+                      <div key={student.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                       <div className="flex-1">
                         <h3 className="font-semibold text-lg">{student.name}</h3>
                         <div className="flex flex-wrap gap-2 mt-1">
@@ -570,9 +572,15 @@ const EnhancedAdminPage = () => {
                           <Trash2 className="h-4 w-4 text-red-500" />
                         </Button>
                       </div>
-                    </div>
-                  ))}
-                </div>
+                      </div>
+                    ))}
+                  </div>
+                </ScrollArea>
+                {filteredStudents.length === 0 && (
+                  <div className="text-center py-8 text-muted-foreground">
+                    No students found matching your filters
+                  </div>
+                )}
               </CardContent>
             </Card>
 

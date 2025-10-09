@@ -33,9 +33,14 @@ const StudentList: React.FC<StudentListProps> = ({ students }) => {
   };
 
   return (
-    <ScrollArea className="h-64">
-      <div className="space-y-3">
-        {students.map((student) => (
+    <ScrollArea className="h-[600px]">
+      <div className="space-y-3 pr-4">
+        {students.length === 0 ? (
+          <div className="text-center py-8 text-muted-foreground">
+            No students registered yet
+          </div>
+        ) : (
+          students.map((student) => (
           <div
             key={student.id}
             className={`flex items-center justify-between p-3 rounded-lg transition-colors ${
@@ -79,9 +84,10 @@ const StudentList: React.FC<StudentListProps> = ({ students }) => {
                 <Clock className="h-3 w-3" />
                 <span>{formatLastScan(student.lastScan)}</span>
               </div>
+              </div>
             </div>
-          </div>
-        ))}
+          ))
+        )}
       </div>
     </ScrollArea>
   );

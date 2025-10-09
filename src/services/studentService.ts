@@ -26,10 +26,12 @@ export const studentService = {
     try {
       // Try to fetch from Supabase if online
       if (navigator.onLine) {
+        // Fetch ALL students - no limit for proper data handling
         const { data, error } = await supabase
           .from('students')
           .select('*')
-          .order('created_at', { ascending: false });
+          .order('created_at', { ascending: false })
+          .limit(10000); // Set high limit to handle large datasets
 
         if (!error && data) {
           const students = data.map(student => ({
