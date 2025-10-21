@@ -92,6 +92,24 @@ export const studentService = {
       }
     }
 
+    // Check if student name already exists (exact match, case-insensitive)
+    try {
+      const allStudents = await this.getStudents();
+      const duplicateName = allStudents.find(s => 
+        s.name.toUpperCase() === student.name.toUpperCase() &&
+        s.library === (student.library || 'notre-dame')
+      );
+      
+      if (duplicateName) {
+        throw new Error(`A student with the name "${student.name}" already exists (ID: ${duplicateName.studentId})`);
+      }
+    } catch (error: any) {
+      if (error.message.includes('already exists')) {
+        throw error;
+      }
+      console.log('Could not verify name uniqueness:', error);
+    }
+
     // For now, we'll store the combined department info in the course field
     let courseInfo = student.department || '';
     if (student.level) {
