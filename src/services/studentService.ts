@@ -31,7 +31,7 @@ export const studentService = {
           .from('students')
           .select('*')
           .order('created_at', { ascending: false })
-          .limit(10000); // Set high limit to handle large datasets
+          .limit(50000); // Increased limit to handle up to 50,000 students
 
         if (!error && data) {
           const students = data.map(student => ({
