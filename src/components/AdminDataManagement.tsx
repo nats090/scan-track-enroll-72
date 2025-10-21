@@ -8,6 +8,10 @@ import ExportControls from './ExportControls';
 import ImportControls from './ImportControls';
 import DataOverview from './DataOverview';
 import { convertToCSV, convertToSVD, createJSONExport } from '@/utils/exportUtils';
+import { bulkImportStudents2025 } from '@/utils/bulkStudentImport';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { UserPlus, Loader2 } from 'lucide-react';
 
 interface AdminDataManagementProps {
   students: Student[];
@@ -19,6 +23,34 @@ const AdminDataManagement = ({ students, attendanceRecords, onDataImported }: Ad
   const [exportDateRange, setExportDateRange] = useState('today');
   const [exportDepartment, setExportDepartment] = useState('All Departments');
   const [exportFormat, setExportFormat] = useState('json');
+  const [isBulkImporting, setIsBulkImporting] = useState(false);
+
+  const handleBulkImport = async () => {
+    setIsBulkImporting(true);
+    try {
+      const results = await bulkImportStudents2025();
+      toast({
+        title: "Bulk Import Complete!",
+        description: `Added: ${results.added}, Skipped: ${results.skipped}, Errors: ${results.errors}`,
+      });
+      
+      if (results.skippedStudents.length > 0) {
+        console.log('Skipped students:', results.skippedStudents);
+      }
+      
+      // Reload to show new students
+      setTimeout(() => window.location.reload(), 1500);
+    } catch (error) {
+      toast({
+        title: "Import Failed",
+        description: "Failed to bulk import students",
+        variant: "destructive",
+      });
+      console.error(error);
+    } finally {
+      setIsBulkImporting(false);
+    }
+  };
 
   const getFilteredData = () => {
     const now = new Date();
@@ -158,6 +190,38 @@ const AdminDataManagement = ({ students, attendanceRecords, onDataImported }: Ad
       />
 
       <ImportControls onImportData={handleImportData} />
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <UserPlus className="h-5 w-5" />
+            Bulk Student Import 2025
+          </CardTitle>
+          <CardDescription>
+            Import 367 first-year students to Notre Dame Library
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button 
+            onClick={handleBulkImport} 
+            disabled={isBulkImporting}
+            className="w-full"
+            size="lg"
+          >
+            {isBulkImporting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Importing Students...
+              </>
+            ) : (
+              <>
+                <UserPlus className="mr-2 h-4 w-4" />
+                Import 367 Students
+              </>
+            )}
+          </Button>
+        </CardContent>
+      </Card>
 
       <DataOverview
         students={filteredStudents}
