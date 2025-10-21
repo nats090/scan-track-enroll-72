@@ -37,7 +37,7 @@ import { format, startOfDay, endOfDay, subDays, subWeeks, subMonths } from 'date
 import { ChartTimeSeries, ChartCourseDistribution } from '@/components/analytics/ReportCharts';
 import StudentPagination from '@/components/StudentPagination';
 import AttendanceTable from '@/components/AttendanceTable';
-import { bulkImportStudents2025 } from '@/utils/bulkStudentImport';
+import { bulkImportStudents2025, bulkImportStudents2ndYear } from '@/utils/bulkStudentImport';
 import { Loader2 } from 'lucide-react';
 
 const EnhancedAdminPage = () => {
@@ -511,63 +511,106 @@ const EnhancedAdminPage = () => {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <UserPlus className="h-5 w-5" />
-                  Bulk Student Import 2025
+                  Bulk Student Import
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
+                <div className="space-y-6">
                   <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                    <h3 className="font-semibold text-blue-900 mb-2">Import Details</h3>
+                    <h3 className="font-semibold text-blue-900 mb-2">1st Year Students (2025)</h3>
                     <ul className="text-sm text-blue-800 space-y-1">
                       <li>• 367 first-year students</li>
                       <li>• Assigned to Notre Dame Library</li>
                       <li>• All names in CAPS format</li>
-                      <li>• Missing fields: email, contact, RFID, biometric, profile picture</li>
                     </ul>
+                    <Button 
+                      onClick={async () => {
+                        setIsBulkImporting(true);
+                        try {
+                          const results = await bulkImportStudents2025();
+                          toast({
+                            title: "1st Year Import Complete!",
+                            description: `Added: ${results.added}, Skipped: ${results.skipped}, Errors: ${results.errors}`,
+                          });
+                          if (results.skippedStudents.length > 0) {
+                            console.log('Skipped students:', results.skippedStudents);
+                          }
+                          await loadData();
+                        } catch (error) {
+                          toast({
+                            title: "Import Failed",
+                            description: "Failed to import 1st year students",
+                            variant: "destructive",
+                          });
+                          console.error(error);
+                        } finally {
+                          setIsBulkImporting(false);
+                        }
+                      }}
+                      disabled={isBulkImporting}
+                      className="w-full mt-4"
+                    >
+                      {isBulkImporting ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Importing...
+                        </>
+                      ) : (
+                        <>
+                          <UserPlus className="mr-2 h-4 w-4" />
+                          Import 367 1st Year Students
+                        </>
+                      )}
+                    </Button>
                   </div>
                   
-                  <Button 
-                    onClick={async () => {
-                      setIsBulkImporting(true);
-                      try {
-                        const results = await bulkImportStudents2025();
-                        toast({
-                          title: "Bulk Import Complete!",
-                          description: `Added: ${results.added}, Skipped: ${results.skipped}, Errors: ${results.errors}`,
-                        });
-                        
-                        if (results.skippedStudents.length > 0) {
-                          console.log('Skipped students:', results.skippedStudents);
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                    <h3 className="font-semibold text-green-900 mb-2">2nd Year Students</h3>
+                    <ul className="text-sm text-green-800 space-y-1">
+                      <li>• 319 second-year students</li>
+                      <li>• Assigned to Notre Dame Library</li>
+                      <li>• All names in CAPS format</li>
+                    </ul>
+                    <Button 
+                      onClick={async () => {
+                        setIsBulkImporting(true);
+                        try {
+                          const results = await bulkImportStudents2ndYear();
+                          toast({
+                            title: "2nd Year Import Complete!",
+                            description: `Added: ${results.added}, Skipped: ${results.skipped}, Errors: ${results.errors}`,
+                          });
+                          if (results.skippedStudents.length > 0) {
+                            console.log('Skipped students:', results.skippedStudents);
+                          }
+                          await loadData();
+                        } catch (error) {
+                          toast({
+                            title: "Import Failed",
+                            description: "Failed to import 2nd year students",
+                            variant: "destructive",
+                          });
+                          console.error(error);
+                        } finally {
+                          setIsBulkImporting(false);
                         }
-                        
-                        await loadData();
-                      } catch (error) {
-                        toast({
-                          title: "Import Failed",
-                          description: "Failed to bulk import students",
-                          variant: "destructive",
-                        });
-                        console.error(error);
-                      } finally {
-                        setIsBulkImporting(false);
-                      }
-                    }}
-                    disabled={isBulkImporting}
-                    className="w-full"
-                    size="lg"
-                  >
-                    {isBulkImporting ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Importing Students...
-                      </>
-                    ) : (
-                      <>
-                        <UserPlus className="mr-2 h-4 w-4" />
-                        Import 367 Students
-                      </>
-                    )}
-                  </Button>
+                      }}
+                      disabled={isBulkImporting}
+                      className="w-full mt-4"
+                    >
+                      {isBulkImporting ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Importing...
+                        </>
+                      ) : (
+                        <>
+                          <UserPlus className="mr-2 h-4 w-4" />
+                          Import 319 2nd Year Students
+                        </>
+                      )}
+                    </Button>
+                  </div>
                 </div>
               </CardContent>
             </Card>
