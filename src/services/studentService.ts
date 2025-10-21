@@ -26,15 +26,39 @@ export const studentService = {
     try {
       // Try to fetch from Supabase if online
       if (navigator.onLine) {
-        // Fetch ALL students - no limit for proper data handling
-        const { data, error } = await supabase
-          .from('students')
-          .select('*')
-          .order('created_at', { ascending: false })
-          .limit(50000); // Increased limit to handle up to 50,000 students
+        // Fetch ALL students using pagination to bypass the 1000 row default limit
+        let allStudents: any[] = [];
+        let from = 0;
+        const pageSize = 1000;
+        let hasMore = true;
 
-        if (!error && data) {
-          const students = data.map(student => ({
+        while (hasMore) {
+          const { data, error, count } = await supabase
+            .from('students')
+            .select('*', { count: 'exact' })
+            .order('created_at', { ascending: false })
+            .range(from, from + pageSize - 1);
+
+          if (error) {
+            console.error('Error fetching students:', error);
+            break;
+          }
+
+          if (data && data.length > 0) {
+            allStudents = [...allStudents, ...data];
+            from += pageSize;
+            
+            // Check if we've fetched all records
+            if (data.length < pageSize || (count && allStudents.length >= count)) {
+              hasMore = false;
+            }
+          } else {
+            hasMore = false;
+          }
+        }
+
+        if (allStudents.length > 0) {
+          const students = allStudents.map(student => ({
             id: student.id,
             name: student.name,
             studentId: student.student_id,
