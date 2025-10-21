@@ -51,7 +51,8 @@ const EnhancedAdminPage = () => {
   const [userTypeFilter, setUserTypeFilter] = useState<string>('all');
   const [studentPage, setStudentPage] = useState(1);
   const [studentsPerPage, setStudentsPerPage] = useState(25);
-  const [isBulkImporting, setIsBulkImporting] = useState(false);
+  const [isImporting1stYear, setIsImporting1stYear] = useState(false);
+  const [isImporting2ndYear, setIsImporting2ndYear] = useState(false);
   
   const [newStudent, setNewStudent] = useState({
     name: '',
@@ -525,7 +526,7 @@ const EnhancedAdminPage = () => {
                     </ul>
                     <Button 
                       onClick={async () => {
-                        setIsBulkImporting(true);
+                        setIsImporting1stYear(true);
                         try {
                           const results = await bulkImportStudents2025();
                           toast({
@@ -544,13 +545,13 @@ const EnhancedAdminPage = () => {
                           });
                           console.error(error);
                         } finally {
-                          setIsBulkImporting(false);
+                          setIsImporting1stYear(false);
                         }
                       }}
-                      disabled={isBulkImporting}
+                      disabled={isImporting1stYear}
                       className="w-full mt-4"
                     >
-                      {isBulkImporting ? (
+                      {isImporting1stYear ? (
                         <>
                           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                           Importing...
@@ -573,7 +574,7 @@ const EnhancedAdminPage = () => {
                     </ul>
                     <Button 
                       onClick={async () => {
-                        setIsBulkImporting(true);
+                        setIsImporting2ndYear(true);
                         try {
                           const results = await bulkImportStudents2ndYear();
                           toast({
@@ -592,13 +593,13 @@ const EnhancedAdminPage = () => {
                           });
                           console.error(error);
                         } finally {
-                          setIsBulkImporting(false);
+                          setIsImporting2ndYear(false);
                         }
                       }}
-                      disabled={isBulkImporting}
-                      className="w-full mt-4"
+                      disabled={isImporting2ndYear}
+                       className="w-full mt-4"
                     >
-                      {isBulkImporting ? (
+                      {isImporting2ndYear ? (
                         <>
                           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                           Importing...
