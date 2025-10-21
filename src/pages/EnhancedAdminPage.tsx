@@ -37,7 +37,7 @@ import { format, startOfDay, endOfDay, subDays, subWeeks, subMonths } from 'date
 import { ChartTimeSeries, ChartCourseDistribution } from '@/components/analytics/ReportCharts';
 import StudentPagination from '@/components/StudentPagination';
 import AttendanceTable from '@/components/AttendanceTable';
-import { bulkImportStudents2025, bulkImportStudents2ndYear } from '@/utils/bulkStudentImport';
+import { bulkImportStudents2025, bulkImportStudents2ndYear, bulkImportStudents3rdYear } from '@/utils/bulkStudentImport';
 import { Loader2 } from 'lucide-react';
 
 const EnhancedAdminPage = () => {
@@ -53,6 +53,7 @@ const EnhancedAdminPage = () => {
   const [studentsPerPage, setStudentsPerPage] = useState(25);
   const [isImporting1stYear, setIsImporting1stYear] = useState(false);
   const [isImporting2ndYear, setIsImporting2ndYear] = useState(false);
+  const [isImporting3rdYear, setIsImporting3rdYear] = useState(false);
   
   const [newStudent, setNewStudent] = useState({
     name: '',
@@ -609,7 +610,58 @@ const EnhancedAdminPage = () => {
                           <UserPlus className="mr-2 h-4 w-4" />
                           Import 319 2nd Year Students
                         </>
-                      )}
+                      )}                   
+                    </Button>
+                  </div>
+
+                  <div className="bg-card rounded-lg p-6 border">
+                    <h3 className="text-lg font-semibold mb-4">3rd Year Students</h3>
+                    <p className="text-muted-foreground mb-4">
+                      Import 280 pre-configured 3rd year students into the system.
+                    </p>
+                    <ul className="list-disc list-inside text-sm text-muted-foreground mb-4 space-y-1">
+                      <li>Checks for duplicates before importing</li>
+                      <li>Automatically assigns to Notre Dame library</li>
+                      <li>Sets appropriate year level and course information</li>
+                    </ul>
+                    <Button 
+                      onClick={async () => {
+                        setIsImporting3rdYear(true);
+                        try {
+                          const results = await bulkImportStudents3rdYear();
+                          toast({
+                            title: "Import Complete",
+                            description: `Added ${results.added} students, skipped ${results.skipped} duplicates${results.errors.length > 0 ? `, ${results.errors.length} errors` : ''}`,
+                          });
+                          if (results.errors.length > 0) {
+                            console.error('Import errors:', results.errors);
+                          }
+                          window.location.reload();
+                        } catch (error) {
+                          toast({
+                            variant: "destructive",
+                            title: "Import Failed",
+                            description: "An error occurred during the import process.",
+                          });
+                          console.error(error);
+                        } finally {
+                          setIsImporting3rdYear(false);
+                        }
+                      }}
+                      disabled={isImporting3rdYear}
+                      className="w-full mt-4"
+                    >
+                      {isImporting3rdYear ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Importing...
+                        </>
+                      ) : (
+                        <>
+                          <UserPlus className="mr-2 h-4 w-4" />
+                          Import 280 3rd Year Students
+                        </>
+                      )}                   
                     </Button>
                   </div>
                 </div>
