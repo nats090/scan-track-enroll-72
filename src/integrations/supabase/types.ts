@@ -313,6 +313,14 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      create_admin_user: {
+        Args: {
+          user_email: string
+          user_password: string
+          user_role?: Database["public"]["Enums"]["app_role1"]
+        }
+        Returns: string
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role1"]
