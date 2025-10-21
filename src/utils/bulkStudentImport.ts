@@ -361,12 +361,25 @@ export const bulkImportStudents2025 = async () => {
 
   for (const student of students) {
     try {
-      // Check if student already exists
-      const existing = await studentService.findStudentByBarcode(student.id, 'notre-dame');
+      // Check if student already exists by ID
+      const existingById = await studentService.findStudentByBarcode(student.id, 'notre-dame');
       
-      if (existing) {
+      if (existingById) {
         results.skipped++;
-        results.skippedStudents.push(`${student.id} - ${student.name} (already exists)`);
+        results.skippedStudents.push(`${student.id} - ${student.name} (student ID already exists)`);
+        continue;
+      }
+
+      // Check if student already exists by exact name
+      const allStudents = await studentService.getStudents();
+      const existingByName = allStudents.find(s => 
+        s.name.toUpperCase() === student.name.toUpperCase() && 
+        s.library === 'notre-dame'
+      );
+      
+      if (existingByName) {
+        results.skipped++;
+        results.skippedStudents.push(`${student.id} - ${student.name} (duplicate name: already exists as ${existingByName.studentId})`);
         continue;
       }
 
