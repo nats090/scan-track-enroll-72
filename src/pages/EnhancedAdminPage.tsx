@@ -37,7 +37,7 @@ import { format, startOfDay, endOfDay, subDays, subWeeks, subMonths } from 'date
 import { ChartTimeSeries, ChartCourseDistribution } from '@/components/analytics/ReportCharts';
 import StudentPagination from '@/components/StudentPagination';
 import AttendanceTable from '@/components/AttendanceTable';
-import { bulkImportStudents2025, bulkImportStudents2ndYear, bulkImportStudents3rdYear } from '@/utils/bulkStudentImport';
+import { bulkImportStudents2025, bulkImportStudents2ndYear, bulkImportStudents3rdYear, bulkImportStudents4thYear } from '@/utils/bulkStudentImport';
 import { Loader2 } from 'lucide-react';
 
 const EnhancedAdminPage = () => {
@@ -54,6 +54,7 @@ const EnhancedAdminPage = () => {
   const [isImporting1stYear, setIsImporting1stYear] = useState(false);
   const [isImporting2ndYear, setIsImporting2ndYear] = useState(false);
   const [isImporting3rdYear, setIsImporting3rdYear] = useState(false);
+  const [isImporting4thYear, setIsImporting4thYear] = useState(false);
   
   const [newStudent, setNewStudent] = useState({
     name: '',
@@ -660,6 +661,46 @@ const EnhancedAdminPage = () => {
                         <>
                           <UserPlus className="mr-2 h-4 w-4" />
                           Import 280 3rd Year Students
+                        </>
+                      )}                   
+                    </Button>
+
+                    <Button 
+                      onClick={async () => {
+                        setIsImporting4thYear(true);
+                        try {
+                          const results = await bulkImportStudents4thYear();
+                          toast({
+                            title: "4th Year Import Complete",
+                            description: `Added: ${results.added}, Skipped: ${results.skipped}, Errors: ${results.errors}`,
+                          });
+                          if (results.errors.length > 0) {
+                            console.error("Import errors:", results.errors);
+                          }
+                          window.location.reload();
+                        } catch (error) {
+                          toast({
+                            title: "Import Failed",
+                            description: "An error occurred during the import process.",
+                            variant: "destructive",
+                          });
+                          console.error(error);
+                        } finally {
+                          setIsImporting4thYear(false);
+                        }
+                      }}
+                      disabled={isImporting4thYear}
+                      className="w-full mt-4"
+                    >
+                      {isImporting4thYear ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Importing 4th Year...
+                        </>
+                      ) : (
+                        <>
+                          <UserPlus className="mr-2 h-4 w-4" />
+                          Import 243 4th Year Students
                         </>
                       )}                   
                     </Button>
