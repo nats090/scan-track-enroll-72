@@ -1332,13 +1332,14 @@ export const bulkImportStudents4thYear = async () => {
       }
 
       await studentService.addStudent({
-        studentId: data.id,
         name: data.name,
-        level: data.course,
-        course: data.major || data.course,
+        studentId: data.id,
+        course: data.course,
         year: data.year as '1st Year' | '2nd Year' | '3rd Year' | '4th Year',
+        department: getDepartmentFromCourse(data.course),
         userType: 'student',
         studentType: 'college',
+        level: 'college',
         library: 'notre-dame'
       });
       
