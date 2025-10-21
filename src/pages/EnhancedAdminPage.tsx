@@ -37,6 +37,8 @@ import { format, startOfDay, endOfDay, subDays, subWeeks, subMonths } from 'date
 import { ChartTimeSeries, ChartCourseDistribution } from '@/components/analytics/ReportCharts';
 import StudentPagination from '@/components/StudentPagination';
 import AttendanceTable from '@/components/AttendanceTable';
+import { bulkImportStudents2025 } from '@/utils/bulkStudentImport';
+import { Loader2 } from 'lucide-react';
 
 const EnhancedAdminPage = () => {
   const [students, setStudents] = useState<Student[]>([]);
@@ -49,6 +51,7 @@ const EnhancedAdminPage = () => {
   const [userTypeFilter, setUserTypeFilter] = useState<string>('all');
   const [studentPage, setStudentPage] = useState(1);
   const [studentsPerPage, setStudentsPerPage] = useState(25);
+  const [isBulkImporting, setIsBulkImporting] = useState(false);
   
   const [newStudent, setNewStudent] = useState({
     name: '',
@@ -481,9 +484,10 @@ const EnhancedAdminPage = () => {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="add-student">Add User</TabsTrigger>
             <TabsTrigger value="edit-students">Manage Users</TabsTrigger>
+            <TabsTrigger value="bulk-import">Bulk Import</TabsTrigger>
             <TabsTrigger value="rfid-manager">RFID Manager</TabsTrigger>
             <TabsTrigger value="reports">Advanced Reports</TabsTrigger>
             <TabsTrigger value="analytics">Live Analytics</TabsTrigger>
@@ -500,6 +504,73 @@ const EnhancedAdminPage = () => {
               }}
               onClose={() => {}}
             />
+          </TabsContent>
+
+          <TabsContent value="bulk-import">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <UserPlus className="h-5 w-5" />
+                  Bulk Student Import 2025
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <h3 className="font-semibold text-blue-900 mb-2">Import Details</h3>
+                    <ul className="text-sm text-blue-800 space-y-1">
+                      <li>• 367 first-year students</li>
+                      <li>• Assigned to Notre Dame Library</li>
+                      <li>• All names in CAPS format</li>
+                      <li>• Missing fields: email, contact, RFID, biometric, profile picture</li>
+                    </ul>
+                  </div>
+                  
+                  <Button 
+                    onClick={async () => {
+                      setIsBulkImporting(true);
+                      try {
+                        const results = await bulkImportStudents2025();
+                        toast({
+                          title: "Bulk Import Complete!",
+                          description: `Added: ${results.added}, Skipped: ${results.skipped}, Errors: ${results.errors}`,
+                        });
+                        
+                        if (results.skippedStudents.length > 0) {
+                          console.log('Skipped students:', results.skippedStudents);
+                        }
+                        
+                        await loadData();
+                      } catch (error) {
+                        toast({
+                          title: "Import Failed",
+                          description: "Failed to bulk import students",
+                          variant: "destructive",
+                        });
+                        console.error(error);
+                      } finally {
+                        setIsBulkImporting(false);
+                      }
+                    }}
+                    disabled={isBulkImporting}
+                    className="w-full"
+                    size="lg"
+                  >
+                    {isBulkImporting ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Importing Students...
+                      </>
+                    ) : (
+                      <>
+                        <UserPlus className="mr-2 h-4 w-4" />
+                        Import 367 Students
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
 
           <TabsContent value="edit-students">
