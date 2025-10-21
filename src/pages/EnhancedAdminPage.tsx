@@ -245,7 +245,7 @@ const EnhancedAdminPage = () => {
     return filtered;
   };
 
-  const generateAdvancedReport = () => {
+  const generateAdvancedReport = async () => {
     const filteredRecords = getFilteredRecords();
     
     // Helper function to determine user type
