@@ -1,17 +1,41 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import AdminLogin from '@/components/AdminLogin';
 import TOTPVerification from '@/components/TOTPVerification';
 import EnhancedAdminPage from './EnhancedAdminPage';
 
 const ProtectedAdminPage = () => {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isVerified, setIsVerified] = useState(false);
   const [secret, setSecret] = useState('');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    checkVerification();
-    loadSecret();
+    checkAuthentication();
   }, []);
+
+  const checkAuthentication = async () => {
+    // Check if user is logged in to Supabase
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (user) {
+      // Check if user has staff role
+      const { data: roleData } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id)
+        .in('role', ['admin', 'librarian'])
+        .single();
+
+      if (roleData) {
+        setIsAuthenticated(true);
+        checkVerification();
+        await loadSecret();
+      }
+    }
+    
+    setLoading(false);
+  };
 
   const checkVerification = () => {
     const verified = sessionStorage.getItem('totp_verified_admin');
@@ -27,7 +51,6 @@ const ProtectedAdminPage = () => {
         sessionStorage.removeItem('totp_verified_admin');
       }
     }
-    setLoading(false);
   };
 
   const loadSecret = async () => {
@@ -42,12 +65,22 @@ const ProtectedAdminPage = () => {
     }
   };
 
+  const handleLoginSuccess = () => {
+    setIsAuthenticated(true);
+    checkVerification();
+    loadSecret();
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary" />
       </div>
     );
+  }
+
+  if (!isAuthenticated) {
+    return <AdminLogin onLoginSuccess={handleLoginSuccess} />;
   }
 
   if (!isVerified) {
