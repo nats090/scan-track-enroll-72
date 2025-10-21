@@ -49,6 +49,7 @@ const EnhancedAdminPage = () => {
   const [courseFilter, setCourseFilter] = useState<string>('all');
   const [yearFilter, setYearFilter] = useState<string>('all');
   const [userTypeFilter, setUserTypeFilter] = useState<string>('all');
+  const [studentTypeFilter, setStudentTypeFilter] = useState<string>('all');
   const [studentPage, setStudentPage] = useState(1);
   const [studentsPerPage, setStudentsPerPage] = useState(25);
   const [isImporting1stYear, setIsImporting1stYear] = useState(false);
@@ -333,6 +334,17 @@ const EnhancedAdminPage = () => {
     });
   };
 
+  // Get dynamic year options based on student type
+  const getYearOptions = () => {
+    if (studentTypeFilter === 'ibed') {
+      return ['Kinder', 'Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6', 'Grade 7', 'Grade 8', 'Grade 9', 'Grade 10', 'Grade 11', 'Grade 12'];
+    } else if (studentTypeFilter === 'college') {
+      return ['1st Year', '2nd Year', '3rd Year', '4th Year'];
+    } else {
+      return [...new Set(students.map(s => (s.year || '').trim()).filter(Boolean))];
+    }
+  };
+
   const filteredStudents = students
     .filter(student =>
       student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -343,8 +355,11 @@ const EnhancedAdminPage = () => {
     .filter(student => {
       if (userTypeFilter === 'all') return true;
       if (userTypeFilter === 'teacher') return student.userType === 'teacher';
-      if (userTypeFilter === 'college') return student.userType === 'student' && student.studentType === 'college';
-      if (userTypeFilter === 'ibed') return student.userType === 'student' && student.studentType === 'ibed';
+      if (userTypeFilter === 'student') {
+        if (studentTypeFilter === 'all') return student.userType === 'student';
+        if (studentTypeFilter === 'college') return student.userType === 'student' && student.studentType === 'college';
+        if (studentTypeFilter === 'ibed') return student.userType === 'student' && student.studentType === 'ibed';
+      }
       return true;
     });
 
@@ -723,17 +738,35 @@ const EnhancedAdminPage = () => {
                       onChange={(e) => setSearchTerm(e.target.value)}
                     />
                   </div>
-                  <Select value={userTypeFilter} onValueChange={setUserTypeFilter}>
+                  <Select value={userTypeFilter} onValueChange={(value) => {
+                    setUserTypeFilter(value);
+                    setStudentTypeFilter('all');
+                    setYearFilter('all');
+                  }}>
                     <SelectTrigger className="w-full md:w-48">
                       <SelectValue placeholder="Filter by user type" />
                     </SelectTrigger>
                     <SelectContent className="bg-background z-50">
                       <SelectItem value="all">All Users</SelectItem>
-                      <SelectItem value="college">🎓 College Students</SelectItem>
-                      <SelectItem value="ibed">🏫 IBED Students</SelectItem>
+                      <SelectItem value="student">👨‍🎓 Students</SelectItem>
                       <SelectItem value="teacher">👨‍🏫 Teachers</SelectItem>
                     </SelectContent>
                   </Select>
+                  {userTypeFilter === 'student' && (
+                    <Select value={studentTypeFilter} onValueChange={(value) => {
+                      setStudentTypeFilter(value);
+                      setYearFilter('all');
+                    }}>
+                      <SelectTrigger className="w-full md:w-48">
+                        <SelectValue placeholder="Student type" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-background z-50">
+                        <SelectItem value="all">All Student Types</SelectItem>
+                        <SelectItem value="college">🎓 College</SelectItem>
+                        <SelectItem value="ibed">🏫 IBED</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  )}
                   <Select value={courseFilter} onValueChange={setCourseFilter}>
                     <SelectTrigger className="w-full md:w-48">
                       <SelectValue placeholder="Filter by course" />
@@ -751,7 +784,7 @@ const EnhancedAdminPage = () => {
                     </SelectTrigger>
                     <SelectContent className="bg-background z-50">
                       <SelectItem value="all">All Years</SelectItem>
-                      {[...new Set(students.map(s => (s.year || '').trim()).filter(Boolean))].map((year) => (
+                      {getYearOptions().map((year) => (
                         <SelectItem key={year} value={year}>{year}</SelectItem>
                       ))}
                     </SelectContent>
