@@ -325,8 +325,9 @@ export const studentService = {
   },
 
   async deleteStudent(id: string): Promise<void> {
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id);
     try {
-      if (navigator.onLine) {
+      if (navigator.onLine && isUuid) {
         const { error } = await supabase
           .from('students')
           .delete()
@@ -341,7 +342,7 @@ export const studentService = {
       console.error('Error deleting student:', error);
       throw error;
     } finally {
-      // Remove from local storage
+      // Always remove locally
       const localData = await getFromLocalStorage();
       const updatedStudents = localData.students.filter(s => s.id !== id);
       await saveToLocalStorage({ students: updatedStudents });
