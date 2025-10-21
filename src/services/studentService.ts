@@ -70,6 +70,8 @@ export const studentService = {
             biometricData: student.biometric_data || '',
             rfid: student.rfid || '',
             library: (student as any).library as 'notre-dame' | 'ibed' || 'notre-dame',
+            userType: (student as any).user_type as 'student' | 'teacher' || 'student',
+            studentType: (student as any).student_type as 'ibed' | 'college' || 'college',
             lastScan: undefined
           }));
 

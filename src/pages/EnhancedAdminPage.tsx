@@ -272,60 +272,44 @@ const EnhancedAdminPage = () => {
         (reportFilter.period === 'today' ? 1 : 
          reportFilter.period === 'week' ? 7 : 30);
 
-      const csvContent = [
-        ['Library Analytics Report'],
-        ['Period', reportFilter.period],
-        ['Generated', format(new Date(), 'yyyy-MM-dd HH:mm:ss')],
-        [''],
-        ['Metric', 'Value'],
-        ['Total Visits', filteredRecords.length.toString()],
-        ['Unique Students', uniqueStudents.toString()],
-        ['Visitors', visitors.toString()],
-        ['Average Visits/Day', avgVisitsPerDay.toFixed(1)],
-        [''],
-        ['Detailed Records'],
-        ['Student Name', 'Student ID', 'Date', 'Time', 'User Type', 'Category']
-      ].concat(
-        filteredRecords.map(record => [
-          record.studentName,
-          record.studentId,
-          format(new Date(record.timestamp), 'yyyy-MM-dd'),
-          format(new Date(record.timestamp), 'HH:mm:ss'),
-          getUserType(record),
-          getUserCategory(record)
-        ])
-      ).map(row => row.join(',')).join('\n');
-
-      const blob = new Blob([csvContent], { type: 'text/csv' });
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `library-analytics-${reportFilter.period}-${format(new Date(), 'yyyy-MM-dd')}.csv`;
-      link.click();
-      window.URL.revokeObjectURL(url);
+      // Export to XLSX to avoid column overlap in spreadsheet apps
+      const { exportXLSX } = await import('@/utils/xlsxExport');
+      const headers = ['Student Name', 'Student ID', 'Date', 'Time', 'User Type', 'Category'];
+      const rows = filteredRecords.map(record => [
+        record.studentName,
+        record.studentId,
+        format(new Date(record.timestamp), 'yyyy-MM-dd'),
+        format(new Date(record.timestamp), 'HH:mm:ss'),
+        getUserType(record),
+        getUserCategory(record)
+      ]);
+      exportXLSX({
+        sheetName: 'Analytics',
+        headers,
+        rows,
+        filename: `library-analytics-${reportFilter.period}-${format(new Date(), 'yyyy-MM-dd')}`,
+        colWidths: [28, 16, 14, 12, 14, 14]
+      });
     } else {
-      const csvContent = [
-        ['Student Name', 'Student ID', 'Date', 'Time', 'User Type', 'Category', 'Purpose', 'Contact'],
-        ...filteredRecords.map(record => [
-          record.studentName,
-          record.studentId,
-          format(new Date(record.timestamp), 'yyyy-MM-dd'),
-          format(new Date(record.timestamp), 'HH:mm:ss'),
-          getUserType(record),
-          getUserCategory(record),
-          record.purpose || 'Library Visit',
-          // Only show contact for visitors (security: protect student/teacher data)
-          record.studentId === 'VISITOR' ? (record.contact || 'N/A') : 'Private'
-        ])
-      ].map(row => row.join(',')).join('\n');
-
-      const blob = new Blob([csvContent], { type: 'text/csv' });
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `library-attendance-${reportFilter.period}-${format(new Date(), 'yyyy-MM-dd')}.csv`;
-      link.click();
-      window.URL.revokeObjectURL(url);
+      const { exportXLSX } = await import('@/utils/xlsxExport');
+      const headers = ['Student Name', 'Student ID', 'Date', 'Time', 'User Type', 'Category', 'Purpose', 'Contact'];
+      const rows = filteredRecords.map(record => [
+        record.studentName,
+        record.studentId,
+        format(new Date(record.timestamp), 'yyyy-MM-dd'),
+        format(new Date(record.timestamp), 'HH:mm:ss'),
+        getUserType(record),
+        getUserCategory(record),
+        record.purpose || 'Library Visit',
+        record.studentId === 'VISITOR' ? (record.contact || 'N/A') : 'Private'
+      ]);
+      exportXLSX({
+        sheetName: 'Attendance',
+        headers,
+        rows,
+        filename: `library-attendance-${reportFilter.period}-${format(new Date(), 'yyyy-MM-dd')}`,
+        colWidths: [30, 16, 12, 10, 12, 12, 18, 18]
+      });
     }
 
     toast({
