@@ -238,6 +238,188 @@
       max-width: 200px;
     }
 
+    .account-menu {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 1000;
+    }
+
+    .menu-btn {
+      background: white;
+      border: none;
+      padding: 12px 16px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .dropdown-menu {
+      display: none;
+      position: absolute;
+      top: 60px;
+      right: 0;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+      min-width: 220px;
+      overflow: hidden;
+    }
+
+    .dropdown-menu.active {
+      display: block;
+    }
+
+    .menu-item {
+      padding: 14px 20px;
+      cursor: pointer;
+      border: none;
+      background: none;
+      width: 100%;
+      text-align: left;
+      font-size: 14px;
+      color: #333;
+      transition: background 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .menu-item:hover {
+      background: #f8f9fa;
+    }
+
+    .menu-item.danger {
+      color: #dc3545;
+    }
+
+    .menu-divider {
+      height: 1px;
+      background: #e0e0e0;
+      margin: 8px 0;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 2000;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .modal.active {
+      display: flex;
+    }
+
+    .modal-content {
+      background: white;
+      border-radius: 20px;
+      padding: 30px;
+      max-width: 400px;
+      width: 100%;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+
+    .modal-header {
+      margin-bottom: 20px;
+    }
+
+    .modal-header h2 {
+      font-size: 22px;
+      color: #333;
+      margin-bottom: 8px;
+    }
+
+    .modal-header p {
+      font-size: 14px;
+      color: #666;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 14px;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 8px;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+
+    .form-group input:focus {
+      outline: none;
+      border-color: #4a7c2c;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .modal-btn {
+      flex: 1;
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .modal-btn.primary {
+      background: #2d5016;
+      color: white;
+    }
+
+    .modal-btn.danger {
+      background: #dc3545;
+      color: white;
+    }
+
+    .modal-btn.secondary {
+      background: #f8f9fa;
+      color: #333;
+    }
+
+    .message {
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 16px;
+      font-size: 14px;
+      text-align: center;
+    }
+
+    .message.success {
+      background: #d4edda;
+      color: #155724;
+    }
+
+    .message.error {
+      background: #f8d7da;
+      color: #721c24;
+    }
+
     @media (max-width: 768px) {
       .code-display {
         font-size: 28px;
@@ -271,6 +453,25 @@
   </div>
 
   <div id="app" style="display: none;">
+    <div class="account-menu">
+      <button class="menu-btn" onclick="toggleMenu()">
+        👤 Account
+      </button>
+      <div class="dropdown-menu" id="accountDropdown">
+        <button class="menu-item" onclick="openChangePasswordModal()">
+          🔑 Change Password
+        </button>
+        <div class="menu-divider"></div>
+        <button class="menu-item danger" onclick="openDeleteAccountModal()">
+          🗑️ Delete Account
+        </button>
+        <div class="menu-divider"></div>
+        <button class="menu-item" onclick="handleSignOut()">
+          🚪 Sign Out
+        </button>
+      </div>
+    </div>
+
     <div class="header-section">
       <h1>🔒 Library Authenticator</h1>
       <p>Admin Access - All Roles</p>
@@ -295,6 +496,48 @@
         <div>✓ Works offline</div>
         <div>✓ Codes refresh every 30 seconds</div>
         <div>✓ Secure authentication for library system</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Change Password Modal -->
+  <div class="modal" id="changePasswordModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Change Password</h2>
+        <p>Enter your new password below</p>
+      </div>
+      <div id="passwordMessage" style="display: none;"></div>
+      <div class="form-group">
+        <label for="newPassword">New Password</label>
+        <input type="password" id="newPassword" placeholder="At least 6 characters" minlength="6">
+      </div>
+      <div class="form-group">
+        <label for="confirmPassword">Confirm Password</label>
+        <input type="password" id="confirmPassword" placeholder="Re-enter your password" minlength="6">
+      </div>
+      <div class="modal-actions">
+        <button class="modal-btn secondary" onclick="closeChangePasswordModal()">Cancel</button>
+        <button class="modal-btn primary" onclick="handleChangePassword()">Update Password</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete Account Modal -->
+  <div class="modal" id="deleteAccountModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Delete Account</h2>
+        <p>This action cannot be undone. Are you sure?</p>
+      </div>
+      <div id="deleteMessage" style="display: none;"></div>
+      <div class="form-group">
+        <label for="confirmDelete">Type "DELETE" to confirm</label>
+        <input type="text" id="confirmDelete" placeholder="DELETE">
+      </div>
+      <div class="modal-actions">
+        <button class="modal-btn secondary" onclick="closeDeleteAccountModal()">Cancel</button>
+        <button class="modal-btn danger" onclick="handleDeleteAccount()">Delete Account</button>
       </div>
     </div>
   </div>
@@ -405,6 +648,114 @@
     async function handleSignOut() {
       await supabase.auth.signOut();
       window.location.href = '/auth';
+    }
+
+    function toggleMenu() {
+      const dropdown = document.getElementById('accountDropdown');
+      dropdown.classList.toggle('active');
+    }
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', (e) => {
+      const menu = document.querySelector('.account-menu');
+      const dropdown = document.getElementById('accountDropdown');
+      if (menu && !menu.contains(e.target)) {
+        dropdown?.classList.remove('active');
+      }
+    });
+
+    function openChangePasswordModal() {
+      document.getElementById('accountDropdown').classList.remove('active');
+      document.getElementById('changePasswordModal').classList.add('active');
+    }
+
+    function closeChangePasswordModal() {
+      document.getElementById('changePasswordModal').classList.remove('active');
+      document.getElementById('newPassword').value = '';
+      document.getElementById('confirmPassword').value = '';
+      document.getElementById('passwordMessage').style.display = 'none';
+    }
+
+    function openDeleteAccountModal() {
+      document.getElementById('accountDropdown').classList.remove('active');
+      document.getElementById('deleteAccountModal').classList.add('active');
+    }
+
+    function closeDeleteAccountModal() {
+      document.getElementById('deleteAccountModal').classList.remove('active');
+      document.getElementById('confirmDelete').value = '';
+      document.getElementById('deleteMessage').style.display = 'none';
+    }
+
+    function showMessage(elementId, text, type) {
+      const element = document.getElementById(elementId);
+      element.textContent = text;
+      element.className = `message ${type}`;
+      element.style.display = 'block';
+      setTimeout(() => {
+        element.style.display = 'none';
+      }, 5000);
+    }
+
+    async function handleChangePassword() {
+      const newPassword = document.getElementById('newPassword').value;
+      const confirmPassword = document.getElementById('confirmPassword').value;
+
+      if (newPassword.length < 6) {
+        showMessage('passwordMessage', 'Password must be at least 6 characters', 'error');
+        return;
+      }
+
+      if (newPassword !== confirmPassword) {
+        showMessage('passwordMessage', 'Passwords do not match', 'error');
+        return;
+      }
+
+      try {
+        const { error } = await supabase.auth.updateUser({
+          password: newPassword
+        });
+
+        if (error) throw error;
+
+        showMessage('passwordMessage', 'Password updated successfully!', 'success');
+        setTimeout(() => {
+          closeChangePasswordModal();
+        }, 2000);
+      } catch (error) {
+        showMessage('passwordMessage', error.message, 'error');
+      }
+    }
+
+    async function handleDeleteAccount() {
+      const confirmText = document.getElementById('confirmDelete').value;
+
+      if (confirmText !== 'DELETE') {
+        showMessage('deleteMessage', 'Please type DELETE to confirm', 'error');
+        return;
+      }
+
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        if (!user) throw new Error('No user found');
+
+        // Delete from approved_totp_users first
+        await supabase
+          .from('approved_totp_users')
+          .delete()
+          .eq('user_id', user.id);
+
+        // Sign out and redirect
+        await supabase.auth.signOut();
+        
+        showMessage('deleteMessage', 'Account deleted. Redirecting...', 'success');
+        setTimeout(() => {
+          window.location.href = '/auth';
+        }, 2000);
+      } catch (error) {
+        showMessage('deleteMessage', error.message, 'error');
+      }
     }
 
     // Register service worker
