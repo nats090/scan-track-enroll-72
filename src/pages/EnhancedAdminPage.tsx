@@ -365,32 +365,32 @@ const EnhancedAdminPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 p-4">
-      <div className="max-w-7xl mx-auto">
-        <div className="mb-6">
+    <div className="h-screen bg-gradient-to-br from-blue-50 to-indigo-50 p-2 sm:p-4 flex flex-col overflow-hidden">
+      <div className="max-w-7xl mx-auto w-full flex flex-col h-full overflow-hidden">
+        <div className="mb-2 sm:mb-4 flex-shrink-0">
           <BackButton to="/" />
         </div>
         
-        <div className="mb-8">
-          <div className="text-center mb-6">
-            <h1 className="text-4xl font-bold text-gray-800 flex items-center justify-center gap-3 mb-2">
-              <Shield className="h-10 w-10" />
+        <div className="mb-4 sm:mb-6 flex-shrink-0">
+          <div className="text-center mb-3 sm:mb-6">
+            <h1 className="text-2xl sm:text-4xl font-bold text-gray-800 flex items-center justify-center gap-2 sm:gap-3 mb-2">
+              <Shield className="h-6 w-6 sm:h-10 sm:w-10" />
               Enhanced Admin Panel
             </h1>
-            <p className="text-xl text-gray-600">Complete System Management & Analytics</p>
+            <p className="text-sm sm:text-xl text-gray-600">Complete System Management & Analytics</p>
           </div>
           
           <Card className="shadow-sm border-0 bg-white/60 backdrop-blur-sm">
-            <CardContent className="py-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-sm text-gray-600">
+            <CardContent className="py-2 sm:py-4">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0">
+                <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-600">
                   <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
                   <span>System Online</span>
-                  <span className="text-gray-400">•</span>
-                  <span>Auto-sync every 10s</span>
+                  <span className="text-gray-400 hidden sm:inline">•</span>
+                  <span className="hidden sm:inline">Auto-sync every 10s</span>
                 </div>
                 
-                <div className="flex gap-2">
+                <div className="flex gap-1 sm:gap-2 flex-wrap">
                   <Button
                     variant="ghost"
                     size="sm"
@@ -452,56 +452,58 @@ const EnhancedAdminPage = () => {
           </Card>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-4 mb-4 sm:mb-6 flex-shrink-0">
           <Card className="bg-green-500 text-white">
-            <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold">{todayRecords.length}</div>
-              <p className="text-sm">Today's Visits</p>
+            <CardContent className="p-2 sm:p-4 text-center">
+              <div className="text-xl sm:text-2xl font-bold">{todayRecords.length}</div>
+              <p className="text-xs sm:text-sm">Today's Visits</p>
             </CardContent>
           </Card>
           <Card className="bg-blue-500 text-white">
-            <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold">{uniqueStudentsToday}</div>
-              <p className="text-sm">Unique Students</p>
+            <CardContent className="p-2 sm:p-4 text-center">
+              <div className="text-xl sm:text-2xl font-bold">{uniqueStudentsToday}</div>
+              <p className="text-xs sm:text-sm">Unique Students</p>
             </CardContent>
           </Card>
           <Card className="bg-orange-500 text-white">
-            <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold">{visitorsToday}</div>
-              <p className="text-sm">Visitors Today</p>
+            <CardContent className="p-2 sm:p-4 text-center">
+              <div className="text-xl sm:text-2xl font-bold">{visitorsToday}</div>
+              <p className="text-xs sm:text-sm">Visitors Today</p>
             </CardContent>
           </Card>
           <Card className="bg-purple-500 text-white">
-            <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold">{students.length}</div>
-              <p className="text-sm">Total Students</p>
+            <CardContent className="p-2 sm:p-4 text-center">
+              <div className="text-xl sm:text-2xl font-bold">{students.length}</div>
+              <p className="text-xs sm:text-sm">Total Students</p>
             </CardContent>
           </Card>
         </div>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5">
-            <TabsTrigger value="add-student">Add User</TabsTrigger>
-            <TabsTrigger value="edit-students">Manage Users</TabsTrigger>
-            <TabsTrigger value="rfid-manager">RFID Manager</TabsTrigger>
-            <TabsTrigger value="reports">Advanced Reports</TabsTrigger>
-            <TabsTrigger value="analytics">Live Analytics</TabsTrigger>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col overflow-hidden">
+          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-5 gap-1 sm:gap-0 mb-2 sm:mb-4 flex-shrink-0">
+            <TabsTrigger value="add-student" className="text-xs sm:text-sm">Add User</TabsTrigger>
+            <TabsTrigger value="edit-students" className="text-xs sm:text-sm">Manage Users</TabsTrigger>
+            <TabsTrigger value="rfid-manager" className="text-xs sm:text-sm">RFID Manager</TabsTrigger>
+            <TabsTrigger value="reports" className="text-xs sm:text-sm">Advanced Reports</TabsTrigger>
+            <TabsTrigger value="analytics" className="text-xs sm:text-sm">Live Analytics</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="add-student">
-            <StudentRegistration
-              onStudentRegistered={(student) => {
-                toast({
-                  title: "Success",
-                  description: `${student.userType === 'teacher' ? 'Teacher' : 'Student'} ${student.name} has been registered`,
-                });
-                setActiveTab('edit-students');
-              }}
-              onClose={() => {}}
-            />
+          <TabsContent value="add-student" className="flex-1 overflow-auto">
+            <ScrollArea className="h-full">
+              <StudentRegistration
+                onStudentRegistered={(student) => {
+                  toast({
+                    title: "Success",
+                    description: `${student.userType === 'teacher' ? 'Teacher' : 'Student'} ${student.name} has been registered`,
+                  });
+                  setActiveTab('edit-students');
+                }}
+                onClose={() => {}}
+              />
+            </ScrollArea>
           </TabsContent>
 
-          <TabsContent value="edit-students">
+          <TabsContent value="edit-students" className="flex-1 overflow-auto">
             <Card>
               <CardHeader>
                 <CardTitle>Manage Users</CardTitle>
@@ -839,12 +841,15 @@ const EnhancedAdminPage = () => {
             </Dialog>
           </TabsContent>
 
-          <TabsContent value="rfid-manager">
-            <RFIDDataManager students={students} onDataUpdated={loadData} />
+          <TabsContent value="rfid-manager" className="flex-1 overflow-auto">
+            <ScrollArea className="h-full">
+              <RFIDDataManager students={students} onDataUpdated={loadData} />
+            </ScrollArea>
           </TabsContent>
 
-          <TabsContent value="reports">
-            <Card>
+          <TabsContent value="reports" className="flex-1 overflow-auto">
+            <ScrollArea className="h-full">
+              <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <BarChart3 className="h-6 w-6" />
@@ -924,10 +929,12 @@ const EnhancedAdminPage = () => {
                 </div>
               </CardContent>
             </Card>
+            </ScrollArea>
           </TabsContent>
 
-          <TabsContent value="analytics">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <TabsContent value="analytics" className="flex-1 overflow-auto">
+            <ScrollArea className="h-full">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
@@ -993,6 +1000,7 @@ const EnhancedAdminPage = () => {
                 </CardContent>
               </Card>
             </div>
+            </ScrollArea>
           </TabsContent>
         </Tabs>
       </div>
