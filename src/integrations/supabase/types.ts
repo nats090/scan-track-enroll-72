@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      approved_totp_users: {
+        Row: {
+          approved: boolean | null
+          created_at: string
+          email: string
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          approved?: boolean | null
+          created_at?: string
+          email: string
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          approved?: boolean | null
+          created_at?: string
+          email?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       attendance_records: {
         Row: {
           barcode: string | null
@@ -309,10 +336,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      clean_expired_verification_sessions: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      clean_expired_verification_sessions: { Args: never; Returns: undefined }
       create_admin_user: {
         Args: {
           user_email: string
@@ -328,10 +352,7 @@ export type Database = {
         }
         Returns: boolean
       }
-      is_staff: {
-        Args: { _user_id: string }
-        Returns: boolean
-      }
+      is_staff: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
       app_role1: "admin" | "librarian" | "student"
