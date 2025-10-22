@@ -117,6 +117,7 @@ class AutoSyncService {
         const { data, error } = await supabase
           .from('attendance_records')
           .insert({
+            student_database_id: record.studentDatabaseId,
             student_id: record.studentId,
             student_name: record.studentName,
             timestamp: record.timestamp instanceof Date ? record.timestamp.toISOString() : record.timestamp,
@@ -125,7 +126,12 @@ class AutoSyncService {
             method: record.method,
             purpose: record.purpose,
             contact: record.contact,
-            library: record.library
+            library: record.library || 'notre-dame',
+            course: record.course,
+            year: record.year,
+            user_type: record.userType || 'student',
+            student_type: record.studentType,
+            level: record.level
           })
           .select()
           .single();
@@ -140,6 +146,7 @@ class AutoSyncService {
           const updatedRecords = localData.attendanceRecords.map(r =>
             r.id === record.id ? {
               id: data.id,
+              studentDatabaseId: (data as any).student_database_id,
               studentId: data.student_id,
               studentName: data.student_name,
               timestamp: new Date(data.timestamp),
@@ -148,7 +155,12 @@ class AutoSyncService {
               method: data.method,
               purpose: data.purpose,
               contact: data.contact,
-              library: data.library
+              library: data.library,
+              course: (data as any).course,
+              year: (data as any).year,
+              userType: (data as any).user_type,
+              studentType: (data as any).student_type,
+              level: (data as any).level
             } : r
           );
           localData.attendanceRecords = updatedRecords;
@@ -234,15 +246,21 @@ class AutoSyncService {
 
         const attendanceRecords = attendanceResponse.data?.map((r: any) => ({
           id: r.id,
+          studentDatabaseId: r.student_database_id,
           studentId: r.student_id,
           studentName: r.student_name,
           timestamp: new Date(r.timestamp),
-          type: (r as any).type || 'check-in',
+          type: r.type || 'check-in',
           barcode: r.barcode,
-          method: r.method as 'barcode' | 'biometric' | 'manual',
+          method: r.method as 'barcode' | 'biometric' | 'manual' | 'rfid',
           purpose: r.purpose,
           contact: r.contact,
-          library: (r as any).library as 'notre-dame' | 'ibed' || 'notre-dame'
+          library: r.library as 'notre-dame' | 'ibed' || 'notre-dame',
+          course: r.course,
+          year: r.year,
+          userType: r.user_type as 'student' | 'teacher',
+          studentType: r.student_type as 'ibed' | 'college',
+          level: r.level
         })) || [];
 
         // Merge with local data (keep local-only items and preserve local edits until uploaded)
