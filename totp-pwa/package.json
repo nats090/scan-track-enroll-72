@@ -1,0 +1,11 @@
+{
+  "name": "library-totp-pwa",
+  "version": "1.0.0",
+  "description": "Library TOTP Authenticator Progressive Web App",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "npx http-server . -p 3000 -o",
+    "preview": "npx http-server . -p 8080 -o"
+  }
+}

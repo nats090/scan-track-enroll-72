@@ -13,8 +13,6 @@ import CheckOutDashboard from "./pages/CheckOutDashboard";
 import ProtectedAdminPage from "./pages/ProtectedAdminPage";
 import ProtectedStaffPage from "./pages/ProtectedStaffPage";
 import AuthenticatorApp from "./pages/AuthenticatorApp";
-import TOTPAuthPage from "./pages/TOTPAuthPage";
-import TOTPAppPage from "./pages/TOTPAppPage";
 import NotFound from "./pages/NotFound";
 
 const App = () => {
@@ -46,8 +44,6 @@ const App = () => {
                   <Route path="/admin" element={<ProtectedAdminPage />} />
                   <Route path="/staff" element={<ProtectedStaffPage />} />
                   <Route path="/authenticator" element={<AuthenticatorApp />} />
-                  <Route path="/totp-auth" element={<TOTPAuthPage />} />
-                  <Route path="/totp-app" element={<TOTPAppPage />} />
                   {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                   <Route path="*" element={<NotFound />} />
                 </Routes>

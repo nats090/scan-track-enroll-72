@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Library TOTP Authenticator - Secure access codes">
+  <meta name="theme-color" content="#8b5cf6">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Library TOTP Authenticator</title>
+  <link rel="manifest" href="./manifest.json">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .container {
+      background: white;
+      border-radius: 20px;
+      padding: 30px;
+      max-width: 500px;
+      width: 100%;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .header h1 {
+      color: #333;
+      font-size: 24px;
+      margin-bottom: 10px;
+    }
+
+    .timer {
+      text-align: center;
+      margin-bottom: 20px;
+      font-size: 18px;
+      color: #666;
+    }
+
+    .timer-bar {
+      width: 100%;
+      height: 8px;
+      background: #e0e0e0;
+      border-radius: 10px;
+      overflow: hidden;
+      margin-bottom: 10px;
+    }
+
+    .timer-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+      transition: width 1s linear;
+    }
+
+    .code-card {
+      background: #f8f9fa;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 15px;
+      position: relative;
+    }
+
+    .code-role {
+      font-size: 14px;
+      color: #666;
+      text-transform: uppercase;
+      font-weight: 600;
+      margin-bottom: 10px;
+    }
+
+    .code-display {
+      font-size: 32px;
+      font-weight: bold;
+      color: #333;
+      letter-spacing: 4px;
+      font-family: 'Courier New', monospace;
+      margin-bottom: 10px;
+    }
+
+    .copy-btn {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      width: 100%;
+      transition: transform 0.2s;
+    }
+
+    .copy-btn:active {
+      transform: scale(0.95);
+    }
+
+    .logout-btn {
+      background: #dc3545;
+      color: white;
+      border: none;
+      padding: 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      width: 100%;
+      margin-top: 20px;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: #666;
+    }
+
+    .spinner {
+      border: 3px solid #f3f3f3;
+      border-top: 3px solid #667eea;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 20px;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .waiting {
+      text-align: center;
+      padding: 40px;
+    }
+
+    .waiting h2 {
+      color: #333;
+      margin-bottom: 10px;
+    }
+
+    .waiting p {
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🔐 Library TOTP Authenticator</h1>
+    </div>
+
+    <div id="loading" class="loading">
+      <div class="spinner"></div>
+      <p>Loading...</p>
+    </div>
+
+    <div id="waiting" class="waiting" style="display: none;">
+      <h2>⏳ Waiting for Approval</h2>
+      <p>Your account is pending admin approval. Please check back later.</p>
+      <button class="logout-btn" onclick="handleSignOut()">Sign Out</button>
+    </div>
+
+    <div id="app" style="display: none;">
+      <div class="timer">
+        <div class="timer-bar">
+          <div id="timerFill" class="timer-fill"></div>
+        </div>
+        <span id="timeRemaining">30s</span>
+      </div>
+
+      <div id="codesList"></div>
+
+      <button class="logout-btn" onclick="handleSignOut()">Sign Out</button>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/otpauth@9/dist/otpauth.umd.min.js"></script>
+  <script>
+    const SUPABASE_URL = 'https://bsygexfvkbcnsurlgeiu.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJzeWdleGZ2a2JjbnN1cmxnZWl1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI4OTU2ODQsImV4cCI6MjA2ODQ3MTY4NH0.cqCk0KAd2IrcYrwem4h1eaFvtlziu5_x5tiJ0UMZ2J8';
+
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    let secrets = [];
+    let codes = {};
+
+    async function init() {
+      // Check authentication
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        window.location.href = './auth.html';
+        return;
+      }
+
+      // Check approval status
+      const { data: approval } = await supabase
+        .from('approved_totp_users')
+        .select('approved')
+        .eq('user_id', session.user.id)
+        .single();
+
+      if (!approval || !approval.approved) {
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('waiting').style.display = 'block';
+        return;
+      }
+
+      // Load secrets and start app
+      await loadSecrets();
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('app').style.display = 'block';
+      updateCodes();
+      startTimer();
+    }
+
+    async function loadSecrets() {
+      const { data } = await supabase
+        .from('totp_secrets')
+        .select('role, secret');
+      
+      secrets = data || [];
+    }
+
+    function generateCode(secret) {
+      const totp = new OTPAuth.TOTP({
+        secret: secret,
+        digits: 6,
+        period: 30
+      });
+      return totp.generate();
+    }
+
+    function updateCodes() {
+      codes = {};
+      secrets.forEach(s => {
+        codes[s.role] = generateCode(s.secret);
+      });
+      renderCodes();
+    }
+
+    function renderCodes() {
+      const container = document.getElementById('codesList');
+      container.innerHTML = secrets.map(s => `
+        <div class="code-card">
+          <div class="code-role">${s.role}</div>
+          <div class="code-display">${codes[s.role]}</div>
+          <button class="copy-btn" onclick="copyCode('${s.role}', '${codes[s.role]}')">
+            📋 Copy Code
+          </button>
+        </div>
+      `).join('');
+    }
+
+    function copyCode(role, code) {
+      navigator.clipboard.writeText(code);
+      event.target.textContent = '✓ Copied!';
+      setTimeout(() => {
+        event.target.textContent = '📋 Copy Code';
+      }, 2000);
+    }
+
+    function startTimer() {
+      setInterval(() => {
+        const now = Math.floor(Date.now() / 1000);
+        const remaining = 30 - (now % 30);
+        
+        document.getElementById('timeRemaining').textContent = `${remaining}s`;
+        document.getElementById('timerFill').style.width = `${(remaining / 30) * 100}%`;
+
+        if (remaining === 30) {
+          updateCodes();
+        }
+      }, 1000);
+    }
+
+    async function handleSignOut() {
+      await supabase.auth.signOut();
+      window.location.href = './auth.html';
+    }
+
+    // Register service worker
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./sw.js');
+    }
+
+    init();
+  </script>
+</body>
+</html>
