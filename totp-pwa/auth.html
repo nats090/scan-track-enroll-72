@@ -210,7 +210,7 @@
     async function checkAuth() {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
-        window.location.href = '/';
+        window.location.href = '/index.html';
       }
     }
 
@@ -258,7 +258,7 @@
 
           showMessage('Sign in successful!', 'success');
           setTimeout(() => {
-            window.location.href = '/';
+            window.location.href = '/index.html';
           }, 1000);
         } else {
           const { data, error } = await supabase.auth.signUp({
@@ -277,7 +277,7 @@
             });
             showMessage('Account created and approved! Signing you in...', 'success');
             setTimeout(() => {
-              window.location.href = '/';
+              window.location.href = '/index.html';
             }, 1500);
           } else {
             // Create approval request
