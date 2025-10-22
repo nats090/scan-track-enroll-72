@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Library TOTP Authenticator - Secure access codes">
-  <meta name="theme-color" content="#8b5cf6">
+  <meta name="theme-color" content="#2d5016">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>Library TOTP Authenticator</title>
@@ -18,120 +18,183 @@
 
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: linear-gradient(180deg, #2d5016 0%, #4a7c2c 100%);
       min-height: 100vh;
+      padding: 0;
+      margin: 0;
+    }
+
+    .header-section {
+      background: linear-gradient(135deg, #2d5016 0%, #3d6622 100%);
+      padding: 20px;
+      text-align: center;
+      color: white;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    }
+
+    .header-section h1 {
+      font-size: 22px;
+      margin-bottom: 5px;
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 20px;
+      gap: 8px;
+    }
+
+    .header-section p {
+      font-size: 14px;
+      opacity: 0.9;
     }
 
     .container {
+      padding: 20px;
+      max-width: 700px;
+      margin: 0 auto;
+    }
+
+    .timer-card {
       background: white;
-      border-radius: 20px;
-      padding: 30px;
-      max-width: 500px;
-      width: 100%;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-    }
-
-    .header {
+      border-radius: 16px;
+      padding: 30px 20px;
+      margin-bottom: 20px;
       text-align: center;
-      margin-bottom: 30px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     }
 
-    .header h1 {
-      color: #333;
-      font-size: 24px;
+    .timer-number {
+      font-size: 64px;
+      font-weight: bold;
+      color: #2d5016;
+      line-height: 1;
       margin-bottom: 10px;
     }
 
-    .timer {
-      text-align: center;
-      margin-bottom: 20px;
-      font-size: 18px;
+    .timer-text {
+      font-size: 16px;
       color: #666;
+      margin-bottom: 20px;
     }
 
     .timer-bar {
       width: 100%;
-      height: 8px;
+      height: 10px;
       background: #e0e0e0;
       border-radius: 10px;
       overflow: hidden;
-      margin-bottom: 10px;
     }
 
     .timer-fill {
       height: 100%;
-      background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+      background: linear-gradient(90deg, #2d5016 0%, #4a7c2c 100%);
       transition: width 1s linear;
     }
 
+    .scan-btn {
+      background: white;
+      border: none;
+      padding: 18px;
+      border-radius: 16px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 600;
+      width: 100%;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      color: #333;
+    }
+
     .code-card {
-      background: #f8f9fa;
-      border-radius: 12px;
+      background: white;
+      border-radius: 16px;
       padding: 20px;
       margin-bottom: 15px;
-      position: relative;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     }
 
     .code-role {
-      font-size: 14px;
-      color: #666;
+      font-size: 12px;
+      color: #888;
       text-transform: uppercase;
       font-weight: 600;
-      margin-bottom: 10px;
+      margin-bottom: 15px;
+      letter-spacing: 1px;
+    }
+
+    .code-content {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 15px;
     }
 
     .code-display {
-      font-size: 32px;
+      font-size: 36px;
       font-weight: bold;
       color: #333;
-      letter-spacing: 4px;
+      letter-spacing: 8px;
       font-family: 'Courier New', monospace;
-      margin-bottom: 10px;
+      flex: 1;
     }
 
     .copy-btn {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: #2d5016;
       color: white;
       border: none;
-      padding: 10px 20px;
-      border-radius: 8px;
+      padding: 14px 24px;
+      border-radius: 12px;
       cursor: pointer;
       font-size: 14px;
       font-weight: 600;
-      width: 100%;
-      transition: transform 0.2s;
+      transition: transform 0.2s, opacity 0.2s;
+      white-space: nowrap;
     }
 
     .copy-btn:active {
       transform: scale(0.95);
     }
 
-    .logout-btn {
-      background: #dc3545;
-      color: white;
-      border: none;
-      padding: 12px;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 14px;
-      font-weight: 600;
-      width: 100%;
+    .copy-btn.staff {
+      background: #f59e0b;
+    }
+
+    .footer-info {
+      background: rgba(255,255,255,0.1);
+      border-radius: 16px;
+      padding: 20px;
       margin-top: 20px;
+      color: white;
+    }
+
+    .footer-info div {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+      font-size: 14px;
+    }
+
+    .footer-info div:last-child {
+      margin-bottom: 0;
     }
 
     .loading {
       text-align: center;
       padding: 40px;
-      color: #666;
+      color: white;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
     }
 
     .spinner {
-      border: 3px solid #f3f3f3;
-      border-top: 3px solid #667eea;
+      border: 3px solid rgba(255,255,255,0.3);
+      border-top: 3px solid white;
       border-radius: 50%;
       width: 40px;
       height: 40px;
@@ -147,46 +210,92 @@
     .waiting {
       text-align: center;
       padding: 40px;
+      color: white;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
     }
 
     .waiting h2 {
-      color: #333;
       margin-bottom: 10px;
     }
 
     .waiting p {
-      color: #666;
+      margin-bottom: 20px;
+    }
+
+    .waiting .logout-btn {
+      background: #dc3545;
+      color: white;
+      border: none;
+      padding: 14px 24px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      max-width: 200px;
+    }
+
+    @media (max-width: 768px) {
+      .code-display {
+        font-size: 28px;
+        letter-spacing: 4px;
+      }
+      
+      .timer-number {
+        font-size: 48px;
+      }
+      
+      .header-section h1 {
+        font-size: 18px;
+      }
+      
+      .header-section p {
+        font-size: 12px;
+      }
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <div class="header">
-      <h1>🔐 Library TOTP Authenticator</h1>
+  <div id="loading" class="loading">
+    <div class="spinner"></div>
+    <p>Loading...</p>
+  </div>
+
+  <div id="waiting" class="waiting" style="display: none;">
+    <h2>⏳ Waiting for Approval</h2>
+    <p>Your account is pending admin approval. Please check back later.</p>
+    <button class="logout-btn" onclick="handleSignOut()">Sign Out</button>
+  </div>
+
+  <div id="app" style="display: none;">
+    <div class="header-section">
+      <h1>🔒 Library Authenticator</h1>
+      <p>Admin Access - All Roles</p>
     </div>
 
-    <div id="loading" class="loading">
-      <div class="spinner"></div>
-      <p>Loading...</p>
-    </div>
-
-    <div id="waiting" class="waiting" style="display: none;">
-      <h2>⏳ Waiting for Approval</h2>
-      <p>Your account is pending admin approval. Please check back later.</p>
-      <button class="logout-btn" onclick="handleSignOut()">Sign Out</button>
-    </div>
-
-    <div id="app" style="display: none;">
-      <div class="timer">
+    <div class="container">
+      <div class="timer-card">
+        <div class="timer-number" id="timeRemaining">30</div>
+        <div class="timer-text">seconds until refresh</div>
         <div class="timer-bar">
           <div id="timerFill" class="timer-fill"></div>
         </div>
-        <span id="timeRemaining">30s</span>
       </div>
+
+      <button class="scan-btn" onclick="alert('QR Scan feature coming soon!')">
+        📷 Scan QR Code
+      </button>
 
       <div id="codesList"></div>
 
-      <button class="logout-btn" onclick="handleSignOut()">Sign Out</button>
+      <div class="footer-info">
+        <div>✓ Works offline</div>
+        <div>✓ Codes refresh every 30 seconds</div>
+        <div>✓ Secure authentication for library system</div>
+      </div>
     </div>
   </div>
 
@@ -258,22 +367,24 @@
 
     function renderCodes() {
       const container = document.getElementById('codesList');
-      container.innerHTML = secrets.map(s => `
+      container.innerHTML = secrets.map((s, idx) => `
         <div class="code-card">
-          <div class="code-role">${s.role}</div>
-          <div class="code-display">${codes[s.role]}</div>
-          <button class="copy-btn" onclick="copyCode('${s.role}', '${codes[s.role]}')">
-            📋 Copy Code
-          </button>
+          <div class="code-role">${s.role.toUpperCase()}</div>
+          <div class="code-content">
+            <div class="code-display">${codes[s.role]}</div>
+            <button class="copy-btn ${idx === 1 ? 'staff' : ''}" onclick="copyCode('${s.role}', '${codes[s.role]}')">
+              Copy
+            </button>
+          </div>
         </div>
       `).join('');
     }
 
     function copyCode(role, code) {
       navigator.clipboard.writeText(code);
-      event.target.textContent = '✓ Copied!';
+      event.target.textContent = '✓';
       setTimeout(() => {
-        event.target.textContent = '📋 Copy Code';
+        event.target.textContent = 'Copy';
       }, 2000);
     }
 
@@ -282,7 +393,7 @@
         const now = Math.floor(Date.now() / 1000);
         const remaining = 30 - (now % 30);
         
-        document.getElementById('timeRemaining').textContent = `${remaining}s`;
+        document.getElementById('timeRemaining').textContent = remaining;
         document.getElementById('timerFill').style.width = `${(remaining / 30) * 100}%`;
 
         if (remaining === 30) {
