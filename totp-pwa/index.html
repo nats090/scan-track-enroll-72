@@ -548,47 +548,104 @@
     const SUPABASE_URL = 'https://bsygexfvkbcnsurlgeiu.supabase.co';
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJzeWdleGZ2a2JjbnN1cmxnZWl1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI4OTU2ODQsImV4cCI6MjA2ODQ3MTY4NH0.cqCk0KAd2IrcYrwem4h1eaFvtlziu5_x5tiJ0UMZ2J8';
 
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+      auth: {
+        storage: window.localStorage,
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: true
+      }
+    });
 
     let secrets = [];
     let codes = {};
 
     async function init() {
-      // Check authentication
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) {
-        window.location.href = '/auth';
-        return;
-      }
+      try {
+        // Check authentication - session persists in localStorage
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (!session) {
+          window.location.href = '/auth';
+          return;
+        }
 
-      // Check approval status
-      const { data: approval } = await supabase
-        .from('approved_totp_users')
-        .select('approved')
-        .eq('user_id', session.user.id)
-        .single();
+        // Check approval status - try cache first if offline
+        let approval = null;
+        const cachedApproval = localStorage.getItem('totp_approval');
+        
+        if (navigator.onLine) {
+          const { data } = await supabase
+            .from('approved_totp_users')
+            .select('approved')
+            .eq('user_id', session.user.id)
+            .single();
+          
+          approval = data;
+          
+          // Cache approval status for offline use
+          if (approval) {
+            localStorage.setItem('totp_approval', JSON.stringify(approval));
+          }
+        } else if (cachedApproval) {
+          // Use cached approval when offline
+          approval = JSON.parse(cachedApproval);
+        }
 
-      if (!approval || !approval.approved) {
+        if (!approval || !approval.approved) {
+          document.getElementById('loading').style.display = 'none';
+          document.getElementById('waiting').style.display = 'block';
+          return;
+        }
+
+        // Load secrets and start app
+        await loadSecrets();
         document.getElementById('loading').style.display = 'none';
-        document.getElementById('waiting').style.display = 'block';
-        return;
+        document.getElementById('app').style.display = 'block';
+        updateCodes();
+        startTimer();
+      } catch (error) {
+        console.error('Init error:', error);
+        // If offline and have cached data, still allow access
+        const cachedSecrets = localStorage.getItem('totp_secrets');
+        if (cachedSecrets && !navigator.onLine) {
+          secrets = JSON.parse(cachedSecrets);
+          document.getElementById('loading').style.display = 'none';
+          document.getElementById('app').style.display = 'block';
+          updateCodes();
+          startTimer();
+        }
       }
-
-      // Load secrets and start app
-      await loadSecrets();
-      document.getElementById('loading').style.display = 'none';
-      document.getElementById('app').style.display = 'block';
-      updateCodes();
-      startTimer();
     }
 
     async function loadSecrets() {
-      const { data } = await supabase
-        .from('totp_secrets')
-        .select('role, secret');
-      
-      secrets = data || [];
+      try {
+        if (navigator.onLine) {
+          const { data } = await supabase
+            .from('totp_secrets')
+            .select('role, secret');
+          
+          secrets = data || [];
+          
+          // Cache secrets for offline use
+          if (secrets.length > 0) {
+            localStorage.setItem('totp_secrets', JSON.stringify(secrets));
+          }
+        } else {
+          // Load from cache when offline
+          const cachedSecrets = localStorage.getItem('totp_secrets');
+          if (cachedSecrets) {
+            secrets = JSON.parse(cachedSecrets);
+          }
+        }
+      } catch (error) {
+        console.error('Load secrets error:', error);
+        // Fallback to cached data
+        const cachedSecrets = localStorage.getItem('totp_secrets');
+        if (cachedSecrets) {
+          secrets = JSON.parse(cachedSecrets);
+        }
+      }
     }
 
     function generateCode(secret) {

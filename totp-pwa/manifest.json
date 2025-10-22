@@ -2,7 +2,7 @@
   "name": "Library TOTP Authenticator",
   "short_name": "TOTP Auth",
   "description": "Secure TOTP authentication for library staff",
-  "start_url": "./index.html",
+  "start_url": "/",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#2d5016",
