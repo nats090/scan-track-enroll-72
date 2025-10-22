@@ -37,8 +37,6 @@ import { format, startOfDay, endOfDay, subDays, subWeeks, subMonths } from 'date
 import { ChartTimeSeries, ChartCourseDistribution } from '@/components/analytics/ReportCharts';
 import StudentPagination from '@/components/StudentPagination';
 import AttendanceTable from '@/components/AttendanceTable';
-import { bulkImportStudents2025, bulkImportStudents2ndYear, bulkImportStudents3rdYear, bulkImportStudents4thYear } from '@/utils/bulkStudentImport';
-import { Loader2 } from 'lucide-react';
 
 const EnhancedAdminPage = () => {
   const [students, setStudents] = useState<Student[]>([]);
@@ -52,10 +50,6 @@ const EnhancedAdminPage = () => {
   const [studentTypeFilter, setStudentTypeFilter] = useState<string>('all');
   const [studentPage, setStudentPage] = useState(1);
   const [studentsPerPage, setStudentsPerPage] = useState(25);
-  const [isImporting1stYear, setIsImporting1stYear] = useState(false);
-  const [isImporting2ndYear, setIsImporting2ndYear] = useState(false);
-  const [isImporting3rdYear, setIsImporting3rdYear] = useState(false);
-  const [isImporting4thYear, setIsImporting4thYear] = useState(false);
   
   const [newStudent, setNewStudent] = useState({
     name: '',
@@ -486,10 +480,9 @@ const EnhancedAdminPage = () => {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-6">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="add-student">Add User</TabsTrigger>
             <TabsTrigger value="edit-students">Manage Users</TabsTrigger>
-            <TabsTrigger value="bulk-import">Bulk Import</TabsTrigger>
             <TabsTrigger value="rfid-manager">RFID Manager</TabsTrigger>
             <TabsTrigger value="reports">Advanced Reports</TabsTrigger>
             <TabsTrigger value="analytics">Live Analytics</TabsTrigger>
@@ -506,207 +499,6 @@ const EnhancedAdminPage = () => {
               }}
               onClose={() => {}}
             />
-          </TabsContent>
-
-          <TabsContent value="bulk-import">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <UserPlus className="h-5 w-5" />
-                  Bulk Student Import
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-6">
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                    <h3 className="font-semibold text-blue-900 mb-2">1st Year Students (2025)</h3>
-                    <ul className="text-sm text-blue-800 space-y-1">
-                      <li>• 367 first-year students</li>
-                      <li>• Assigned to Notre Dame Library</li>
-                      <li>• All names in CAPS format</li>
-                    </ul>
-                    <Button 
-                      onClick={async () => {
-                        setIsImporting1stYear(true);
-                        try {
-                          const results = await bulkImportStudents2025();
-                          toast({
-                            title: "1st Year Import Complete!",
-                            description: `Added: ${results.added}, Skipped: ${results.skipped}, Errors: ${results.errors}`,
-                          });
-                          if (results.skippedStudents.length > 0) {
-                            console.log('Skipped students:', results.skippedStudents);
-                          }
-                          await loadData();
-                        } catch (error) {
-                          toast({
-                            title: "Import Failed",
-                            description: "Failed to import 1st year students",
-                            variant: "destructive",
-                          });
-                          console.error(error);
-                        } finally {
-                          setIsImporting1stYear(false);
-                        }
-                      }}
-                      disabled={isImporting1stYear}
-                      className="w-full mt-4"
-                    >
-                      {isImporting1stYear ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Importing...
-                        </>
-                      ) : (
-                        <>
-                          <UserPlus className="mr-2 h-4 w-4" />
-                          Import 367 1st Year Students
-                        </>
-                      )}
-                    </Button>
-                  </div>
-                  
-                  <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                    <h3 className="font-semibold text-green-900 mb-2">2nd Year Students</h3>
-                    <ul className="text-sm text-green-800 space-y-1">
-                      <li>• 319 second-year students</li>
-                      <li>• Assigned to Notre Dame Library</li>
-                      <li>• All names in CAPS format</li>
-                    </ul>
-                    <Button 
-                      onClick={async () => {
-                        setIsImporting2ndYear(true);
-                        try {
-                          const results = await bulkImportStudents2ndYear();
-                          toast({
-                            title: "2nd Year Import Complete!",
-                            description: `Added: ${results.added}, Skipped: ${results.skipped}, Errors: ${results.errors}`,
-                          });
-                          if (results.skippedStudents.length > 0) {
-                            console.log('Skipped students:', results.skippedStudents);
-                          }
-                          await loadData();
-                        } catch (error) {
-                          toast({
-                            title: "Import Failed",
-                            description: "Failed to import 2nd year students",
-                            variant: "destructive",
-                          });
-                          console.error(error);
-                        } finally {
-                          setIsImporting2ndYear(false);
-                        }
-                      }}
-                      disabled={isImporting2ndYear}
-                       className="w-full mt-4"
-                    >
-                      {isImporting2ndYear ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Importing...
-                        </>
-                      ) : (
-                        <>
-                          <UserPlus className="mr-2 h-4 w-4" />
-                          Import 319 2nd Year Students
-                        </>
-                      )}                   
-                    </Button>
-                  </div>
-
-                  <div className="bg-card rounded-lg p-6 border">
-                    <h3 className="text-lg font-semibold mb-4">3rd Year Students</h3>
-                    <p className="text-muted-foreground mb-4">
-                      Import 280 pre-configured 3rd year students into the system.
-                    </p>
-                    <ul className="list-disc list-inside text-sm text-muted-foreground mb-4 space-y-1">
-                      <li>Checks for duplicates before importing</li>
-                      <li>Automatically assigns to Notre Dame library</li>
-                      <li>Sets appropriate year level and course information</li>
-                    </ul>
-                    <Button 
-                      onClick={async () => {
-                        setIsImporting3rdYear(true);
-                        try {
-                          const results = await bulkImportStudents3rdYear();
-                          toast({
-                            title: "Import Complete",
-                            description: `Added ${results.added} students, skipped ${results.skipped} duplicates${results.errors.length > 0 ? `, ${results.errors.length} errors` : ''}`,
-                          });
-                          if (results.errors.length > 0) {
-                            console.error('Import errors:', results.errors);
-                          }
-                          window.location.reload();
-                        } catch (error) {
-                          toast({
-                            variant: "destructive",
-                            title: "Import Failed",
-                            description: "An error occurred during the import process.",
-                          });
-                          console.error(error);
-                        } finally {
-                          setIsImporting3rdYear(false);
-                        }
-                      }}
-                      disabled={isImporting3rdYear}
-                      className="w-full mt-4"
-                    >
-                      {isImporting3rdYear ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Importing...
-                        </>
-                      ) : (
-                        <>
-                          <UserPlus className="mr-2 h-4 w-4" />
-                          Import 280 3rd Year Students
-                        </>
-                      )}                   
-                    </Button>
-
-                    <Button 
-                      onClick={async () => {
-                        setIsImporting4thYear(true);
-                        try {
-                          const results = await bulkImportStudents4thYear();
-                          toast({
-                            title: "4th Year Import Complete",
-                            description: `Added: ${results.added}, Skipped: ${results.skipped}, Errors: ${results.errors}`,
-                          });
-                          if (results.errors.length > 0) {
-                            console.error("Import errors:", results.errors);
-                          }
-                          window.location.reload();
-                        } catch (error) {
-                          toast({
-                            title: "Import Failed",
-                            description: "An error occurred during the import process.",
-                            variant: "destructive",
-                          });
-                          console.error(error);
-                        } finally {
-                          setIsImporting4thYear(false);
-                        }
-                      }}
-                      disabled={isImporting4thYear}
-                      className="w-full mt-4"
-                    >
-                      {isImporting4thYear ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Importing 4th Year...
-                        </>
-                      ) : (
-                        <>
-                          <UserPlus className="mr-2 h-4 w-4" />
-                          Import 243 4th Year Students
-                        </>
-                      )}                   
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
           </TabsContent>
 
           <TabsContent value="edit-students">
