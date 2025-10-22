@@ -2,11 +2,10 @@ const CACHE_NAME = 'totp-pwa-v1';
 const STATIC_CACHE = 'totp-static-v1';
 
 const STATIC_ASSETS = [
-  '/',
-  '/index.html',
-  '/auth.html',
-  '/auth',
-  '/manifest.json',
+  './',
+  './index.html',
+  './auth.html',
+  './manifest.json',
   'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2',
   'https://cdn.jsdelivr.net/npm/otpauth@9/dist/otpauth.umd.min.js'
 ];
@@ -38,35 +37,12 @@ self.addEventListener('activate', (event) => {
 // Fetch event - serve from cache, fallback to network
 self.addEventListener('fetch', (event) => {
   const { request } = event;
-  const url = new URL(request.url);
 
   // Skip non-GET requests
   if (request.method !== 'GET') return;
 
-  // Skip Supabase requests - always go to network when online
+  // Skip Supabase requests - always go to network
   if (request.url.includes('supabase.co')) {
-    return;
-  }
-
-  // For navigation requests to root or index, serve index.html
-  if (request.mode === 'navigate' && (url.pathname === '/' || url.pathname === '/index.html')) {
-    event.respondWith(
-      caches.match('/index.html')
-        .then((cachedResponse) => {
-          if (cachedResponse) {
-            return cachedResponse;
-          }
-          return fetch('/index.html')
-            .then((response) => {
-              if (response && response.status === 200) {
-                const responseToCache = response.clone();
-                caches.open(STATIC_CACHE).then((cache) => cache.put('/index.html', responseToCache));
-              }
-              return response;
-            })
-            .catch(() => caches.match('/index.html'));
-        })
-    );
     return;
   }
 
@@ -93,7 +69,7 @@ self.addEventListener('fetch', (event) => {
           .catch(() => {
             // Return offline page if available
             if (request.mode === 'navigate') {
-              return caches.match('/index.html');
+              return caches.match('./index.html');
             }
           });
       })

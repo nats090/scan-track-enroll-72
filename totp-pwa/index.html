@@ -4,11 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Library TOTP Authenticator - Secure access codes">
-  <meta name="theme-color" content="#2d5016">
+  <meta name="theme-color" content="#8b5cf6">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>Library TOTP Authenticator</title>
-  <link rel="manifest" href="/manifest.json">
+  <link rel="manifest" href="./manifest.json">
   <style>
     * {
       margin: 0;
@@ -18,183 +18,120 @@
 
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-      background: linear-gradient(180deg, #2d5016 0%, #4a7c2c 100%);
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       min-height: 100vh;
-      padding: 0;
-      margin: 0;
-    }
-
-    .header-section {
-      background: linear-gradient(135deg, #2d5016 0%, #3d6622 100%);
-      padding: 20px;
-      text-align: center;
-      color: white;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-    }
-
-    .header-section h1 {
-      font-size: 22px;
-      margin-bottom: 5px;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 8px;
-    }
-
-    .header-section p {
-      font-size: 14px;
-      opacity: 0.9;
+      padding: 20px;
     }
 
     .container {
-      padding: 20px;
-      max-width: 700px;
-      margin: 0 auto;
-    }
-
-    .timer-card {
       background: white;
-      border-radius: 16px;
-      padding: 30px 20px;
-      margin-bottom: 20px;
-      text-align: center;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      border-radius: 20px;
+      padding: 30px;
+      max-width: 500px;
+      width: 100%;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
     }
 
-    .timer-number {
-      font-size: 64px;
-      font-weight: bold;
-      color: #2d5016;
-      line-height: 1;
+    .header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .header h1 {
+      color: #333;
+      font-size: 24px;
       margin-bottom: 10px;
     }
 
-    .timer-text {
-      font-size: 16px;
-      color: #666;
+    .timer {
+      text-align: center;
       margin-bottom: 20px;
+      font-size: 18px;
+      color: #666;
     }
 
     .timer-bar {
       width: 100%;
-      height: 10px;
+      height: 8px;
       background: #e0e0e0;
       border-radius: 10px;
       overflow: hidden;
+      margin-bottom: 10px;
     }
 
     .timer-fill {
       height: 100%;
-      background: linear-gradient(90deg, #2d5016 0%, #4a7c2c 100%);
+      background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
       transition: width 1s linear;
     }
 
-    .scan-btn {
-      background: white;
-      border: none;
-      padding: 18px;
-      border-radius: 16px;
-      cursor: pointer;
-      font-size: 16px;
-      font-weight: 600;
-      width: 100%;
-      margin-bottom: 20px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-      color: #333;
-    }
-
     .code-card {
-      background: white;
-      border-radius: 16px;
+      background: #f8f9fa;
+      border-radius: 12px;
       padding: 20px;
       margin-bottom: 15px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      position: relative;
     }
 
     .code-role {
-      font-size: 12px;
-      color: #888;
+      font-size: 14px;
+      color: #666;
       text-transform: uppercase;
       font-weight: 600;
-      margin-bottom: 15px;
-      letter-spacing: 1px;
-    }
-
-    .code-content {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 15px;
+      margin-bottom: 10px;
     }
 
     .code-display {
-      font-size: 36px;
+      font-size: 32px;
       font-weight: bold;
       color: #333;
-      letter-spacing: 8px;
+      letter-spacing: 4px;
       font-family: 'Courier New', monospace;
-      flex: 1;
+      margin-bottom: 10px;
     }
 
     .copy-btn {
-      background: #2d5016;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       color: white;
       border: none;
-      padding: 14px 24px;
-      border-radius: 12px;
+      padding: 10px 20px;
+      border-radius: 8px;
       cursor: pointer;
       font-size: 14px;
       font-weight: 600;
-      transition: transform 0.2s, opacity 0.2s;
-      white-space: nowrap;
+      width: 100%;
+      transition: transform 0.2s;
     }
 
     .copy-btn:active {
       transform: scale(0.95);
     }
 
-    .copy-btn.staff {
-      background: #f59e0b;
-    }
-
-    .footer-info {
-      background: rgba(255,255,255,0.1);
-      border-radius: 16px;
-      padding: 20px;
-      margin-top: 20px;
+    .logout-btn {
+      background: #dc3545;
       color: white;
-    }
-
-    .footer-info div {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 10px;
+      border: none;
+      padding: 12px;
+      border-radius: 8px;
+      cursor: pointer;
       font-size: 14px;
-    }
-
-    .footer-info div:last-child {
-      margin-bottom: 0;
+      font-weight: 600;
+      width: 100%;
+      margin-top: 20px;
     }
 
     .loading {
       text-align: center;
       padding: 40px;
-      color: white;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
+      color: #666;
     }
 
     .spinner {
-      border: 3px solid rgba(255,255,255,0.3);
-      border-top: 3px solid white;
+      border: 3px solid #f3f3f3;
+      border-top: 3px solid #667eea;
       border-radius: 50%;
       width: 40px;
       height: 40px;
@@ -210,335 +147,46 @@
     .waiting {
       text-align: center;
       padding: 40px;
-      color: white;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
     }
 
     .waiting h2 {
+      color: #333;
       margin-bottom: 10px;
     }
 
     .waiting p {
-      margin-bottom: 20px;
-    }
-
-    .waiting .logout-btn {
-      background: #dc3545;
-      color: white;
-      border: none;
-      padding: 14px 24px;
-      border-radius: 12px;
-      cursor: pointer;
-      font-size: 14px;
-      font-weight: 600;
-      max-width: 200px;
-    }
-
-    .account-menu {
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      z-index: 1000;
-    }
-
-    .menu-btn {
-      background: white;
-      border: none;
-      padding: 12px 16px;
-      border-radius: 12px;
-      cursor: pointer;
-      font-size: 14px;
-      font-weight: 600;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .dropdown-menu {
-      display: none;
-      position: absolute;
-      top: 60px;
-      right: 0;
-      background: white;
-      border-radius: 12px;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.15);
-      min-width: 220px;
-      overflow: hidden;
-    }
-
-    .dropdown-menu.active {
-      display: block;
-    }
-
-    .menu-item {
-      padding: 14px 20px;
-      cursor: pointer;
-      border: none;
-      background: none;
-      width: 100%;
-      text-align: left;
-      font-size: 14px;
-      color: #333;
-      transition: background 0.2s;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .menu-item:hover {
-      background: #f8f9fa;
-    }
-
-    .menu-item.danger {
-      color: #dc3545;
-    }
-
-    .menu-divider {
-      height: 1px;
-      background: #e0e0e0;
-      margin: 8px 0;
-    }
-
-    .modal {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: rgba(0,0,0,0.5);
-      z-index: 2000;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-    }
-
-    .modal.active {
-      display: flex;
-    }
-
-    .modal-content {
-      background: white;
-      border-radius: 20px;
-      padding: 30px;
-      max-width: 400px;
-      width: 100%;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-    }
-
-    .modal-header {
-      margin-bottom: 20px;
-    }
-
-    .modal-header h2 {
-      font-size: 22px;
-      color: #333;
-      margin-bottom: 8px;
-    }
-
-    .modal-header p {
-      font-size: 14px;
       color: #666;
-    }
-
-    .form-group {
-      margin-bottom: 16px;
-    }
-
-    .form-group label {
-      display: block;
-      font-size: 14px;
-      font-weight: 600;
-      color: #333;
-      margin-bottom: 8px;
-    }
-
-    .form-group input {
-      width: 100%;
-      padding: 12px;
-      border: 2px solid #e0e0e0;
-      border-radius: 8px;
-      font-size: 14px;
-    }
-
-    .form-group input:focus {
-      outline: none;
-      border-color: #4a7c2c;
-    }
-
-    .modal-actions {
-      display: flex;
-      gap: 10px;
-      margin-top: 20px;
-    }
-
-    .modal-btn {
-      flex: 1;
-      padding: 12px;
-      border: none;
-      border-radius: 8px;
-      font-size: 14px;
-      font-weight: 600;
-      cursor: pointer;
-    }
-
-    .modal-btn.primary {
-      background: #2d5016;
-      color: white;
-    }
-
-    .modal-btn.danger {
-      background: #dc3545;
-      color: white;
-    }
-
-    .modal-btn.secondary {
-      background: #f8f9fa;
-      color: #333;
-    }
-
-    .message {
-      padding: 12px;
-      border-radius: 8px;
-      margin-bottom: 16px;
-      font-size: 14px;
-      text-align: center;
-    }
-
-    .message.success {
-      background: #d4edda;
-      color: #155724;
-    }
-
-    .message.error {
-      background: #f8d7da;
-      color: #721c24;
-    }
-
-    @media (max-width: 768px) {
-      .code-display {
-        font-size: 28px;
-        letter-spacing: 4px;
-      }
-      
-      .timer-number {
-        font-size: 48px;
-      }
-      
-      .header-section h1 {
-        font-size: 18px;
-      }
-      
-      .header-section p {
-        font-size: 12px;
-      }
     }
   </style>
 </head>
 <body>
-  <div id="loading" class="loading">
-    <div class="spinner"></div>
-    <p>Loading...</p>
-  </div>
-
-  <div id="waiting" class="waiting" style="display: none;">
-    <h2>⏳ Waiting for Approval</h2>
-    <p>Your account is pending admin approval. Please check back later.</p>
-    <button class="logout-btn" onclick="handleSignOut()">Sign Out</button>
-  </div>
-
-  <div id="app" style="display: none;">
-    <div class="account-menu">
-      <button class="menu-btn" onclick="toggleMenu()">
-        👤 Account
-      </button>
-      <div class="dropdown-menu" id="accountDropdown">
-        <button class="menu-item" onclick="openChangePasswordModal()">
-          🔑 Change Password
-        </button>
-        <div class="menu-divider"></div>
-        <button class="menu-item danger" onclick="openDeleteAccountModal()">
-          🗑️ Delete Account
-        </button>
-        <div class="menu-divider"></div>
-        <button class="menu-item" onclick="handleSignOut()">
-          🚪 Sign Out
-        </button>
-      </div>
+  <div class="container">
+    <div class="header">
+      <h1>🔐 Library TOTP Authenticator</h1>
     </div>
 
-    <div class="header-section">
-      <h1>🔒 Library Authenticator</h1>
-      <p>Admin Access - All Roles</p>
+    <div id="loading" class="loading">
+      <div class="spinner"></div>
+      <p>Loading...</p>
     </div>
 
-    <div class="container">
-      <div class="timer-card">
-        <div class="timer-number" id="timeRemaining">30</div>
-        <div class="timer-text">seconds until refresh</div>
+    <div id="waiting" class="waiting" style="display: none;">
+      <h2>⏳ Waiting for Approval</h2>
+      <p>Your account is pending admin approval. Please check back later.</p>
+      <button class="logout-btn" onclick="handleSignOut()">Sign Out</button>
+    </div>
+
+    <div id="app" style="display: none;">
+      <div class="timer">
         <div class="timer-bar">
           <div id="timerFill" class="timer-fill"></div>
         </div>
+        <span id="timeRemaining">30s</span>
       </div>
-
-      <button class="scan-btn" onclick="alert('QR Scan feature coming soon!')">
-        📷 Scan QR Code
-      </button>
 
       <div id="codesList"></div>
 
-      <div class="footer-info">
-        <div>✓ Works offline</div>
-        <div>✓ Codes refresh every 30 seconds</div>
-        <div>✓ Secure authentication for library system</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Change Password Modal -->
-  <div class="modal" id="changePasswordModal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2>Change Password</h2>
-        <p>Enter your new password below</p>
-      </div>
-      <div id="passwordMessage" style="display: none;"></div>
-      <div class="form-group">
-        <label for="newPassword">New Password</label>
-        <input type="password" id="newPassword" placeholder="At least 6 characters" minlength="6">
-      </div>
-      <div class="form-group">
-        <label for="confirmPassword">Confirm Password</label>
-        <input type="password" id="confirmPassword" placeholder="Re-enter your password" minlength="6">
-      </div>
-      <div class="modal-actions">
-        <button class="modal-btn secondary" onclick="closeChangePasswordModal()">Cancel</button>
-        <button class="modal-btn primary" onclick="handleChangePassword()">Update Password</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Delete Account Modal -->
-  <div class="modal" id="deleteAccountModal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2>Delete Account</h2>
-        <p>This action cannot be undone. Are you sure?</p>
-      </div>
-      <div id="deleteMessage" style="display: none;"></div>
-      <div class="form-group">
-        <label for="confirmDelete">Type "DELETE" to confirm</label>
-        <input type="text" id="confirmDelete" placeholder="DELETE">
-      </div>
-      <div class="modal-actions">
-        <button class="modal-btn secondary" onclick="closeDeleteAccountModal()">Cancel</button>
-        <button class="modal-btn danger" onclick="handleDeleteAccount()">Delete Account</button>
-      </div>
+      <button class="logout-btn" onclick="handleSignOut()">Sign Out</button>
     </div>
   </div>
 
@@ -548,104 +196,47 @@
     const SUPABASE_URL = 'https://bsygexfvkbcnsurlgeiu.supabase.co';
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJzeWdleGZ2a2JjbnN1cmxnZWl1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI4OTU2ODQsImV4cCI6MjA2ODQ3MTY4NH0.cqCk0KAd2IrcYrwem4h1eaFvtlziu5_x5tiJ0UMZ2J8';
 
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
-      auth: {
-        storage: window.localStorage,
-        persistSession: true,
-        autoRefreshToken: true,
-        detectSessionInUrl: true
-      }
-    });
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     let secrets = [];
     let codes = {};
 
     async function init() {
-      try {
-        // Check authentication - session persists in localStorage
-        const { data: { session } } = await supabase.auth.getSession();
-        
-        if (!session) {
-          window.location.href = '/auth';
-          return;
-        }
-
-        // Check approval status - try cache first if offline
-        let approval = null;
-        const cachedApproval = localStorage.getItem('totp_approval');
-        
-        if (navigator.onLine) {
-          const { data } = await supabase
-            .from('approved_totp_users')
-            .select('approved')
-            .eq('user_id', session.user.id)
-            .single();
-          
-          approval = data;
-          
-          // Cache approval status for offline use
-          if (approval) {
-            localStorage.setItem('totp_approval', JSON.stringify(approval));
-          }
-        } else if (cachedApproval) {
-          // Use cached approval when offline
-          approval = JSON.parse(cachedApproval);
-        }
-
-        if (!approval || !approval.approved) {
-          document.getElementById('loading').style.display = 'none';
-          document.getElementById('waiting').style.display = 'block';
-          return;
-        }
-
-        // Load secrets and start app
-        await loadSecrets();
-        document.getElementById('loading').style.display = 'none';
-        document.getElementById('app').style.display = 'block';
-        updateCodes();
-        startTimer();
-      } catch (error) {
-        console.error('Init error:', error);
-        // If offline and have cached data, still allow access
-        const cachedSecrets = localStorage.getItem('totp_secrets');
-        if (cachedSecrets && !navigator.onLine) {
-          secrets = JSON.parse(cachedSecrets);
-          document.getElementById('loading').style.display = 'none';
-          document.getElementById('app').style.display = 'block';
-          updateCodes();
-          startTimer();
-        }
+      // Check authentication
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        window.location.href = './auth.html';
+        return;
       }
+
+      // Check approval status
+      const { data: approval } = await supabase
+        .from('approved_totp_users')
+        .select('approved')
+        .eq('user_id', session.user.id)
+        .single();
+
+      if (!approval || !approval.approved) {
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('waiting').style.display = 'block';
+        return;
+      }
+
+      // Load secrets and start app
+      await loadSecrets();
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('app').style.display = 'block';
+      updateCodes();
+      startTimer();
     }
 
     async function loadSecrets() {
-      try {
-        if (navigator.onLine) {
-          const { data } = await supabase
-            .from('totp_secrets')
-            .select('role, secret');
-          
-          secrets = data || [];
-          
-          // Cache secrets for offline use
-          if (secrets.length > 0) {
-            localStorage.setItem('totp_secrets', JSON.stringify(secrets));
-          }
-        } else {
-          // Load from cache when offline
-          const cachedSecrets = localStorage.getItem('totp_secrets');
-          if (cachedSecrets) {
-            secrets = JSON.parse(cachedSecrets);
-          }
-        }
-      } catch (error) {
-        console.error('Load secrets error:', error);
-        // Fallback to cached data
-        const cachedSecrets = localStorage.getItem('totp_secrets');
-        if (cachedSecrets) {
-          secrets = JSON.parse(cachedSecrets);
-        }
-      }
+      const { data } = await supabase
+        .from('totp_secrets')
+        .select('role, secret');
+      
+      secrets = data || [];
     }
 
     function generateCode(secret) {
@@ -667,24 +258,22 @@
 
     function renderCodes() {
       const container = document.getElementById('codesList');
-      container.innerHTML = secrets.map((s, idx) => `
+      container.innerHTML = secrets.map(s => `
         <div class="code-card">
-          <div class="code-role">${s.role.toUpperCase()}</div>
-          <div class="code-content">
-            <div class="code-display">${codes[s.role]}</div>
-            <button class="copy-btn ${idx === 1 ? 'staff' : ''}" onclick="copyCode('${s.role}', '${codes[s.role]}')">
-              Copy
-            </button>
-          </div>
+          <div class="code-role">${s.role}</div>
+          <div class="code-display">${codes[s.role]}</div>
+          <button class="copy-btn" onclick="copyCode('${s.role}', '${codes[s.role]}')">
+            📋 Copy Code
+          </button>
         </div>
       `).join('');
     }
 
     function copyCode(role, code) {
       navigator.clipboard.writeText(code);
-      event.target.textContent = '✓';
+      event.target.textContent = '✓ Copied!';
       setTimeout(() => {
-        event.target.textContent = 'Copy';
+        event.target.textContent = '📋 Copy Code';
       }, 2000);
     }
 
@@ -693,7 +282,7 @@
         const now = Math.floor(Date.now() / 1000);
         const remaining = 30 - (now % 30);
         
-        document.getElementById('timeRemaining').textContent = remaining;
+        document.getElementById('timeRemaining').textContent = `${remaining}s`;
         document.getElementById('timerFill').style.width = `${(remaining / 30) * 100}%`;
 
         if (remaining === 30) {
@@ -704,120 +293,12 @@
 
     async function handleSignOut() {
       await supabase.auth.signOut();
-      window.location.href = '/auth';
-    }
-
-    function toggleMenu() {
-      const dropdown = document.getElementById('accountDropdown');
-      dropdown.classList.toggle('active');
-    }
-
-    // Close dropdown when clicking outside
-    document.addEventListener('click', (e) => {
-      const menu = document.querySelector('.account-menu');
-      const dropdown = document.getElementById('accountDropdown');
-      if (menu && !menu.contains(e.target)) {
-        dropdown?.classList.remove('active');
-      }
-    });
-
-    function openChangePasswordModal() {
-      document.getElementById('accountDropdown').classList.remove('active');
-      document.getElementById('changePasswordModal').classList.add('active');
-    }
-
-    function closeChangePasswordModal() {
-      document.getElementById('changePasswordModal').classList.remove('active');
-      document.getElementById('newPassword').value = '';
-      document.getElementById('confirmPassword').value = '';
-      document.getElementById('passwordMessage').style.display = 'none';
-    }
-
-    function openDeleteAccountModal() {
-      document.getElementById('accountDropdown').classList.remove('active');
-      document.getElementById('deleteAccountModal').classList.add('active');
-    }
-
-    function closeDeleteAccountModal() {
-      document.getElementById('deleteAccountModal').classList.remove('active');
-      document.getElementById('confirmDelete').value = '';
-      document.getElementById('deleteMessage').style.display = 'none';
-    }
-
-    function showMessage(elementId, text, type) {
-      const element = document.getElementById(elementId);
-      element.textContent = text;
-      element.className = `message ${type}`;
-      element.style.display = 'block';
-      setTimeout(() => {
-        element.style.display = 'none';
-      }, 5000);
-    }
-
-    async function handleChangePassword() {
-      const newPassword = document.getElementById('newPassword').value;
-      const confirmPassword = document.getElementById('confirmPassword').value;
-
-      if (newPassword.length < 6) {
-        showMessage('passwordMessage', 'Password must be at least 6 characters', 'error');
-        return;
-      }
-
-      if (newPassword !== confirmPassword) {
-        showMessage('passwordMessage', 'Passwords do not match', 'error');
-        return;
-      }
-
-      try {
-        const { error } = await supabase.auth.updateUser({
-          password: newPassword
-        });
-
-        if (error) throw error;
-
-        showMessage('passwordMessage', 'Password updated successfully!', 'success');
-        setTimeout(() => {
-          closeChangePasswordModal();
-        }, 2000);
-      } catch (error) {
-        showMessage('passwordMessage', error.message, 'error');
-      }
-    }
-
-    async function handleDeleteAccount() {
-      const confirmText = document.getElementById('confirmDelete').value;
-
-      if (confirmText !== 'DELETE') {
-        showMessage('deleteMessage', 'Please type DELETE to confirm', 'error');
-        return;
-      }
-
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        
-        if (!user) throw new Error('No user found');
-
-        // Delete from approved_totp_users first
-        await supabase
-          .from('approved_totp_users')
-          .delete()
-          .eq('user_id', user.id);
-
-        // Sign out and redirect
-        await supabase.auth.signOut();
-        
-        showMessage('deleteMessage', 'Account deleted. Redirecting...', 'success');
-        setTimeout(() => {
-          window.location.href = '/auth';
-        }, 2000);
-      } catch (error) {
-        showMessage('deleteMessage', error.message, 'error');
-      }
+      window.location.href = './auth.html';
     }
 
     // Register service worker
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js');
+      navigator.serviceWorker.register('./sw.js');
     }
 
     init();
