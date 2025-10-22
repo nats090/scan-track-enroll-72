@@ -1,4 +1,6 @@
 {
+  "buildCommand": "echo 'No build needed'",
+  "outputDirectory": ".",
   "rewrites": [
     { "source": "/(.*)", "destination": "/$1" }
   ],
@@ -9,6 +11,10 @@
         {
           "key": "Service-Worker-Allowed",
           "value": "/"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=0, must-revalidate"
         }
       ]
     },
@@ -21,5 +27,7 @@
         }
       ]
     }
-  ]
+  ],
+  "cleanUrls": true,
+  "trailingSlash": false
 }
