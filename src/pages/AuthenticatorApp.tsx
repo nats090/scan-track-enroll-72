@@ -3,13 +3,16 @@ import { TOTP } from 'otpauth';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { Shield, Clock, Copy, Check, QrCode, ScanLine } from 'lucide-react';
+import { Shield, Clock, Copy, Check, QrCode, ScanLine, WifiOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { Progress } from '@/components/ui/progress';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Badge } from '@/components/ui/badge';
 import BarcodeScanner from '@/components/BarcodeScanner';
 import BackButton from '@/components/BackButton';
+import { getTOTPSecrets, saveTOTPSecrets, getTOTPLastSync } from '@/utils/totpOfflineStorage';
+import { useOnlineStatus } from '@/hooks/useOnlineStatus';
 
 interface TOTPSecret {
   role: string;
@@ -22,6 +25,8 @@ const AuthenticatorApp = () => {
   const [timeLeft, setTimeLeft] = useState(30);
   const [copiedRole, setCopiedRole] = useState<string | null>(null);
   const [scannerOpen, setScannerOpen] = useState(false);
+  const [lastSync, setLastSync] = useState<number | null>(null);
+  const isOnline = useOnlineStatus();
   const { toast } = useToast();
 
   useEffect(() => {
@@ -29,16 +34,42 @@ const AuthenticatorApp = () => {
   }, []);
 
   const loadSecrets = async () => {
-    const { data, error } = await supabase
-      .from('totp_secrets')
-      .select('role, secret');
-
-    if (error) {
-      console.error('Error loading secrets:', error);
-      return;
+    // First, load from cache (works offline)
+    const cachedSecrets = await getTOTPSecrets();
+    if (cachedSecrets.length > 0) {
+      setSecrets(cachedSecrets);
+      console.log('✅ TOTP secrets loaded from cache (offline available)');
     }
 
-    setSecrets(data || []);
+    // Get last sync time
+    const syncTime = await getTOTPLastSync();
+    setLastSync(syncTime);
+
+    // If online, refresh from Supabase
+    if (isOnline) {
+      try {
+        const { data, error } = await supabase
+          .from('totp_secrets')
+          .select('role, secret');
+
+        if (data && !error && data.length > 0) {
+          setSecrets(data);
+          await saveTOTPSecrets(data);
+          const newSyncTime = await getTOTPLastSync();
+          setLastSync(newSyncTime);
+          console.log('✅ TOTP secrets refreshed from server');
+        }
+      } catch (error) {
+        console.warn('Could not refresh TOTP secrets from server:', error);
+        // Continue with cached secrets
+      }
+    } else if (cachedSecrets.length === 0) {
+      toast({
+        title: "Offline Mode",
+        description: "No cached authenticator codes. Please connect to internet first.",
+        variant: "destructive",
+      });
+    }
   };
 
   const generateCode = (secret: string): string => {
@@ -133,10 +164,33 @@ const AuthenticatorApp = () => {
     }
   };
 
+  const getLastSyncText = () => {
+    if (!lastSync) return 'Never synced';
+    const now = Date.now();
+    const diffMs = now - lastSync;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMins / 60);
+    
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins} minute${diffMins > 1 ? 's' : ''} ago`;
+    if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+    return `${Math.floor(diffHours / 24)} day${Math.floor(diffHours / 24) > 1 ? 's' : ''} ago`;
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-muted to-accent/20 p-4">
       <div className="max-w-2xl mx-auto space-y-6">
         <BackButton />
+        
+        {/* Offline Badge */}
+        {!isOnline && (
+          <div className="flex justify-center">
+            <Badge variant="secondary" className="bg-yellow-500/10 text-yellow-700 border-yellow-500/20">
+              <WifiOff className="mr-2 h-4 w-4" />
+              Offline Mode - Using Cached Codes
+            </Badge>
+          </div>
+        )}
         
         {/* Header */}
         <div className="text-center space-y-2 pt-4">
@@ -144,7 +198,14 @@ const AuthenticatorApp = () => {
             <Shield className="h-16 w-16 text-primary" />
           </div>
           <h1 className="text-4xl font-bold text-foreground">Library Authenticator</h1>
-          <p className="text-muted-foreground">Admin Access - Generate secure codes</p>
+          <p className="text-muted-foreground">
+            Admin Access - Generate secure codes
+            {lastSync && (
+              <span className="block text-sm mt-1">
+                Last synced: {getLastSyncText()}
+              </span>
+            )}
+          </p>
         </div>
 
         {/* Timer Card */}

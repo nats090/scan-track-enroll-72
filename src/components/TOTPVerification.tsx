@@ -3,11 +3,12 @@ import { TOTP } from 'otpauth';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
-import { Shield, AlertCircle, QrCode } from 'lucide-react';
+import { Shield, AlertCircle, QrCode, WifiOff } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import QRCode from 'qrcode';
 import { Separator } from '@/components/ui/separator';
 import { supabase } from '@/integrations/supabase/client';
+import { useOnlineStatus } from '@/hooks/useOnlineStatus';
 
 interface TOTPVerificationProps {
   role: 'admin' | 'librarian';
@@ -21,6 +22,7 @@ const TOTPVerification = ({ role, secret, onVerified }: TOTPVerificationProps) =
   const [qrCodeUrl, setQrCodeUrl] = useState('');
   const [currentCode, setCurrentCode] = useState('');
   const [sessionId, setSessionId] = useState('');
+  const isOnline = useOnlineStatus();
 
   // Generate QR code with current TOTP and create verification session
   useEffect(() => {
@@ -40,17 +42,23 @@ const TOTPVerification = ({ role, secret, onVerified }: TOTPVerificationProps) =
       const newSessionId = `${role}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       setSessionId(newSessionId);
 
-      // Create verification session in database
-      const { error: dbError } = await supabase
-        .from('verification_sessions')
-        .insert({
-          session_id: newSessionId,
-          role: role,
-          verified: false
-        });
+      // Create verification session in database (only if online)
+      if (isOnline) {
+        try {
+          const { error: dbError } = await supabase
+            .from('verification_sessions')
+            .insert({
+              session_id: newSessionId,
+              role: role,
+              verified: false
+            });
 
-      if (dbError) {
-        console.error('Error creating verification session:', dbError);
+          if (dbError) {
+            console.error('Error creating verification session:', dbError);
+          }
+        } catch (err) {
+          console.warn('Could not create verification session (offline):', err);
+        }
       }
 
       // Format: sessionId:role:code (e.g., "abc123:admin:123456")
@@ -76,23 +84,27 @@ const TOTPVerification = ({ role, secret, onVerified }: TOTPVerificationProps) =
     // Regenerate QR code every 30 seconds
     const interval = setInterval(generateQR, 30000);
     return () => clearInterval(interval);
-  }, [secret, role]);
+  }, [secret, role, isOnline]);
 
-  // Poll for verification from mobile app
+  // Poll for verification from mobile app (only when online)
   useEffect(() => {
-    if (!sessionId) return;
+    if (!sessionId || !isOnline) return;
 
     const pollForVerification = async () => {
-      const { data, error } = await supabase
-        .from('verification_sessions')
-        .select('verified')
-        .eq('session_id', sessionId)
-        .single();
+      try {
+        const { data, error } = await supabase
+          .from('verification_sessions')
+          .select('verified')
+          .eq('session_id', sessionId)
+          .single();
 
-      if (data?.verified) {
-        // Mobile app has verified! Proceed with login
-        sessionStorage.setItem(`totp_verified_${role}`, Date.now().toString());
-        onVerified();
+        if (data?.verified) {
+          // Mobile app has verified! Proceed with login
+          sessionStorage.setItem(`totp_verified_${role}`, Date.now().toString());
+          onVerified();
+        }
+      } catch (err) {
+        console.warn('Could not poll verification session:', err);
       }
     };
 
@@ -108,7 +120,7 @@ const TOTPVerification = ({ role, secret, onVerified }: TOTPVerificationProps) =
       clearInterval(pollInterval);
       clearTimeout(timeout);
     };
-  }, [sessionId, role, onVerified]);
+  }, [sessionId, role, onVerified, isOnline]);
 
   const verifyCode = () => {
     try {
@@ -223,26 +235,46 @@ const TOTPVerification = ({ role, secret, onVerified }: TOTPVerificationProps) =
           {/* QR Code */}
           <div className="space-y-3">
             <div className="flex items-center justify-center gap-2 text-muted-foreground">
-              <QrCode className="h-4 w-4" />
-              <span className="text-sm font-medium">Scan with Authenticator App</span>
+              {isOnline ? (
+                <>
+                  <QrCode className="h-4 w-4" />
+                  <span className="text-sm font-medium">Scan with Authenticator App</span>
+                </>
+              ) : (
+                <>
+                  <WifiOff className="h-4 w-4" />
+                  <span className="text-sm font-medium">Manual code entry only (offline mode)</span>
+                </>
+              )}
             </div>
             
-            {qrCodeUrl && (
-              <div className="flex justify-center">
-                <div className="bg-white p-4 rounded-lg border-2 border-border">
-                  <img 
-                    src={qrCodeUrl} 
-                    alt="Authentication QR Code" 
-                    className="w-48 h-48"
-                  />
+            {isOnline && qrCodeUrl && (
+              <>
+                <div className="flex justify-center">
+                  <div className="bg-white p-4 rounded-lg border-2 border-border">
+                    <img 
+                      src={qrCodeUrl} 
+                      alt="Authentication QR Code" 
+                      className="w-48 h-48"
+                    />
+                  </div>
                 </div>
-              </div>
+                
+                <div className="text-center text-xs text-muted-foreground">
+                  <p>QR code refreshes every 30 seconds</p>
+                  <p className="mt-1">Open your Library Authenticator App and scan this code</p>
+                </div>
+              </>
             )}
             
-            <div className="text-center text-xs text-muted-foreground">
-              <p>QR code refreshes every 30 seconds</p>
-              <p className="mt-1">Open your Library Authenticator App and scan this code</p>
-            </div>
+            {!isOnline && (
+              <Alert>
+                <WifiOff className="h-4 w-4" />
+                <AlertDescription>
+                  QR code scanning requires internet connection. Please use manual code entry from your cached authenticator codes.
+                </AlertDescription>
+              </Alert>
+            )}
           </div>
         </CardContent>
       </Card>
