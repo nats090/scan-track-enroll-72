@@ -4,6 +4,7 @@ import { studentService } from './studentService';
 import { attendanceService } from './attendanceService';
 import { Student } from '@/types/Student';
 import { AttendanceEntry } from '@/types/AttendanceEntry';
+import { supabase } from '@/integrations/supabase/client';
 
 export const syncService = {
   async syncLocalToSupabase(): Promise<{ studentsAdded: number; recordsAdded: number }> {
@@ -45,6 +46,22 @@ export const syncService = {
     for (const record of localData.attendanceRecords) {
       try {
         const timestamp = typeof record.timestamp === 'string' ? new Date(record.timestamp) : record.timestamp;
+        
+        // Check if this record already exists in Supabase to prevent duplicates
+        const existingStatus = await attendanceService.getStudentCurrentStatus(record.studentId);
+        const { data: recentRecords } = await supabase
+          .from('attendance_records')
+          .select('*')
+          .eq('student_id', record.studentId)
+          .eq('type', record.type)
+          .gte('timestamp', new Date(timestamp.getTime() - 60000).toISOString()) // Check within 1 minute window
+          .lte('timestamp', new Date(timestamp.getTime() + 60000).toISOString());
+        
+        if (recentRecords && recentRecords.length > 0) {
+          console.log(`⚠️ Attendance record already exists for ${record.studentName} at ${timestamp} - skipping duplicate`);
+          // Don't keep this record as it's already synced
+          continue;
+        }
         
         await attendanceService.addAttendanceRecord({
           ...record,
