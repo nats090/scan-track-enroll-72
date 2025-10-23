@@ -1,0 +1,731 @@
+===========================================
+LIBRARY ATTENDANCE SYSTEM - SERVICES
+===========================================
+
+This file contains all service layer code that handles data operations.
+
+===========================================
+1. studentService.ts
+===========================================
+
+import { supabase } from '@/integrations/supabase/client';
+import { Student } from '@/types/Student';
+import { saveToLocalStorage, getFromLocalStorage } from '@/utils/offlineStorage';
+
+export interface DatabaseStudent {
+  id: string;
+  name: string;
+  student_id: string;
+  email?: string;
+  course?: string;
+  biometric_data?: string;
+  rfid?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+// Generate unique ID for offline mode
+const generateId = () => `local_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
+export const studentService = {
+  async getStudents(): Promise<Student[]> {
+    // Always try local storage first
+    const localData = await getFromLocalStorage();
+    
+    try {
+      // Try to fetch from Supabase if online
+      if (navigator.onLine) {
+        // Fetch ALL students using pagination to bypass the 1000 row default limit
+        let allStudents: any[] = [];
+        let from = 0;
+        const pageSize = 1000;
+        let hasMore = true;
+
+        while (hasMore) {
+          const { data, error, count } = await supabase
+            .from('students')
+            .select('*', { count: 'exact' })
+            .order('created_at', { ascending: false })
+            .range(from, from + pageSize - 1);
+
+          if (error) {
+            console.error('Error fetching students:', error);
+            break;
+          }
+
+          if (data && data.length > 0) {
+            allStudents = [...allStudents, ...data];
+            from += pageSize;
+            
+            // Check if we've fetched all records
+            if (data.length < pageSize || (count && allStudents.length >= count)) {
+              hasMore = false;
+            }
+          } else {
+            hasMore = false;
+          }
+        }
+
+        if (allStudents.length > 0) {
+          const students = allStudents.map(student => ({
+            id: student.id,
+            name: student.name,
+            studentId: student.student_id,
+            email: student.email || '',
+            department: student.course,
+            course: (student as any).course || '',
+            year: (student as any).year || '',
+            contactNumber: (student as any).contact_number || '',
+            biometricData: student.biometric_data || '',
+            rfid: student.rfid || '',
+            library: (student as any).library as 'notre-dame' | 'ibed' || 'notre-dame',
+            userType: (student as any).user_type as 'student' | 'teacher' || 'student',
+            studentType: (student as any).student_type as 'ibed' | 'college' || 'college',
+            lastScan: undefined
+          }));
+
+          // Preserve offline-only and locally edited (dirty) students
+          const localOnly = (localData.students || []).filter((s: any) => s.id?.toString().startsWith('local_'));
+          const dirtyList = (localData.students || []).filter((s: any) => !s.id?.toString().startsWith('local_') && (s as any)._dirty);
+          const dirtyMap = Object.fromEntries(dirtyList.map((s: any) => [s.id, s]));
+          const overlay = students.map(s => dirtyMap[s.id] ? { ...s, ...(dirtyMap[s.id] as any) } : s);
+          const merged = [...overlay, ...localOnly];
+
+          // Update local storage with merged data
+          saveToLocalStorage({ students: merged });
+          return merged;
+        }
+      }
+    } catch (error) {
+      console.log('Using offline data:', error);
+    }
+
+    // Return local data as fallback
+    return localData.students || [];
+  },
+
+  async addStudent(student: Omit<Student, 'id'>): Promise<Student> {
+    // Check if RFID is already in use
+    if (student.rfid && student.rfid.trim()) {
+      try {
+        if (navigator.onLine) {
+          const { data: existingStudent } = await supabase
+            .from('students')
+            .select('id, name, student_id')
+            .eq('rfid', student.rfid)
+            .maybeSingle();
+
+          if (existingStudent) {
+            throw new Error(`RFID is already assigned to ${existingStudent.name} (ID: ${existingStudent.student_id})`);
+          }
+        }
+      } catch (error: any) {
+        if (error.message.includes('RFID is already assigned')) {
+          throw error;
+        }
+        console.log('Could not verify RFID uniqueness:', error);
+      }
+    }
+
+    const newStudent: Student = {
+      ...student,
+      id: generateId(),
+      department: student.department || ''
+    };
+
+    // Save to local storage immediately
+    const localData = await getFromLocalStorage();
+    const updatedStudents = [...localData.students, newStudent];
+    saveToLocalStorage({ students: updatedStudents });
+
+    // Try to sync to Supabase if online
+    try {
+      if (navigator.onLine) {
+        const { data, error } = await supabase
+          .from('students')
+          .insert({
+            name: student.name,
+            student_id: student.studentId,
+            email: student.email,
+            course: student.course || student.department,
+            year: (student as any).year,
+            contact_number: (student as any).contactNumber,
+            biometric_data: student.biometricData,
+            rfid: student.rfid,
+            library: student.library || 'notre-dame',
+            user_type: student.userType || 'student',
+            student_type: student.studentType || 'college'
+          })
+          .select()
+          .single();
+
+        if (!error && data) {
+          const serverStudent = {
+            id: data.id,
+            name: data.name,
+            studentId: data.student_id,
+            email: data.email || '',
+            department: data.course,
+            course: (data as any).course || '',
+            year: (data as any).year || '',
+            biometricData: data.biometric_data || '',
+            rfid: data.rfid || '',
+            library: data.library as 'notre-dame' | 'ibed' || 'notre-dame'
+          };
+          const updatedWithServerId = updatedStudents.map(s => 
+            s.id === newStudent.id ? serverStudent : s
+          );
+          saveToLocalStorage({ students: updatedWithServerId });
+          return serverStudent;
+        }
+      }
+    } catch (error) {
+      console.log('Offline mode: Student saved locally');
+    }
+
+    return newStudent;
+  },
+
+  async deleteStudent(id: string): Promise<void> {
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id);
+    try {
+      if (navigator.onLine && isUuid) {
+        const { error } = await supabase
+          .from('students')
+          .delete()
+          .eq('id', id);
+
+        if (error) {
+          console.error('Error deleting student from Supabase:', error);
+          throw error;
+        }
+      }
+    } catch (error) {
+      console.error('Error deleting student:', error);
+      throw error;
+    } finally {
+      // Always remove locally
+      const localData = await getFromLocalStorage();
+      const updatedStudents = localData.students.filter(s => s.id !== id);
+      await saveToLocalStorage({ students: updatedStudents });
+    }
+  }
+};
+
+===========================================
+2. attendanceService.ts
+===========================================
+
+import { supabase } from '@/integrations/supabase/client';
+import { AttendanceEntry } from '@/types/AttendanceEntry';
+import { saveToLocalStorage, getFromLocalStorage } from '@/utils/offlineStorage';
+
+export interface DatabaseAttendanceRecord {
+  id: string;
+  student_id: string;
+  student_name: string;
+  timestamp: string;
+  type: 'check-in' | 'check-out';
+  barcode?: string;
+  method: 'barcode' | 'biometric' | 'manual' | 'rfid';
+  purpose?: string;
+  contact?: string;
+  created_at: string;
+  course?: string;
+  year?: string;
+}
+
+// Generate unique ID for offline mode
+const generateId = () => `local_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
+export const attendanceService = {
+  async getAttendanceRecords(): Promise<AttendanceEntry[]> {
+    // Always try local storage first
+    const localData = await getFromLocalStorage();
+    
+    try {
+      // Try to fetch from Supabase if online
+      if (navigator.onLine) {
+        const { data, error } = await supabase
+          .from('attendance_records')
+          .select('*')
+          .order('timestamp', { ascending: false });
+
+        if (!error && data) {
+          const records = data.map(record => ({
+            id: record.id,
+            studentId: record.student_id,
+            studentName: record.student_name,
+            timestamp: new Date(record.timestamp),
+            type: (record as any).type || 'check-in',
+            barcode: record.barcode,
+            method: record.method as 'barcode' | 'biometric' | 'manual' | 'rfid',
+            purpose: record.purpose,
+            contact: record.contact,
+            library: (record as any).library as 'notre-dame' | 'ibed' || 'notre-dame',
+            course: (record as any).course,
+            year: (record as any).year
+          }));
+
+          // Preserve any offline-only (local_*) records until they are synced
+          const localOnly = (localData.attendanceRecords || []).filter((r: any) => r.id?.toString().startsWith('local_'));
+          const merged = [...records, ...localOnly];
+
+          // Update local storage with merged data
+          saveToLocalStorage({ attendanceRecords: merged });
+          return merged;
+        }
+      }
+    } catch (error) {
+      console.log('Using offline data:', error);
+    }
+
+    // Return local data as fallback
+    return localData.attendanceRecords || [];
+  },
+
+  async addAttendanceRecord(record: Omit<AttendanceEntry, 'id'>): Promise<AttendanceEntry> {
+    // Enforce alternating check-in/check-out per student
+    const currentStatus = await this.getStudentCurrentStatus(record.studentDatabaseId || record.studentId);
+    if (record.type === 'check-in' && currentStatus === 'checked-in') {
+      throw new Error('Student is already checked in. Please check out first.');
+    }
+    if (record.type === 'check-out' && (currentStatus === 'checked-out' || currentStatus === 'unknown')) {
+      throw new Error(currentStatus === 'unknown'
+        ? 'No active check-in found for this student.'
+        : 'Student is already checked out.');
+    }
+
+    const newRecord: AttendanceEntry = {
+      ...record,
+      id: generateId()
+    };
+
+    // Save to local storage immediately
+    const localData = await getFromLocalStorage();
+    const updatedRecords = [...localData.attendanceRecords, newRecord];
+    saveToLocalStorage({ attendanceRecords: updatedRecords });
+
+    // Try to sync to Supabase if online
+    try {
+      if (navigator.onLine) {
+        const { data, error } = await supabase
+          .from('attendance_records')
+          .insert({
+            student_database_id: record.studentDatabaseId,
+            student_id: record.studentId,
+            student_name: record.studentName,
+            timestamp: record.timestamp.toISOString(),
+            type: record.type,
+            barcode: record.barcode,
+            method: record.method,
+            purpose: record.purpose,
+            contact: record.contact,
+            library: record.library || 'notre-dame',
+            course: record.course,
+            year: record.year
+          })
+          .select()
+          .single();
+
+        if (!error && data) {
+          const serverRecord = {
+            id: data.id,
+            studentDatabaseId: (data as any).student_database_id,
+            studentId: data.student_id,
+            studentName: data.student_name,
+            timestamp: new Date(data.timestamp),
+            type: (data as any).type || 'check-in',
+            barcode: data.barcode,
+            method: data.method as 'barcode' | 'biometric' | 'manual' | 'rfid',
+            purpose: data.purpose,
+            contact: data.contact,
+            library: (data as any).library as 'notre-dame' | 'ibed' || 'notre-dame',
+            course: (data as any).course,
+            year: (data as any).year
+          };
+          const updatedWithServerId = updatedRecords.map(r => 
+            r.id === newRecord.id ? serverRecord : r
+          );
+          saveToLocalStorage({ attendanceRecords: updatedWithServerId });
+          return serverRecord;
+        }
+      }
+    } catch (error) {
+      console.log('Offline mode: Record saved locally');
+    }
+
+    return newRecord;
+  },
+
+  async getStudentCurrentStatus(studentIdentifier: string): Promise<'checked-in' | 'checked-out' | 'unknown'> {
+    // Get local records for this student
+    const localData = await getFromLocalStorage();
+    const localRecords = (localData.attendanceRecords || [])
+      .filter(record => 
+        record.studentDatabaseId === studentIdentifier || 
+        record.studentId === studentIdentifier
+      );
+
+    let allRecords = [...localRecords];
+
+    // Try to get records from Supabase if online and merge them
+    try {
+      if (navigator.onLine) {
+        const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(studentIdentifier);
+        
+        let query = supabase
+          .from('attendance_records')
+          .select('*')
+          .order('timestamp', { ascending: false });
+        
+        if (isUUID) {
+          query = query.eq('student_database_id', studentIdentifier);
+        } else {
+          query = query.eq('student_id', studentIdentifier);
+        }
+        
+        const { data, error } = await query;
+
+        if (!error && data) {
+          const serverRecords = data.map(record => ({
+            id: record.id,
+            studentDatabaseId: (record as any).student_database_id,
+            studentId: record.student_id,
+            studentName: record.student_name,
+            timestamp: new Date(record.timestamp),
+            type: record.type as 'check-in' | 'check-out',
+            barcode: record.barcode,
+            method: record.method as 'barcode' | 'biometric' | 'manual' | 'rfid',
+            purpose: record.purpose,
+            contact: record.contact,
+            library: (record as any).library as 'notre-dame' | 'ibed' || 'notre-dame',
+            course: (record as any).course,
+            year: (record as any).year
+          }));
+
+          const localOnly = localRecords.filter(r => r.id?.toString().startsWith('local_'));
+          allRecords = [...serverRecords, ...localOnly];
+        }
+      }
+    } catch (error) {
+      console.log('Using local data only for status check');
+    }
+
+    if (allRecords.length > 0) {
+      const sortedRecords = allRecords.sort((a, b) => 
+        new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+      );
+      const lastRecord = sortedRecords[0];
+      return lastRecord.type === 'check-in' ? 'checked-in' : 'checked-out';
+    }
+
+    return 'unknown';
+  }
+};
+
+===========================================
+3. syncService.ts
+===========================================
+
+import { saveToLocalStorage, getFromLocalStorage } from '@/utils/offlineStorage';
+import { studentService } from './studentService';
+import { attendanceService } from './attendanceService';
+import { Student } from '@/types/Student';
+import { AttendanceEntry } from '@/types/AttendanceEntry';
+import { supabase } from '@/integrations/supabase/client';
+
+export const syncService = {
+  async syncLocalToSupabase(): Promise<{ studentsAdded: number; recordsAdded: number }> {
+    const localData = await getFromLocalStorage();
+    let studentsAdded = 0;
+    let recordsAdded = 0;
+    const studentsToKeep: any[] = [];
+
+    console.log('Starting sync from local storage to Supabase...');
+
+    // Sync students
+    for (const student of localData.students) {
+      try {
+        const existingStudent = await studentService.findStudentByBarcode(student.studentId);
+        if (!existingStudent) {
+          await studentService.addStudent(student);
+          studentsAdded++;
+          console.log(`✅ Synced new student: ${student.name} (${student.studentId})`);
+        } else {
+          console.log(`⚠️ Student ${student.name} already exists - skipping duplicate`);
+          continue;
+        }
+      } catch (error: any) {
+        if (error?.message?.includes('duplicate key') || error?.code === '23505') {
+          console.error(`❌ Duplicate detected: ${student.name} - removing from queue`);
+          continue;
+        }
+        console.error(`Failed to sync student ${student.name}:`, error);
+        studentsToKeep.push(student);
+      }
+    }
+
+    // Sync attendance records
+    const recordsToKeep: any[] = [];
+    for (const record of localData.attendanceRecords) {
+      try {
+        const timestamp = typeof record.timestamp === 'string' ? new Date(record.timestamp) : record.timestamp;
+        
+        const { data: recentRecords } = await supabase
+          .from('attendance_records')
+          .select('*')
+          .eq('student_id', record.studentId)
+          .eq('type', record.type)
+          .gte('timestamp', new Date(timestamp.getTime() - 60000).toISOString())
+          .lte('timestamp', new Date(timestamp.getTime() + 60000).toISOString());
+        
+        if (recentRecords && recentRecords.length > 0) {
+          console.log(`⚠️ Attendance record already exists - skipping duplicate`);
+          continue;
+        }
+        
+        await attendanceService.addAttendanceRecord({
+          ...record,
+          timestamp
+        });
+        recordsAdded++;
+        console.log(`✅ Synced attendance record for: ${record.studentName}`);
+      } catch (error: any) {
+        if (error?.message?.includes('duplicate') || error?.code === '23505') {
+          console.log(`⚠️ Record already synced - removing from queue`);
+          continue;
+        }
+        console.error(`Failed to sync record:`, error);
+        recordsToKeep.push(record);
+      }
+    }
+
+    saveToLocalStorage({ 
+      students: studentsToKeep,
+      attendanceRecords: recordsToKeep,
+      lastSync: new Date().toISOString() 
+    });
+
+    console.log(`✅ Sync completed: ${studentsAdded} students, ${recordsAdded} records`);
+    return { studentsAdded, recordsAdded };
+  },
+
+  async syncSupabaseToLocal(): Promise<{ students: Student[]; attendanceRecords: AttendanceEntry[] }> {
+    console.log('Starting sync from Supabase to local storage...');
+
+    const [studentsData, attendanceData] = await Promise.all([
+      studentService.getStudents(),
+      attendanceService.getAttendanceRecords()
+    ]);
+
+    saveToLocalStorage({
+      students: studentsData,
+      attendanceRecords: attendanceData,
+      lastSync: new Date().toISOString()
+    });
+
+    console.log(`Downloaded ${studentsData.length} students and ${attendanceData.length} records`);
+    return { students: studentsData, attendanceRecords: attendanceData };
+  }
+};
+
+===========================================
+4. autoSyncService.ts
+===========================================
+
+import { supabase } from '@/integrations/supabase/client';
+import { getFromLocalStorage, saveToLocalStorage } from '@/utils/offlineStorage';
+import { studentService } from './studentService';
+import { attendanceService } from './attendanceService';
+
+class AutoSyncService {
+  private syncInterval: NodeJS.Timeout | null = null;
+  private isOnline = navigator.onLine;
+
+  constructor() {
+    this.setupOnlineListener();
+    this.startAutoSync();
+    if (this.isOnline) {
+      console.log('App started online - checking for pending offline data');
+      this.performSync();
+    }
+  }
+
+  private setupOnlineListener() {
+    window.addEventListener('online', () => {
+      console.log('Connection restored - starting sync');
+      this.isOnline = true;
+      this.performSync();
+    });
+
+    window.addEventListener('offline', () => {
+      console.log('Connection lost - offline mode');
+      this.isOnline = false;
+    });
+  }
+
+  private startAutoSync() {
+    // Sync every 10 seconds when online
+    this.syncInterval = setInterval(() => {
+      if (this.isOnline) {
+        this.performSync();
+      }
+    }, 10000);
+  }
+
+  private async performSync() {
+    try {
+      const localData = await getFromLocalStorage();
+      const pendingStudents = localData.students.filter(s => s.id.toString().startsWith('local_'));
+      const pendingRecords = localData.attendanceRecords.filter(r => r.id.toString().startsWith('local_'));
+      
+      if (pendingStudents.length > 0 || pendingRecords.length > 0) {
+        console.log(`📤 Syncing ${pendingStudents.length} students and ${pendingRecords.length} records...`);
+      }
+      
+      await this.syncLocalToSupabase();
+      await this.syncSupabaseToLocal();
+      console.log('Auto-sync completed successfully');
+    } catch (error) {
+      console.error('❌ Auto-sync failed:', error);
+    }
+  }
+
+  private async syncLocalToSupabase() {
+    const localData = await getFromLocalStorage();
+    let syncCount = 0;
+
+    // Sync students with local_ prefix
+    const localStudents = localData.students.filter(s => s.id.toString().startsWith('local_'));
+    for (const student of localStudents) {
+      try {
+        const { data, error } = await supabase
+          .from('students')
+          .insert({
+            name: student.name,
+            student_id: student.studentId,
+            course: student.course,
+            rfid: student.rfid
+          })
+          .select()
+          .single();
+
+        if (!error && data) {
+          const updatedStudents = localData.students.map(s =>
+            s.id === student.id ? {
+              id: data.id,
+              name: data.name,
+              studentId: data.student_id,
+              course: data.course,
+              rfid: data.rfid
+            } : s
+          );
+          localData.students = updatedStudents;
+          syncCount++;
+        }
+      } catch (error) {
+        console.error('Failed to sync student:', error);
+      }
+    }
+
+    // Sync attendance records with local_ prefix
+    const localRecords = localData.attendanceRecords.filter(r => r.id.toString().startsWith('local_'));
+    for (const record of localRecords) {
+      try {
+        const { data, error } = await supabase
+          .from('attendance_records')
+          .insert({
+            student_database_id: record.studentDatabaseId,
+            student_id: record.studentId,
+            student_name: record.studentName,
+            timestamp: record.timestamp instanceof Date ? record.timestamp.toISOString() : record.timestamp,
+            type: record.type || 'check-in',
+            method: record.method
+          })
+          .select()
+          .single();
+
+        if (!error && data) {
+          const updatedRecords = localData.attendanceRecords.map(r =>
+            r.id === record.id ? {
+              id: data.id,
+              studentId: data.student_id,
+              studentName: data.student_name,
+              timestamp: new Date(data.timestamp),
+              type: data.type,
+              method: data.method
+            } : r
+          );
+          localData.attendanceRecords = updatedRecords;
+          syncCount++;
+        }
+      } catch (error) {
+        console.error('❌ Failed to sync attendance record:', error);
+      }
+    }
+
+    if (syncCount > 0) {
+      await saveToLocalStorage({
+        students: localData.students,
+        attendanceRecords: localData.attendanceRecords,
+        lastSync: new Date().toISOString()
+      });
+      console.log(`✅ Auto-sync completed: ${syncCount} items uploaded`);
+    }
+  }
+
+  private async syncSupabaseToLocal() {
+    try {
+      const [studentsResponse, attendanceResponse] = await Promise.all([
+        supabase.from('students').select('*').order('created_at', { ascending: false }),
+        supabase.from('attendance_records').select('*').order('timestamp', { ascending: false })
+      ]);
+
+      if (!studentsResponse.error && !attendanceResponse.error) {
+        const students = studentsResponse.data?.map((s: any) => ({
+          id: s.id,
+          name: s.name,
+          studentId: s.student_id,
+          course: s.course,
+          rfid: s.rfid
+        })) || [];
+
+        const attendanceRecords = attendanceResponse.data?.map((r: any) => ({
+          id: r.id,
+          studentId: r.student_id,
+          studentName: r.student_name,
+          timestamp: new Date(r.timestamp),
+          type: r.type || 'check-in',
+          method: r.method
+        })) || [];
+
+        const localData = await getFromLocalStorage();
+        const localOnlyStudents = (localData.students || []).filter((s: any) => s.id?.toString().startsWith('local_'));
+        const localOnlyRecords = (localData.attendanceRecords || []).filter((r: any) => r.id?.toString().startsWith('local_'));
+
+        saveToLocalStorage({
+          students: [...students, ...localOnlyStudents],
+          attendanceRecords: [...attendanceRecords, ...localOnlyRecords],
+          lastSync: new Date().toISOString()
+        });
+      }
+    } catch (error) {
+      console.error('Failed to sync from server:', error);
+    }
+  }
+
+  public async forceSync() {
+    console.log('🔄 Force sync requested');
+    await this.performSync();
+  }
+
+  public destroy() {
+    if (this.syncInterval) {
+      clearInterval(this.syncInterval);
+      this.syncInterval = null;
+    }
+  }
+}
+
+export const autoSyncService = new AutoSyncService();

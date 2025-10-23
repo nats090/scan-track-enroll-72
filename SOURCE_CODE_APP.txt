@@ -1,0 +1,391 @@
+===========================================
+LIBRARY ATTENDANCE SYSTEM - MAIN APP & PAGES
+===========================================
+
+This file contains the main App component and key page components.
+
+===========================================
+1. App.tsx
+===========================================
+
+import { Toaster } from "@/components/ui/toaster";
+import { Toaster as Sonner } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { HashRouter, Routes, Route } from "react-router-dom";
+import { useState } from "react";
+import { useTheme } from "@/hooks/useTheme";
+import { LibraryProvider } from "@/contexts/LibraryContext";
+import HomePage from "./pages/HomePage";
+import CheckInDashboard from "./pages/CheckInDashboard";
+import CheckOutDashboard from "./pages/CheckOutDashboard";
+import ProtectedAdminPage from "./pages/ProtectedAdminPage";
+import ProtectedStaffPage from "./pages/ProtectedStaffPage";
+import AuthenticatorApp from "./pages/AuthenticatorApp";
+import NotFound from "./pages/NotFound";
+
+const App = () => {
+  const [queryClient] = useState(() => new QueryClient({
+    defaultOptions: {
+      queries: {
+        staleTime: 1000 * 60 * 5, // 5 minutes
+        retry: false,
+      },
+    },
+  }));
+
+  // Initialize theme
+  useTheme();
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <LibraryProvider>
+          <Toaster />
+          <Sonner />
+          <HashRouter>
+            <div className="min-h-screen bg-background">
+              <main>
+                <Routes>
+                  <Route path="/" element={<HomePage />} />
+                  <Route path="/check-in" element={<CheckInDashboard />} />
+                  <Route path="/check-out" element={<CheckOutDashboard />} />
+                  <Route path="/admin" element={<ProtectedAdminPage />} />
+                  <Route path="/staff" element={<ProtectedStaffPage />} />
+                  <Route path="/authenticator" element={<AuthenticatorApp />} />
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </main>
+            </div>
+          </HashRouter>
+        </LibraryProvider>
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+};
+
+export default App;
+
+===========================================
+2. ProtectedAdminPage.tsx
+===========================================
+
+import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import TOTPVerification from '@/components/TOTPVerification';
+import EnhancedAdminPage from './EnhancedAdminPage';
+import { getTOTPSecrets, saveTOTPSecrets } from '@/utils/totpOfflineStorage';
+import { useOnlineStatus } from '@/hooks/useOnlineStatus';
+import { Badge } from '@/components/ui/badge';
+
+const ProtectedAdminPage = () => {
+  const [isVerified, setIsVerified] = useState(false);
+  const [secret, setSecret] = useState('');
+  const [loading, setLoading] = useState(true);
+  const isOnline = useOnlineStatus();
+
+  useEffect(() => {
+    checkVerification();
+    loadSecret();
+  }, []);
+
+  const checkVerification = () => {
+    const verified = sessionStorage.getItem('totp_verified_admin');
+    if (verified) {
+      const verifiedTime = parseInt(verified);
+      const now = Date.now();
+      const oneHour = 60 * 60 * 1000;
+      
+      if (now - verifiedTime < oneHour) {
+        setIsVerified(true);
+      } else {
+        sessionStorage.removeItem('totp_verified_admin');
+      }
+    }
+    setLoading(false);
+  };
+
+  const loadSecret = async () => {
+    // First, try to load from cache (works offline)
+    const cachedSecrets = await getTOTPSecrets();
+    const cachedAdmin = cachedSecrets.find(s => s.role === 'admin');
+    
+    if (cachedAdmin) {
+      setSecret(cachedAdmin.secret);
+      console.log('✅ Admin TOTP secret loaded from cache (offline available)');
+    }
+    
+    // If online, refresh from Supabase
+    if (isOnline) {
+      try {
+        const { data, error } = await supabase
+          .from('totp_secrets')
+          .select('secret')
+          .eq('role', 'admin')
+          .single();
+
+        if (data && !error) {
+          setSecret(data.secret);
+          // Update cache for offline use
+          const allSecrets = cachedSecrets.filter(s => s.role !== 'admin');
+          allSecrets.push({ role: 'admin', secret: data.secret });
+          await saveTOTPSecrets(allSecrets);
+          console.log('✅ Admin TOTP secret refreshed and cached');
+        }
+      } catch (error) {
+        console.warn('Could not refresh admin TOTP secret from server:', error);
+      }
+    } else if (!cachedAdmin) {
+      console.warn('⚠️ No cached admin TOTP secret and offline');
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary" />
+      </div>
+    );
+  }
+
+  if (!isVerified) {
+    return (
+      <div className="relative">
+        {!isOnline && (
+          <div className="fixed top-4 right-4 z-50">
+            <Badge variant="secondary" className="bg-yellow-500/10 text-yellow-700 border-yellow-500/20">
+              🔌 Offline Mode
+            </Badge>
+          </div>
+        )}
+        <TOTPVerification
+          role="admin"
+          secret={secret}
+          onVerified={() => setIsVerified(true)}
+        />
+      </div>
+    );
+  }
+
+  return <EnhancedAdminPage />;
+};
+
+export default ProtectedAdminPage;
+
+===========================================
+3. AuthenticatorApp.tsx (Partial - First 200 lines)
+===========================================
+
+import { useEffect, useState } from 'react';
+import { TOTP } from 'otpauth';
+import { supabase } from '@/integrations/supabase/client';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
+import { Shield, Clock, Copy, Check, WifiOff } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { useToast } from '@/hooks/use-toast';
+import { Progress } from '@/components/ui/progress';
+import { Badge } from '@/components/ui/badge';
+import BackButton from '@/components/BackButton';
+import { getTOTPSecrets, saveTOTPSecrets, getTOTPLastSync } from '@/utils/totpOfflineStorage';
+import { useOnlineStatus } from '@/hooks/useOnlineStatus';
+
+interface TOTPSecret {
+  role: string;
+  secret: string;
+}
+
+const AuthenticatorApp = () => {
+  const [secrets, setSecrets] = useState<TOTPSecret[]>([]);
+  const [codes, setCodes] = useState<Record<string, string>>({});
+  const [timeLeft, setTimeLeft] = useState(30);
+  const [copiedRole, setCopiedRole] = useState<string | null>(null);
+  const [lastSync, setLastSync] = useState<number | null>(null);
+  const isOnline = useOnlineStatus();
+  const { toast } = useToast();
+
+  useEffect(() => {
+    loadSecrets();
+  }, []);
+
+  const loadSecrets = async () => {
+    // First, load from cache (works offline)
+    const cachedSecrets = await getTOTPSecrets();
+    if (cachedSecrets.length > 0) {
+      setSecrets(cachedSecrets);
+      console.log('✅ TOTP secrets loaded from cache (offline available)');
+    }
+
+    const syncTime = await getTOTPLastSync();
+    setLastSync(syncTime);
+
+    // If online, refresh from Supabase
+    if (isOnline) {
+      try {
+        const { data, error } = await supabase
+          .from('totp_secrets')
+          .select('role, secret');
+
+        if (data && !error && data.length > 0) {
+          setSecrets(data);
+          await saveTOTPSecrets(data);
+          const newSyncTime = await getTOTPLastSync();
+          setLastSync(newSyncTime);
+          console.log('✅ TOTP secrets refreshed from server');
+        }
+      } catch (error) {
+        console.warn('Could not refresh TOTP secrets from server:', error);
+      }
+    } else if (cachedSecrets.length === 0) {
+      toast({
+        title: "Offline Mode",
+        description: "No cached authenticator codes. Please connect to internet first.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const generateCode = (secret: string): string => {
+    try {
+      const totp = new TOTP({
+        secret: secret,
+        digits: 6,
+        period: 30,
+      });
+      return totp.generate();
+    } catch (error) {
+      console.error('Error generating TOTP:', error);
+      return '------';
+    }
+  };
+
+  useEffect(() => {
+    const updateCodes = () => {
+      const newCodes: Record<string, string> = {};
+      secrets.forEach(({ role, secret }) => {
+        newCodes[role] = generateCode(secret);
+      });
+      setCodes(newCodes);
+
+      const now = Math.floor(Date.now() / 1000);
+      const timeRemaining = 30 - (now % 30);
+      setTimeLeft(timeRemaining);
+    };
+
+    updateCodes();
+    const interval = setInterval(updateCodes, 1000);
+
+    return () => clearInterval(interval);
+  }, [secrets]);
+
+  const copyCode = (role: string, code: string) => {
+    navigator.clipboard.writeText(code);
+    setCopiedRole(role);
+    toast({
+      title: "Code copied!",
+      description: `${role.charAt(0).toUpperCase() + role.slice(1)} code copied to clipboard`,
+    });
+    setTimeout(() => setCopiedRole(null), 2000);
+  };
+
+  const getProgressPercentage = () => {
+    return (timeLeft / 30) * 100;
+  };
+
+  const getLastSyncText = () => {
+    if (!lastSync) return 'Never synced';
+    const now = Date.now();
+    const diffMs = now - lastSync;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMins / 60);
+    
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins} minute${diffMins > 1 ? 's' : ''} ago`;
+    if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+    return `${Math.floor(diffHours / 24)} day${Math.floor(diffHours / 24) > 1 ? 's' : ''} ago`;
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-background via-muted to-accent/20 p-4">
+      <div className="max-w-2xl mx-auto space-y-6">
+        <BackButton />
+        
+        {/* Offline Badge */}
+        {!isOnline && (
+          <div className="flex justify-center">
+            <Badge variant="secondary" className="bg-yellow-500/10 text-yellow-700 border-yellow-500/20">
+              <WifiOff className="mr-2 h-4 w-4" />
+              Offline Mode - Using Cached Codes
+            </Badge>
+          </div>
+        )}
+        
+        {/* UI continues... */}
+      </div>
+    </div>
+  );
+};
+
+export default AuthenticatorApp;
+
+===========================================
+4. TypeScript Types
+===========================================
+
+// Student.ts
+export interface Student {
+  id: string;
+  name: string;
+  studentId: string;
+  email?: string;
+  department?: string;
+  course?: string;
+  year?: string;
+  level?: 'elementary' | 'junior-high' | 'senior-high' | 'college' | 'graduated' | 'transferred-out';
+  shift?: 'morning' | 'afternoon';
+  lastScan?: Date;
+  profilePicture?: string;
+  biometricData?: string;
+  barcode?: string;
+  rfid?: string;
+  contactNumber?: string;
+  registrationDate?: Date;
+  library?: 'notre-dame' | 'ibed';
+  userType?: 'student' | 'teacher';
+  studentType?: 'ibed' | 'college';
+}
+
+// AttendanceEntry.ts
+export interface AttendanceEntry {
+  id: string;
+  studentDatabaseId?: string;
+  studentId: string;
+  studentName: string;
+  timestamp: Date;
+  type: 'check-in' | 'check-out';
+  barcode?: string;
+  method: 'barcode' | 'biometric' | 'manual' | 'rfid';
+  purpose?: string;
+  contact?: string;
+  library?: 'notre-dame' | 'ibed';
+  course?: string;
+  year?: string;
+  userType?: 'student' | 'teacher';
+  studentType?: 'ibed' | 'college';
+  level?: string;
+}
+
+// electron.d.ts
+export interface ElectronAPI {
+  platform: string;
+  versions: any;
+  saveData: (data: any) => Promise<{ success: boolean; error?: string }>;
+  loadData: () => Promise<{ success: boolean; data?: any; error?: string }>;
+  clearData: () => Promise<{ success: boolean; error?: string }>;
+}
+
+declare global {
+  interface Window {
+    electronAPI: ElectronAPI;
+  }
+}

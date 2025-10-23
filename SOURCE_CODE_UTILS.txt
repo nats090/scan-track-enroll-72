@@ -1,0 +1,399 @@
+===========================================
+LIBRARY ATTENDANCE SYSTEM - UTILITIES
+===========================================
+
+This file contains utility functions for offline storage and TOTP authentication.
+
+===========================================
+1. offlineStorage.ts
+===========================================
+
+import { saveToFileSystem, getFromFileSystem, clearFileSystem } from './electronStorage';
+
+export interface OfflineData {
+  students: any[];
+  attendanceRecords: any[];
+  lastSync: string | null;
+}
+
+const STORAGE_KEY = 'library-attendance-offline';
+
+// Check if running in Electron
+const isElectron = () => {
+  return typeof window !== 'undefined' && window.electronAPI;
+};
+
+export const saveToLocalStorage = async (data: Partial<OfflineData>) => {
+  // Filter to keep only recent data (last 30 days)
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+  
+  const filteredData = {
+    ...data,
+    attendanceRecords: data.attendanceRecords?.filter(record => {
+      const recordDate = record.timestamp instanceof Date ? record.timestamp : new Date(record.timestamp);
+      return recordDate >= thirtyDaysAgo || record.id?.toString().startsWith('local_');
+    })
+  };
+
+  // Use file system storage if in Electron
+  if (isElectron()) {
+    try {
+      await saveToFileSystem(filteredData);
+      return;
+    } catch (error) {
+      console.warn('Failed to save to file system, falling back to localStorage:', error);
+    }
+  }
+
+  // Fallback to browser localStorage
+  try {
+    const existing = await getFromLocalStorage();
+    const updated = { ...existing, ...filteredData };
+    
+    const serializedData = {
+      ...updated,
+      attendanceRecords: updated.attendanceRecords?.map(record => ({
+        ...record,
+        timestamp: record.timestamp instanceof Date ? record.timestamp.toISOString() : record.timestamp
+      })) || existing.attendanceRecords,
+      students: updated.students?.map(student => ({
+        ...student,
+        lastScan: student.lastScan instanceof Date ? student.lastScan.toISOString() : student.lastScan,
+        registrationDate: student.registrationDate instanceof Date ? student.registrationDate.toISOString() : student.registrationDate
+      })) || existing.students
+    };
+    
+    const existingString = localStorage.getItem(STORAGE_KEY);
+    const newString = JSON.stringify(serializedData);
+    
+    if (existingString !== newString) {
+      localStorage.setItem(STORAGE_KEY, newString);
+      console.log(`Data saved to localStorage (${updated.attendanceRecords?.length || 0} records)`);
+    }
+  } catch (error) {
+    console.error('Failed to save to localStorage:', error);
+  }
+};
+
+export const getFromLocalStorage = async (): Promise<OfflineData> => {
+  // Use file system storage if in Electron
+  if (isElectron()) {
+    try {
+      return await getFromFileSystem();
+    } catch (error) {
+      console.warn('Failed to load from file system, falling back to localStorage:', error);
+    }
+  }
+
+  // Fallback to browser localStorage
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      
+      return {
+        ...parsed,
+        attendanceRecords: parsed.attendanceRecords?.map((record: any) => ({
+          ...record,
+          timestamp: typeof record.timestamp === 'string' ? new Date(record.timestamp) : record.timestamp
+        })) || [],
+        students: parsed.students?.map((student: any) => ({
+          ...student,
+          lastScan: typeof student.lastScan === 'string' ? new Date(student.lastScan) : student.lastScan,
+          registrationDate: typeof student.registrationDate === 'string' ? new Date(student.registrationDate) : student.registrationDate
+        })) || []
+      };
+    }
+  } catch (error) {
+    console.error('Failed to load from localStorage:', error);
+  }
+  
+  return {
+    students: [],
+    attendanceRecords: [],
+    lastSync: null
+  };
+};
+
+export const clearLocalStorage = async () => {
+  // Clear file system storage if in Electron
+  if (isElectron()) {
+    try {
+      await clearFileSystem();
+      return;
+    } catch (error) {
+      console.warn('Failed to clear file system, falling back to localStorage:', error);
+    }
+  }
+
+  // Fallback to browser localStorage
+  try {
+    localStorage.removeItem(STORAGE_KEY);
+    console.log('Browser localStorage cleared');
+  } catch (error) {
+    console.error('Failed to clear localStorage:', error);
+  }
+};
+
+export const isOnline = () => {
+  return navigator.onLine;
+};
+
+===========================================
+2. electronStorage.ts
+===========================================
+
+export interface OfflineData {
+  students: any[];
+  attendanceRecords: any[];
+  lastSync: string | null;
+}
+
+// Check if running in Electron
+const isElectron = () => {
+  return typeof window !== 'undefined' && window.electronAPI;
+};
+
+export const saveToFileSystem = async (data: Partial<OfflineData>) => {
+  if (!isElectron()) {
+    throw new Error('Not running in Electron environment');
+  }
+
+  try {
+    const existing = await getFromFileSystem();
+    const updated = { ...existing, ...data };
+    
+    // Serialize data properly for file storage
+    const serializedData = {
+      ...updated,
+      attendanceRecords: updated.attendanceRecords?.map(record => ({
+        ...record,
+        timestamp: record.timestamp instanceof Date ? record.timestamp.toISOString() : record.timestamp
+      })) || existing.attendanceRecords,
+      students: updated.students?.map(student => ({
+        ...student,
+        lastScan: student.lastScan instanceof Date ? student.lastScan.toISOString() : student.lastScan,
+        registrationDate: student.registrationDate instanceof Date ? student.registrationDate.toISOString() : student.registrationDate
+      })) || existing.students
+    };
+    
+    const result = await window.electronAPI.saveData(serializedData);
+    if (result.success) {
+      console.log('Data saved to file system');
+    } else {
+      throw new Error(result.error);
+    }
+  } catch (error) {
+    console.error('Failed to save to file system:', error);
+    throw error;
+  }
+};
+
+export const getFromFileSystem = async (): Promise<OfflineData> => {
+  if (!isElectron()) {
+    throw new Error('Not running in Electron environment');
+  }
+
+  try {
+    const result = await window.electronAPI.loadData();
+    if (result.success) {
+      const parsed = result.data;
+      
+      // Deserialize Date objects properly
+      return {
+        ...parsed,
+        attendanceRecords: parsed.attendanceRecords?.map((record: any) => ({
+          ...record,
+          timestamp: typeof record.timestamp === 'string' ? new Date(record.timestamp) : record.timestamp
+        })) || [],
+        students: parsed.students?.map((student: any) => ({
+          ...student,
+          lastScan: typeof student.lastScan === 'string' ? new Date(student.lastScan) : student.lastScan,
+          registrationDate: typeof student.registrationDate === 'string' ? new Date(student.registrationDate) : student.registrationDate
+        })) || []
+      };
+    } else {
+      throw new Error(result.error);
+    }
+  } catch (error) {
+    console.error('Failed to load from file system:', error);
+    return {
+      students: [],
+      attendanceRecords: [],
+      lastSync: null
+    };
+  }
+};
+
+export const clearFileSystem = async () => {
+  if (!isElectron()) {
+    throw new Error('Not running in Electron environment');
+  }
+
+  try {
+    const result = await window.electronAPI.clearData();
+    if (result.success) {
+      console.log('File system storage cleared');
+    } else {
+      throw new Error(result.error);
+    }
+  } catch (error) {
+    console.error('Failed to clear file system:', error);
+    throw error;
+  }
+};
+
+===========================================
+3. totpOfflineStorage.ts
+===========================================
+
+interface TOTPSecret {
+  role: string;
+  secret: string;
+}
+
+interface TOTPCache {
+  secrets: TOTPSecret[];
+  lastSync: number;
+}
+
+const TOTP_STORAGE_KEY = 'totp_offline_cache';
+
+// Helper function to check if running in Electron
+const isElectron = (): boolean => {
+  return typeof window !== 'undefined' && window.electronAPI !== undefined;
+};
+
+export const saveTOTPSecrets = async (secrets: TOTPSecret[]): Promise<void> => {
+  const cache: TOTPCache = {
+    secrets,
+    lastSync: Date.now()
+  };
+
+  // Try Electron file system storage first
+  if (isElectron()) {
+    try {
+      // Load existing data to merge with TOTP secrets
+      const existingDataResult = await window.electronAPI.loadData();
+      const existingData = existingDataResult.success && existingDataResult.data 
+        ? existingDataResult.data 
+        : {};
+
+      const result = await window.electronAPI.saveData({
+        ...existingData,
+        totpSecrets: cache.secrets,
+        totpLastSync: cache.lastSync
+      });
+
+      if (result.success) {
+        console.log('✅ TOTP secrets cached to Electron file system');
+        return;
+      } else {
+        console.warn('Electron save failed, falling back to localStorage:', result.error);
+      }
+    } catch (error) {
+      console.warn('Electron file system not available, falling back to localStorage:', error);
+    }
+  }
+
+  // Fallback to localStorage
+  try {
+    localStorage.setItem(TOTP_STORAGE_KEY, JSON.stringify(cache));
+    console.log('✅ TOTP secrets cached to localStorage');
+  } catch (error) {
+    console.error('Failed to cache TOTP secrets:', error);
+  }
+};
+
+export const getTOTPSecrets = async (): Promise<TOTPSecret[]> => {
+  // Try Electron file system first
+  if (isElectron()) {
+    try {
+      const result = await window.electronAPI.loadData();
+      
+      if (result.success && result.data) {
+        const secrets = result.data.totpSecrets || [];
+        console.log('✅ TOTP secrets loaded from Electron file system');
+        return secrets;
+      }
+    } catch (error) {
+      console.warn('Failed to load TOTP secrets from Electron, trying localStorage:', error);
+    }
+  }
+
+  // Fallback to localStorage
+  try {
+    const stored = localStorage.getItem(TOTP_STORAGE_KEY);
+    if (stored) {
+      const cache: TOTPCache = JSON.parse(stored);
+      return cache.secrets || [];
+    }
+  } catch (error) {
+    console.error('Failed to retrieve TOTP secrets from cache:', error);
+  }
+  
+  return [];
+};
+
+export const getTOTPLastSync = async (): Promise<number | null> => {
+  // Try Electron file system first
+  if (isElectron()) {
+    try {
+      const result = await window.electronAPI.loadData();
+      
+      if (result.success && result.data && result.data.totpLastSync) {
+        return result.data.totpLastSync;
+      }
+    } catch (error) {
+      console.warn('Failed to get TOTP last sync from Electron, trying localStorage:', error);
+    }
+  }
+
+  // Fallback to localStorage
+  try {
+    const stored = localStorage.getItem(TOTP_STORAGE_KEY);
+    if (stored) {
+      const cache: TOTPCache = JSON.parse(stored);
+      return cache.lastSync || null;
+    }
+  } catch (error) {
+    console.error('Failed to get TOTP last sync:', error);
+  }
+  
+  return null;
+};
+
+export const clearTOTPSecrets = async (): Promise<void> => {
+  // Try Electron file system first
+  if (isElectron()) {
+    try {
+      // Load existing data and remove TOTP secrets
+      const existingDataResult = await window.electronAPI.loadData();
+      const existingData = existingDataResult.success && existingDataResult.data 
+        ? existingDataResult.data 
+        : {};
+
+      const { totpSecrets, totpLastSync, ...restData } = existingData;
+
+      const result = await window.electronAPI.saveData(restData);
+
+      if (result.success) {
+        console.log('✅ TOTP secrets cleared from Electron file system');
+        return;
+      } else {
+        console.warn('Electron clear failed, falling back to localStorage:', result.error);
+      }
+    } catch (error) {
+      console.warn('Failed to clear TOTP secrets from Electron, trying localStorage:', error);
+    }
+  }
+
+  // Fallback to localStorage
+  try {
+    localStorage.removeItem(TOTP_STORAGE_KEY);
+    console.log('✅ TOTP secrets cleared from localStorage');
+  } catch (error) {
+    console.error('Failed to clear TOTP secrets:', error);
+  }
+};

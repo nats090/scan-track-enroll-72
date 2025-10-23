@@ -1,0 +1,315 @@
+===========================================
+LIBRARY ATTENDANCE SYSTEM
+BUILD AND DEPLOYMENT INSTRUCTIONS
+===========================================
+
+Last Updated: 2025
+System: Library Attendance with Offline TOTP Support
+
+===========================================
+OVERVIEW
+===========================================
+
+This system is a comprehensive Library Attendance Management System with:
+- Student check-in/check-out tracking
+- RFID and barcode scanning support
+- Offline-first architecture with automatic synchronization
+- TOTP (Time-based One-Time Password) authentication for admin access
+- Electron desktop application support
+- Supabase backend integration
+- Multi-library support (Notre Dame & IBED)
+
+===========================================
+PREREQUISITES
+===========================================
+
+1. Node.js v16+ and npm installed
+2. Git installed
+3. VS Code (recommended) or any code editor
+4. For mobile: Android Studio (Android) or Xcode (iOS, macOS only)
+5. For desktop builds: Electron Builder dependencies
+
+===========================================
+INITIAL SETUP
+===========================================
+
+1. Clone or extract the project:
+   git clone <repository-url>
+   cd library-attendance-system
+
+2. Install dependencies:
+   npm install
+
+3. Create .env file in the project root:
+   VITE_SUPABASE_URL=your_supabase_url
+   VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+
+4. Verify installation:
+   npm run dev
+
+===========================================
+DEVELOPMENT WORKFLOW
+===========================================
+
+1. Start development server:
+   npm run dev
+   
+   Opens at: http://localhost:8080
+
+2. For Electron development:
+   # Terminal 1: Start dev server
+   npm run dev
+   
+   # Terminal 2: Start Electron (after server is running)
+   npx electron electron/main.js
+
+3. Hot reload is enabled - changes auto-update
+
+===========================================
+BUILDING FOR PRODUCTION
+===========================================
+
+WEB APPLICATION:
+-----------------
+1. Build the web app:
+   npm run build
+
+2. Output location:
+   dist/
+
+3. Deploy dist/ folder to:
+   - Netlify
+   - Vercel
+   - Any static hosting service
+
+ELECTRON DESKTOP APPLICATION:
+------------------------------
+1. Install electron-builder as dev dependency:
+   npm install electron-builder --save-dev
+
+2. Move Electron dependencies to devDependencies in package.json:
+   - electron
+   - concurrently
+   - wait-on
+   (Move from "dependencies" to "devDependencies")
+
+3. Reinstall dependencies:
+   npm install
+
+4. Build React app first:
+   npm run build
+
+5. Build Electron application:
+   npx electron-builder
+
+   Platform-specific builds:
+   npx electron-builder --win    # Windows (.exe)
+   npx electron-builder --mac    # macOS (.dmg)
+   npx electron-builder --linux  # Linux (.AppImage)
+
+6. Output location:
+   electron-dist/
+   
+   Contains installable executables:
+   - Windows: .exe installer
+   - macOS: .dmg disk image
+   - Linux: .AppImage
+
+7. Distribute the executable to users
+
+MOBILE APPLICATION (Capacitor):
+--------------------------------
+1. Add platform:
+   npx cap add android
+   npx cap add ios  # macOS only
+
+2. Build web app:
+   npm run build
+
+3. Sync with native projects:
+   npx cap sync
+
+4. Open in native IDE:
+   npx cap open android
+   npx cap open ios
+
+5. Build in Android Studio or Xcode
+
+===========================================
+OFFLINE TOTP SETUP
+===========================================
+
+The system implements offline TOTP authentication:
+
+1. First Launch (Internet Required):
+   - User opens admin or staff page while online
+   - TOTP secrets are fetched from Supabase
+   - Secrets are automatically cached to:
+     * Electron: File system (library-attendance-data.json)
+     * Browser: localStorage
+   
+2. Subsequent Use (Offline Works):
+   - TOTP codes are generated from cached secrets
+   - Works completely offline after first sync
+   - Codes refresh every 30 seconds client-side
+
+3. Authenticator App:
+   - Navigate to /authenticator route
+   - Displays TOTP codes for admin and staff
+   - Copy codes or scan QR codes for authentication
+   - Works offline after initial sync
+
+===========================================
+DATA PERSISTENCE
+===========================================
+
+ELECTRON (Desktop):
+-------------------
+Data stored in:
+- Windows: C:\Users\<Username>\AppData\Roaming\Library Attendance System\library-attendance-data.json
+- macOS: ~/Library/Application Support/Library Attendance System/library-attendance-data.json
+- Linux: ~/.config/Library Attendance System/library-attendance-data.json
+
+Contains:
+- students[]
+- attendanceRecords[]
+- totpSecrets[]
+- totpLastSync
+- lastSync
+
+BROWSER (Web):
+--------------
+Data stored in:
+- localStorage (key: library-attendance-offline)
+- Separate TOTP cache (key: totp_offline_cache)
+
+AUTO-SYNC:
+----------
+- Syncs every 10 seconds when online
+- Uploads local_ prefixed records to server
+- Downloads server updates to local storage
+- Merges offline changes with server data
+
+===========================================
+TESTING OFFLINE FUNCTIONALITY
+===========================================
+
+1. Browser:
+   - Open DevTools (F12)
+   - Network tab → Throttling → Offline
+   - Application should work normally
+
+2. Electron:
+   - Disconnect internet
+   - App continues functioning
+   - Data saved locally
+   - Auto-syncs when reconnected
+
+3. TOTP Offline Test:
+   - Visit authenticator while online (first time)
+   - Disconnect internet
+   - Codes should still generate
+   - Admin/Staff login should work
+
+===========================================
+TROUBLESHOOTING
+===========================================
+
+Module Not Found:
+-----------------
+rm -rf node_modules package-lock.json
+npm install
+
+Port Already in Use:
+--------------------
+# Find process
+netstat -ano | findstr :8080  (Windows)
+lsof -i :8080  (Mac/Linux)
+
+# Kill process or change port in vite.config.ts
+
+Supabase Connection Error:
+---------------------------
+- Verify .env file exists
+- Check VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY
+- Ensure Supabase project is active
+
+Electron Not Starting:
+----------------------
+# Ensure dev server is running first
+npm run dev
+
+# Then in separate terminal:
+npx electron electron/main.js
+
+TOTP Not Working Offline:
+--------------------------
+- Ensure you accessed authenticator while online first
+- Check browser console for cache errors
+- Verify totpOfflineStorage.ts is loaded
+- Check file permissions (Electron)
+
+Build Errors:
+-------------
+# Clear build cache
+rm -rf dist electron-dist
+
+# Rebuild
+npm run build
+npx electron-builder
+
+===========================================
+DEPLOYMENT CHECKLIST
+===========================================
+
+Before Release:
+□ Update version in package.json
+□ Test offline functionality
+□ Test TOTP authentication offline
+□ Verify data synchronization
+□ Test on target platforms
+□ Check electron-builder.json configuration
+□ Update .env with production values
+□ Build and test production builds
+□ Create installer packages
+□ Test installation on clean systems
+□ Verify auto-update mechanism (if implemented)
+
+===========================================
+SECURITY CONSIDERATIONS
+===========================================
+
+1. TOTP Secrets:
+   - Cached locally for offline use
+   - Not transmitted unnecessarily
+   - Session-based verification (1 hour timeout)
+
+2. Data Storage:
+   - Local storage encrypted in Electron
+   - Browser storage uses Web Crypto API
+   - Supabase RLS policies enforced
+
+3. Authentication:
+   - TOTP-based admin access
+   - 6-digit codes, 30-second rotation
+   - Offline verification supported
+
+===========================================
+SUPPORT AND MAINTENANCE
+===========================================
+
+Regular Updates:
+- npm update (check for dependency updates)
+- Review Supabase migrations
+- Test offline functionality after updates
+- Monitor auto-sync performance
+
+Common Maintenance Tasks:
+- Clear old attendance records (>30 days auto-filtered)
+- Backup Electron data files
+- Update TOTP secrets if compromised
+- Monitor storage usage
+
+===========================================
+END OF BUILD INSTRUCTIONS
+===========================================
