@@ -28,6 +28,7 @@ import BackButton from '@/components/BackButton';
 import RFIDDataManager from '@/components/RFIDDataManager';
 // Import StudentRegistration component
 import StudentRegistration from '@/components/StudentRegistration';
+import ThesisDatabaseManager from '@/components/ThesisDatabaseManager';
 import { attendanceService } from '@/services/attendanceService';
 import { supabaseService } from '@/services/supabaseService';
 import { Student } from '@/types/Student';
@@ -480,10 +481,11 @@ const EnhancedAdminPage = () => {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col overflow-hidden">
-          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-5 gap-1 sm:gap-0 mb-2 sm:mb-4 flex-shrink-0">
+          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-1 sm:gap-0 mb-2 sm:mb-4 flex-shrink-0">
             <TabsTrigger value="add-student" className="text-xs sm:text-sm">Add User</TabsTrigger>
             <TabsTrigger value="edit-students" className="text-xs sm:text-sm">Manage Users</TabsTrigger>
             <TabsTrigger value="rfid-manager" className="text-xs sm:text-sm">RFID Manager</TabsTrigger>
+            <TabsTrigger value="thesis-database" className="text-xs sm:text-sm">Thesis Database</TabsTrigger>
             <TabsTrigger value="reports" className="text-xs sm:text-sm">Advanced Reports</TabsTrigger>
             <TabsTrigger value="analytics" className="text-xs sm:text-sm">Live Analytics</TabsTrigger>
           </TabsList>
@@ -844,6 +846,12 @@ const EnhancedAdminPage = () => {
           <TabsContent value="rfid-manager" className="flex-1 overflow-auto">
             <ScrollArea className="h-full">
               <RFIDDataManager students={students} onDataUpdated={loadData} />
+            </ScrollArea>
+          </TabsContent>
+
+          <TabsContent value="thesis-database" className="flex-1 overflow-auto">
+            <ScrollArea className="h-full">
+              <ThesisDatabaseManager />
             </ScrollArea>
           </TabsContent>
 

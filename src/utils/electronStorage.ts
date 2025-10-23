@@ -1,6 +1,7 @@
 export interface OfflineData {
   students: any[];
   attendanceRecords: any[];
+  documents: any[];
   lastSync: string | null;
 }
 
@@ -75,6 +76,7 @@ export const getFromFileSystem = async (): Promise<OfflineData> => {
     return {
       students: [],
       attendanceRecords: [],
+      documents: [],
       lastSync: null
     };
   }
