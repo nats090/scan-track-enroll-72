@@ -365,8 +365,8 @@ const EnhancedAdminPage = () => {
   }
 
   return (
-    <div className="h-screen bg-gradient-to-br from-blue-50 to-indigo-50 p-2 sm:p-4 flex flex-col overflow-hidden">
-      <div className="max-w-7xl mx-auto w-full flex flex-col h-full overflow-hidden">
+    <div className="h-screen bg-gradient-to-br from-blue-50 to-indigo-50 p-2 sm:p-6 flex flex-col overflow-hidden">
+      <div className="w-full flex flex-col h-full overflow-hidden px-2 sm:px-4">
         <div className="mb-2 sm:mb-4 flex-shrink-0">
           <BackButton to="/" />
         </div>
