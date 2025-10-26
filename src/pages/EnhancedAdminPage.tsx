@@ -722,42 +722,33 @@ const EnhancedAdminPage = () => {
                     )}
 
                     {editingStudent?.userType === 'student' && 
-                     !(editingStudent?.studentType === 'ibed' && 
-                       (editingStudent?.level === 'elementary' || editingStudent?.level === 'junior-high')) && (
+                     editingStudent?.level === 'senior-high' && (
                       <div>
-                        <Label>{editingStudent?.level === 'senior-high' ? 'Strand' : 'Department'}</Label>
+                        <Label>Strand</Label>
                         <Input
-                          value={editingStudent?.department || ''}
-                          onChange={(e) => setEditingStudent(editingStudent ? {...editingStudent, department: e.target.value} : null)}
-                          placeholder={editingStudent?.level === 'senior-high' ? 'Enter strand' : 'Enter department'}
+                          value={editingStudent?.strand || ''}
+                          onChange={(e) => setEditingStudent(editingStudent ? {...editingStudent, strand: e.target.value} : null)}
+                          placeholder="Enter strand (e.g., STEM, ABM, HUMSS)"
                         />
                       </div>
                     )}
 
                     {editingStudent?.userType === 'student' && 
-                     editingStudent?.level === 'senior-high' && (
+                     editingStudent?.level !== 'senior-high' &&
+                     !(editingStudent?.studentType === 'ibed' && 
+                       (editingStudent?.level === 'elementary' || editingStudent?.level === 'junior-high')) && (
                       <div>
-                        <Label>Shift</Label>
-                        <Select
-                          value={editingStudent?.shift || 'morning'}
-                          onValueChange={(value: 'morning' | 'afternoon') => 
-                            setEditingStudent(editingStudent ? {...editingStudent, shift: value} : null)
-                          }
-                        >
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="morning">Morning Shift</SelectItem>
-                            <SelectItem value="afternoon">Afternoon Shift</SelectItem>
-                          </SelectContent>
-                        </Select>
+                        <Label>Department</Label>
+                        <Input
+                          value={editingStudent?.department || ''}
+                          onChange={(e) => setEditingStudent(editingStudent ? {...editingStudent, department: e.target.value} : null)}
+                          placeholder="Enter department"
+                        />
                       </div>
                     )}
 
                     {editingStudent?.userType === 'student' && 
-                     !(editingStudent?.studentType === 'ibed' && 
-                       (editingStudent?.level === 'elementary' || editingStudent?.level === 'junior-high')) && (
+                     editingStudent?.studentType === 'college' && (
                       <div>
                         <Label>Course/Program</Label>
                         <Input

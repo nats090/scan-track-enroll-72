@@ -22,17 +22,6 @@ const AttendanceTable: React.FC<AttendanceTableProps> = ({ records, students, ty
   const endIndex = startIndex + ITEMS_PER_PAGE;
   const currentRecords = records.slice(startIndex, endIndex);
   const getDisplayInfo = (record: AttendanceEntry) => {
-    // Debug log to see what data we're receiving
-    console.log('Record data:', {
-      name: record.studentName,
-      userType: record.userType,
-      studentType: record.studentType,
-      level: record.level,
-      course: record.course,
-      year: record.year,
-      strand: record.strand
-    });
-
     // Check if it's a visitor (starts with VISITOR_)
     if (record.studentId.startsWith('VISITOR_')) {
       return {

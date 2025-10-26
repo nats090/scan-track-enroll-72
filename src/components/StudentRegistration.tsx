@@ -140,9 +140,8 @@ const form = useForm<RegistrationForm>({
     const emailValid = !data.email || /^[A-Za-z0-9._%+-]+@(gmail\.com|ndkc\.edu\.ph)$/.test(data.email);
     const studentIdValid = /^\d{4}-\d{3,4}$/.test(data.studentId || '');
     
-    // Course is required except for teachers and IBED elementary/junior-high students
-    const isIbedElemOrJH = data.studentType === 'ibed' && (data.level === 'elementary' || data.level === 'junior-high');
-    const courseValid = data.userType === 'teacher' || isIbedElemOrJH || !!data.course?.trim();
+    // Course is required only for COLLEGE students
+    const courseValid = data.userType === 'teacher' || data.studentType === 'ibed' || !!data.course?.trim();
     const yearValid = data.userType === 'teacher' || !!data.year?.trim();
 
     if (!nameValid) {
@@ -175,9 +174,10 @@ const form = useForm<RegistrationForm>({
       name: data.name,
       studentId: data.studentId,
       email: data.email,
-      department: data.department === 'none' ? undefined : data.department,
+      department: (data.level !== 'senior-high' && data.department !== 'none') ? data.department : undefined,
       level: data.level === 'none' ? undefined : data.level as 'elementary' | 'junior-high' | 'senior-high' | 'college',
-      shift: (data.level === 'senior-high' && data.shift !== 'none') ? data.shift as 'morning' | 'afternoon' : undefined,
+      strand: data.level === 'senior-high' && data.department !== 'none' ? data.department : undefined,
+      shift: undefined, // Removed shift field as requested
       course: data.userType === 'teacher' ? 'Teacher' : (data.course || undefined),
       year: data.year,
       profilePicture: profilePicture || undefined,
@@ -412,15 +412,14 @@ const form = useForm<RegistrationForm>({
 
                 {/* Department/Strand Selection - not shown for IBED elementary/junior-high */}
                 {watchedUserType === 'student' && 
-                 !(watchedStudentType === 'ibed' && (watchedLevel === 'elementary' || watchedLevel === 'junior-high')) && (
+                 !(watchedStudentType === 'ibed' && (watchedLevel === 'elementary' || watchedLevel === 'junior-high')) && 
+                 watchedLevel !== 'senior-high' && (
                   <FormField
                     control={form.control}
                     name="department"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>
-                          {watchedLevel === 'senior-high' ? 'Strand' : 'Department'}
-                        </FormLabel>
+                        <FormLabel>Department</FormLabel>
                         <FormControl>
                           <Select 
                             value={field.value || 'none'} 
@@ -429,7 +428,7 @@ const form = useForm<RegistrationForm>({
                             }}
                           >
                             <SelectTrigger className="bg-background">
-                              <SelectValue placeholder={`Select ${watchedLevel === 'senior-high' ? 'strand' : 'department'}`} />
+                              <SelectValue placeholder="Select department" />
                             </SelectTrigger>
                             <SelectContent className="bg-background z-50">
                               {getDepartmentOptions().map(option => (
@@ -446,14 +445,14 @@ const form = useForm<RegistrationForm>({
                   />
                 )}
 
-                {/* Show shift field only for SHS students */}
+                {/* Strand Selection - only for Senior High */}
                 {watchedUserType === 'student' && watchedLevel === 'senior-high' && (
                   <FormField
                     control={form.control}
-                    name="shift"
+                    name="department"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Shift</FormLabel>
+                        <FormLabel>Strand</FormLabel>
                         <FormControl>
                           <Select 
                             value={field.value || 'none'} 
@@ -462,12 +461,14 @@ const form = useForm<RegistrationForm>({
                             }}
                           >
                             <SelectTrigger className="bg-background">
-                              <SelectValue placeholder="Select shift" />
+                              <SelectValue placeholder="Select strand" />
                             </SelectTrigger>
                             <SelectContent className="bg-background z-50">
-                              <SelectItem value="none">No shift assigned</SelectItem>
-                              <SelectItem value="morning">Morning Shift</SelectItem>
-                              <SelectItem value="afternoon">Afternoon Shift</SelectItem>
+                              {getDepartmentOptions().map(option => (
+                                <SelectItem key={option.value} value={option.value}>
+                                  {option.label}
+                                </SelectItem>
+                              ))}
                             </SelectContent>
                           </Select>
                         </FormControl>
@@ -477,9 +478,8 @@ const form = useForm<RegistrationForm>({
                   />
                 )}
 
-                {/* Course - not shown for teachers or IBED elementary/junior-high */}
-                {watchedUserType === 'student' && 
-                 !(watchedStudentType === 'ibed' && (watchedLevel === 'elementary' || watchedLevel === 'junior-high')) && (
+                {/* Course - only for COLLEGE students */}
+                {watchedUserType === 'student' && watchedStudentType === 'college' && (
                   <FormField
                     control={form.control}
                     name="course"
