@@ -96,16 +96,6 @@ const CheckInDashboard = () => {
       // Use visitor name as unique identifier (prefixed to distinguish from student IDs)
       const visitorId = `VISITOR_${visitorData.name.toUpperCase().replace(/\s+/g, '_')}`;
       
-      // Check if visitor is already checked in
-      const currentStatus = await attendanceService.getStudentCurrentStatus(visitorId);
-      if (currentStatus === 'checked-in') {
-        toast({
-          title: "Already Checked In",
-          description: `Visitor ${visitorData.name} is already checked in.`,
-          variant: "destructive",
-        });
-        return;
-      }
 
       const visitorRecord: Omit<AttendanceEntry, 'id'> = {
         studentId: visitorId,
@@ -117,7 +107,21 @@ const CheckInDashboard = () => {
         contact: visitorData.contact
       };
 
-      await attendanceService.addAttendanceRecord(visitorRecord);
+      try {
+        await attendanceService.addAttendanceRecord(visitorRecord);
+      } catch (error: any) {
+        if (error.message?.startsWith('COOLDOWN:')) {
+          const remainingSeconds = error.message.split(':')[1];
+          toast({
+            title: "⏱️ Please wait",
+            description: `Please wait ${remainingSeconds} more seconds before checking in again`,
+            variant: "destructive",
+          });
+          return;
+        } else {
+          throw error;
+        }
+      }
       
       toast({
         title: "Welcome!",
@@ -165,18 +169,6 @@ const CheckInDashboard = () => {
       );
       
       if (student) {
-        // Check current status before allowing check-in (using unique database ID)
-        const currentStatus = await attendanceService.getStudentCurrentStatus(student.id);
-        
-        if (currentStatus === 'checked-in') {
-          toast({
-            title: "Already Checked In",
-            description: `${student.name} is already checked in. Please check out first.`,
-            variant: "destructive",
-          });
-          setRfidInput(''); // Clear input
-          return;
-        }
 
         const newRecord: Omit<AttendanceEntry, 'id'> = {
           studentDatabaseId: student.id,
@@ -192,7 +184,22 @@ const CheckInDashboard = () => {
           level: student.level
         };
         
-        await attendanceService.addAttendanceRecord(newRecord);
+        try {
+          await attendanceService.addAttendanceRecord(newRecord);
+        } catch (error: any) {
+          if (error.message?.startsWith('COOLDOWN:')) {
+            const remainingSeconds = error.message.split(':')[1];
+            toast({
+              title: "⏱️ Please wait",
+              description: `Please wait ${remainingSeconds} more seconds before checking in again`,
+              variant: "destructive",
+            });
+            setRfidInput(''); // Clear input
+            return;
+          } else {
+            throw error;
+          }
+        }
         
         toast({
           title: "Welcome!",
@@ -222,15 +229,6 @@ const CheckInDashboard = () => {
 
   const handleStudentCheckIn = async (student: Student) => {
     try {
-      const currentStatus = await attendanceService.getStudentCurrentStatus(student.id);
-      if (currentStatus === 'checked-in') {
-        toast({
-          title: 'Already Checked In',
-          description: `${student.name} is already checked in. Please check out first.`,
-          variant: 'destructive',
-        });
-        return;
-      }
 
       const studentRecord: Omit<AttendanceEntry, 'id'> = {
         studentDatabaseId: student.id,
@@ -246,7 +244,21 @@ const CheckInDashboard = () => {
         level: student.level
       };
 
-      await attendanceService.addAttendanceRecord(studentRecord);
+      try {
+        await attendanceService.addAttendanceRecord(studentRecord);
+      } catch (error: any) {
+        if (error.message?.startsWith('COOLDOWN:')) {
+          const remainingSeconds = error.message.split(':')[1];
+          toast({
+            title: "⏱️ Please wait",
+            description: `Please wait ${remainingSeconds} more seconds before checking in again`,
+            variant: "destructive",
+          });
+          return;
+        } else {
+          throw error;
+        }
+      }
 
       toast({
         title: "Welcome!",

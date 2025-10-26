@@ -85,24 +85,6 @@ const CheckOutDashboard = () => {
       // Use visitor name as identifier (must match check-in)
       const visitorId = `VISITOR_${visitorName.toUpperCase().replace(/\s+/g, '_')}`;
       
-      // Check if visitor is checked in
-      const currentStatus = await attendanceService.getStudentCurrentStatus(visitorId);
-      if (currentStatus === 'checked-out') {
-        toast({
-          title: "Already Checked Out",
-          description: `Visitor ${visitorName} is not currently checked in.`,
-          variant: "destructive",
-        });
-        return;
-      }
-      if (currentStatus === 'unknown') {
-        toast({
-          title: "No Check-in Record",
-          description: `Visitor ${visitorName} has no active check-in record.`,
-          variant: "destructive",
-        });
-        return;
-      }
 
       const visitorRecord: Omit<AttendanceEntry, 'id'> = {
         studentId: visitorId,
@@ -113,7 +95,21 @@ const CheckOutDashboard = () => {
         purpose: 'Check Out'
       };
 
-      await attendanceService.addAttendanceRecord(visitorRecord);
+      try {
+        await attendanceService.addAttendanceRecord(visitorRecord);
+      } catch (error: any) {
+        if (error.message?.startsWith('COOLDOWN:')) {
+          const remainingSeconds = error.message.split(':')[1];
+          toast({
+            title: "⏱️ Please wait",
+            description: `Please wait ${remainingSeconds} more seconds before checking out again`,
+            variant: "destructive",
+          });
+          return;
+        } else {
+          throw error;
+        }
+      }
       
       toast({
         title: "Goodbye!",
@@ -178,23 +174,6 @@ const CheckOutDashboard = () => {
 
   const handleStudentCheckOut = async (student: Student) => {
     try {
-      const currentStatus = await attendanceService.getStudentCurrentStatus(student.id);
-      if (currentStatus === 'checked-out') {
-        toast({
-          title: 'Already Checked Out',
-          description: `${student.name} is not currently checked in.`,
-          variant: 'destructive',
-        });
-        return;
-      }
-      if (currentStatus === 'unknown') {
-        toast({
-          title: 'No Check-in Record',
-          description: `${student.name} has no active check-in record.`,
-          variant: 'destructive',
-        });
-        return;
-      }
 
       const studentRecord: Omit<AttendanceEntry, 'id'> = {
         studentDatabaseId: student.id,
@@ -210,7 +189,21 @@ const CheckOutDashboard = () => {
         level: student.level
       };
 
-      await attendanceService.addAttendanceRecord(studentRecord);
+      try {
+        await attendanceService.addAttendanceRecord(studentRecord);
+      } catch (error: any) {
+        if (error.message?.startsWith('COOLDOWN:')) {
+          const remainingSeconds = error.message.split(':')[1];
+          toast({
+            title: "⏱️ Please wait",
+            description: `Please wait ${remainingSeconds} more seconds before checking out again`,
+            variant: "destructive",
+          });
+          return;
+        } else {
+          throw error;
+        }
+      }
 
       toast({
         title: "Goodbye!",
@@ -242,28 +235,6 @@ const CheckOutDashboard = () => {
       const student = students.find(s => s.rfid === rfidValue.trim() || s.studentId === rfidValue.trim());
       
       if (student) {
-        // Check current status before allowing check-out (using unique database ID)
-        const currentStatus = await attendanceService.getStudentCurrentStatus(student.id);
-        
-        if (currentStatus === 'checked-out') {
-          toast({
-            title: "Already Checked Out",
-            description: `${student.name} is not currently checked in.`,
-            variant: "destructive",
-          });
-          setRfidInput(''); // Clear input
-          return;
-        }
-        
-        if (currentStatus === 'unknown') {
-          toast({
-            title: "No Check-in Record",
-            description: `${student.name} has no active check-in record.`,
-            variant: "destructive",
-          });
-          setRfidInput(''); // Clear input
-          return;
-        }
 
         const newRecord: Omit<AttendanceEntry, 'id'> = {
           studentDatabaseId: student.id,
@@ -279,7 +250,22 @@ const CheckOutDashboard = () => {
           level: student.level
         };
         
-        await attendanceService.addAttendanceRecord(newRecord);
+        try {
+          await attendanceService.addAttendanceRecord(newRecord);
+        } catch (error: any) {
+          if (error.message?.startsWith('COOLDOWN:')) {
+            const remainingSeconds = error.message.split(':')[1];
+            toast({
+              title: "⏱️ Please wait",
+              description: `Please wait ${remainingSeconds} more seconds before checking out again`,
+              variant: "destructive",
+            });
+            setRfidInput(''); // Clear input
+            return;
+          } else {
+            throw error;
+          }
+        }
         
         toast({
           title: "Goodbye!",

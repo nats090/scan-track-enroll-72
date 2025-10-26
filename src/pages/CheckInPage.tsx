@@ -87,15 +87,28 @@ const CheckInPage = () => {
           level: student.level
         };
         
-        await attendanceService.addAttendanceRecord(newRecord);
-        
-        toast({
-          title: "Welcome!",
-          description: `${student.name} checked in successfully`,
-          duration: 3000,
-        });
-        
-        setRfidInput(''); // Clear input for next scan
+        try {
+          await attendanceService.addAttendanceRecord(newRecord);
+          toast({
+            title: "Welcome!",
+            description: `${student.name} checked in successfully`,
+            duration: 3000,
+          });
+          setRfidInput(''); // Clear input for next scan
+        } catch (error: any) {
+          if (error.message?.startsWith('COOLDOWN:')) {
+            const remainingSeconds = error.message.split(':')[1];
+            toast({
+              title: "⏱️ Please wait",
+              description: `Please wait ${remainingSeconds} more seconds before checking in again`,
+              variant: "destructive",
+            });
+            setRfidInput('');
+            return;
+          } else {
+            throw error;
+          }
+        }
       } else {
         toast({
           title: "Student Not Found",
