@@ -58,22 +58,34 @@ export const studentService = {
         }
 
         if (allStudents.length > 0) {
-          const students = allStudents.map(student => ({
-            id: student.id,
-            name: student.name,
-            studentId: student.student_id,
-            email: student.email || '',
-            department: student.course, // backward compatibility
-            course: (student as any).course || '',
-            year: (student as any).year || '',
-            contactNumber: (student as any).contact_number || '',
-            biometricData: student.biometric_data || '',
-            rfid: student.rfid || '',
-            library: (student as any).library as 'notre-dame' | 'ibed' || 'notre-dame',
-            userType: (student as any).user_type as 'student' | 'teacher' || 'student',
-            studentType: (student as any).student_type as 'ibed' | 'college' || 'college',
-            lastScan: undefined
-          }));
+          const students = allStudents.map(student => {
+            const courseStr = (student as any).course || '';
+            const levelVal = (student as any).level || undefined;
+            // Try to derive strand from course string when senior-high
+            let strand: string | undefined = undefined;
+            if (levelVal === 'senior-high' && typeof courseStr === 'string') {
+              const match = courseStr.match(/senior-high\s*-\s*(.+)$/i);
+              strand = match ? match[1] : undefined;
+            }
+            return {
+              id: student.id,
+              name: student.name,
+              studentId: student.student_id,
+              email: student.email || '',
+              department: courseStr, // backward compatibility
+              course: (student as any).course || '',
+              year: (student as any).year || '',
+              contactNumber: (student as any).contact_number || '',
+              biometricData: student.biometric_data || '',
+              rfid: student.rfid || '',
+              library: (student as any).library as 'notre-dame' | 'ibed' || 'notre-dame',
+              userType: (student as any).user_type as 'student' | 'teacher' || 'student',
+              studentType: (student as any).student_type as 'ibed' | 'college' || 'college',
+              level: levelVal,
+              strand,
+              lastScan: undefined
+            } as any;
+          });
 
           // Preserve offline-only and locally edited (dirty) students
           const localOnly = (localData.students || []).filter((s: any) => s.id?.toString().startsWith('local_'));
@@ -213,22 +225,39 @@ export const studentService = {
   async updateStudent(id: string, studentData: Partial<Student>): Promise<Student> {
     try {
       if (navigator.onLine) {
+        const courseToSave = (() => {
+          const sd: any = studentData || {};
+          if (sd.studentType === 'college') {
+            return sd.course ?? sd.department ?? null;
+          }
+          if (sd.level === 'senior-high') {
+            return `${sd.level}${sd.strand ? ` - ${sd.strand}` : ''}`;
+          }
+          return sd.department ?? sd.course ?? null;
+        })();
+
         const { data, error } = await supabase
           .from('students')
           .update({
             name: studentData.name,
             student_id: studentData.studentId,
             email: studentData.email,
-            course: (studentData as any).course ?? studentData.department,
+            course: courseToSave ?? undefined,
             year: (studentData as any).year,
             contact_number: (studentData as any).contactNumber,
-            rfid: studentData.rfid
+            rfid: studentData.rfid,
+            level: (studentData as any).level,
+            user_type: (studentData as any).userType,
+            student_type: (studentData as any).studentType
           })
           .eq('id', id)
           .select()
           .single();
 
         if (!error && data) {
+          const courseStr = (data as any).course || '';
+          const levelVal = (data as any).level || undefined;
+          const strand = levelVal === 'senior-high' ? (courseStr.match(/senior-high\s*-\s*(.+)$/i)?.[1] || undefined) : undefined;
           const updatedStudent = {
             id: data.id,
             name: data.name,
@@ -240,8 +269,12 @@ export const studentService = {
             contactNumber: (data as any).contact_number || '',
             biometricData: data.biometric_data || '',
             rfid: data.rfid || '',
-            library: data.library as 'notre-dame' | 'ibed' || 'notre-dame'
-          };
+            library: data.library as 'notre-dame' | 'ibed' || 'notre-dame',
+            userType: (data as any).user_type as 'student' | 'teacher' || 'student',
+            studentType: (data as any).student_type as 'ibed' | 'college' || 'college',
+            level: levelVal,
+            strand
+          } as any;
 
           // Update local storage
           const localData = await getFromLocalStorage();
@@ -288,6 +321,10 @@ export const studentService = {
 
     if (!data) return null;
 
+    const courseStr = (data as any).course || '';
+    const levelVal = (data as any).level || undefined;
+    const strand = levelVal === 'senior-high' ? (courseStr.match(/senior-high\s*-\s*(.+)$/i)?.[1] || undefined) : undefined;
+
     return {
       id: data.id,
       name: data.name,
@@ -299,8 +336,12 @@ export const studentService = {
       contactNumber: (data as any).contact_number || '',
       biometricData: data.biometric_data || '',
       rfid: data.rfid || '',
-      library: data.library as 'notre-dame' | 'ibed' || 'notre-dame'
-    };
+      library: data.library as 'notre-dame' | 'ibed' || 'notre-dame',
+      userType: (data as any).user_type as 'student' | 'teacher' || 'student',
+      studentType: (data as any).student_type as 'ibed' | 'college' || 'college',
+      level: levelVal,
+      strand
+    } as any;
   },
 
   async findStudentByBiometric(biometricData: string): Promise<Student | null> {

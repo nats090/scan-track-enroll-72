@@ -63,7 +63,23 @@ const EnhancedAdminPage = () => {
   });
   
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
-  
+
+  const deriveStudentDefaults = (s: Student): Student => {
+    const out = { ...s } as any;
+    // Derive level from course/department text when missing
+    const source = (s.course || s.department || '').toLowerCase();
+    if (!out.level) {
+      if (source.includes('senior-high')) out.level = 'senior-high';
+      else if (source.includes('junior-high')) out.level = 'junior-high';
+      else if (source.includes('elementary')) out.level = 'elementary';
+      else if (source.includes('college')) out.level = 'college';
+    }
+    // Derive strand from "senior-high - STRAND" pattern
+    if (!out.strand && /senior-high\s*-\s*/i.test(source)) {
+      out.strand = (s.course || s.department || '').split(/senior-high\s*-\s*/i)[1] || undefined;
+    }
+    return out as Student;
+  };
   const [reportFilter, setReportFilter] = useState({
     period: 'today',
     userType: 'all',
