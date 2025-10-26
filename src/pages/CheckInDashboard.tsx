@@ -15,6 +15,7 @@ import { format } from 'date-fns';
 
 import BackButton from '@/components/BackButton';
 import AttendanceTable from '@/components/AttendanceTable';
+import { useMidnightReset } from '@/hooks/useMidnightReset';
 
 const CheckInDashboard = () => {
   const [students, setStudents] = useState<Student[]>([]);
@@ -57,22 +58,20 @@ const CheckInDashboard = () => {
 
       setStudents(studentsData);
       
-      // Get records from the last 24 hours
-      const last24Hours = new Date(Date.now() - 24 * 60 * 60 * 1000);
-      const recentRecords = attendanceData.filter(record => 
-        new Date(record.timestamp) >= last24Hours
+      // Get today's records starting from 12am (midnight reset)
+      const todayStart = new Date();
+      todayStart.setHours(0, 0, 0, 0);
+      
+      const todayRecords = attendanceData.filter(record => 
+        new Date(record.timestamp) >= todayStart
       );
       
-      // Get all check-ins from last 24 hours
-      const recentCheckIns = recentRecords
+      // Get all check-ins from today
+      const recentCheckIns = todayRecords
         .filter(record => record.type === 'check-in')
         .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
       
       // Get today's count for the stats card
-      const today = new Date().toDateString();
-      const todayRecords = attendanceData.filter(record => 
-        new Date(record.timestamp).toDateString() === today
-      );
       const todayCheckInsCount = todayRecords.filter(record => record.type === 'check-in').length;
       
       setRecentCheckIns(recentCheckIns);
@@ -81,6 +80,9 @@ const CheckInDashboard = () => {
       console.error('Error loading data:', error);
     }
   };
+
+  // Automatically refresh at midnight to reset daily displays
+  useMidnightReset(loadData);
 
   const handleVisitorCheckIn = async () => {
     try {

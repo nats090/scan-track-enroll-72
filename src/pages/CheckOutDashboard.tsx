@@ -14,6 +14,7 @@ import { format, differenceInHours, differenceInMinutes } from 'date-fns';
 
 import BackButton from '@/components/BackButton';
 import AttendanceTable from '@/components/AttendanceTable';
+import { useMidnightReset } from '@/hooks/useMidnightReset';
 
 const CheckOutDashboard = () => {
   const [students, setStudents] = useState<Student[]>([]);
@@ -51,10 +52,12 @@ const CheckOutDashboard = () => {
 
       setStudents(studentsData);
       
-      // Get today's records
-      const today = new Date().toDateString();
+      // Get today's records starting from 12am (midnight reset)
+      const todayStart = new Date();
+      todayStart.setHours(0, 0, 0, 0);
+      
       const todayRecords = attendanceData.filter(record => 
-        new Date(record.timestamp).toDateString() === today
+        new Date(record.timestamp) >= todayStart
       );
       
       // Get all check-outs for today
@@ -70,6 +73,9 @@ const CheckOutDashboard = () => {
       console.error('Error loading data:', error);
     }
   };
+
+  // Automatically refresh at midnight to reset daily displays
+  useMidnightReset(loadData);
 
   const handleVisitorCheckOut = async () => {
     try {

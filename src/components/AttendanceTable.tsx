@@ -31,33 +31,25 @@ const AttendanceTable: React.FC<AttendanceTableProps> = ({ records, students, ty
       };
     }
 
-    // Check userType
-    const userType = record.userType || 'student';
-    
-    if (userType === 'teacher') {
-      // For teachers, show department/course and "Teacher" as role
-      const student = students.find(s => s.studentId === record.studentId);
+    // Check if it's a teacher - check userType field
+    if (record.userType === 'teacher') {
       return {
         type: 'teacher',
-        field1: record.course || student?.course || 'N/A',
+        field1: record.course || 'N/A',
         field2: 'Teacher'
       };
     }
 
-    // For students, check if IBED or College
-    const studentType = record.studentType || 'college';
-    
-    if (studentType === 'ibed') {
-      // For IBED students, show level and year/grade
-      const levelDisplay = record.level || 'N/A';
+    // Check if it's an IBED student - check studentType OR presence of level field
+    if (record.studentType === 'ibed' || record.level) {
       return {
         type: 'ibed',
-        field1: levelDisplay,
+        field1: record.level || 'N/A',
         field2: record.year || 'N/A'
       };
     }
 
-    // For college students, show course and year
+    // Default to college student - show course and year
     return {
       type: 'college',
       field1: record.course || 'N/A',
@@ -93,8 +85,8 @@ const AttendanceTable: React.FC<AttendanceTableProps> = ({ records, students, ty
                     <TableCell className="font-medium">{record.studentName}</TableCell>
                     <TableCell>
                       {displayInfo.type === 'visitor' && <span className="text-orange-700 font-medium">Purpose: {displayInfo.field1}</span>}
-                      {displayInfo.type === 'teacher' && <span className="text-purple-700 font-medium">Dept: {displayInfo.field1}</span>}
-                      {displayInfo.type === 'ibed' && <span className="text-blue-700 font-medium">Level: {displayInfo.field1}</span>}
+                      {displayInfo.type === 'teacher' && displayInfo.field1 !== 'N/A' && <span className="text-purple-700 font-medium">Dept: {displayInfo.field1}</span>}
+                      {displayInfo.type === 'ibed' && displayInfo.field1 !== 'N/A' && <span className="text-blue-700 font-medium">Level: {displayInfo.field1}</span>}
                       {displayInfo.type === 'college' && <span className="text-green-700 font-medium">Course: {displayInfo.field1}</span>}
                     </TableCell>
                     <TableCell>
