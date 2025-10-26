@@ -21,20 +21,47 @@ const AttendanceTable: React.FC<AttendanceTableProps> = ({ records, students, ty
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
   const endIndex = startIndex + ITEMS_PER_PAGE;
   const currentRecords = records.slice(startIndex, endIndex);
-  const getStudentInfo = (record: AttendanceEntry) => {
-    // Use course/year from attendance record if available (stored at check-in time)
-    // Fall back to looking up in students table for old records
-    if (record.course || record.year) {
+  const getDisplayInfo = (record: AttendanceEntry) => {
+    // Check if it's a visitor (starts with VISITOR_ or has no userType)
+    if (record.studentId.startsWith('VISITOR_')) {
       return {
-        course: record.course || 'N/A',
-        year: record.year || 'N/A'
+        type: 'visitor',
+        field1: record.purpose || 'Visit',
+        field2: record.contact || 'N/A'
       };
     }
+
+    // Check userType
+    const userType = record.userType || 'student';
     
-    const student = students.find(s => s.studentId === record.studentId);
+    if (userType === 'teacher') {
+      // For teachers, show department/course and "Teacher" as role
+      const student = students.find(s => s.studentId === record.studentId);
+      return {
+        type: 'teacher',
+        field1: record.course || student?.course || 'N/A',
+        field2: 'Teacher'
+      };
+    }
+
+    // For students, check if IBED or College
+    const studentType = record.studentType || 'college';
+    
+    if (studentType === 'ibed') {
+      // For IBED students, show level and year/grade
+      const levelDisplay = record.level || 'N/A';
+      return {
+        type: 'ibed',
+        field1: levelDisplay,
+        field2: record.year || 'N/A'
+      };
+    }
+
+    // For college students, show course and year
     return {
-      course: student?.course || 'N/A',
-      year: student?.year || 'N/A'
+      type: 'college',
+      field1: record.course || 'N/A',
+      field2: record.year || 'N/A'
     };
   };
 
@@ -45,8 +72,8 @@ const AttendanceTable: React.FC<AttendanceTableProps> = ({ records, students, ty
           <TableHeader>
             <TableRow>
               <TableHead>Name</TableHead>
-              <TableHead>Course</TableHead>
-              <TableHead>Year</TableHead>
+              <TableHead>Info 1</TableHead>
+              <TableHead>Info 2</TableHead>
               <TableHead>Time</TableHead>
               <TableHead>Date</TableHead>
             </TableRow>
@@ -54,12 +81,22 @@ const AttendanceTable: React.FC<AttendanceTableProps> = ({ records, students, ty
           <TableBody>
             {currentRecords.length > 0 ? (
               currentRecords.map((record) => {
-                const studentInfo = record.studentId !== 'VISITOR' ? getStudentInfo(record) : { course: 'Visitor', year: '-' };
+                const displayInfo = getDisplayInfo(record);
                 return (
                   <TableRow key={record.id}>
                     <TableCell className="font-medium">{record.studentName}</TableCell>
-                    <TableCell>{studentInfo.course}</TableCell>
-                    <TableCell>{studentInfo.year}</TableCell>
+                    <TableCell>
+                      {displayInfo.type === 'visitor' && <span className="text-orange-600">Purpose: {displayInfo.field1}</span>}
+                      {displayInfo.type === 'teacher' && <span className="text-purple-600">Dept: {displayInfo.field1}</span>}
+                      {displayInfo.type === 'ibed' && <span className="text-blue-600">Level: {displayInfo.field1}</span>}
+                      {displayInfo.type === 'college' && <span>Course: {displayInfo.field1}</span>}
+                    </TableCell>
+                    <TableCell>
+                      {displayInfo.type === 'visitor' && <span className="text-orange-600">Contact: {displayInfo.field2}</span>}
+                      {displayInfo.type === 'teacher' && <span className="text-purple-600">Role: {displayInfo.field2}</span>}
+                      {displayInfo.type === 'ibed' && <span className="text-blue-600">Year: {displayInfo.field2}</span>}
+                      {displayInfo.type === 'college' && <span>Year: {displayInfo.field2}</span>}
+                    </TableCell>
                     <TableCell>{format(new Date(record.timestamp), 'HH:mm:ss')}</TableCell>
                     <TableCell>{format(new Date(record.timestamp), 'MMM dd, yyyy')}</TableCell>
                   </TableRow>
