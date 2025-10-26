@@ -82,20 +82,26 @@ const AttendanceTable: React.FC<AttendanceTableProps> = ({ records, students, ty
             {currentRecords.length > 0 ? (
               currentRecords.map((record) => {
                 const displayInfo = getDisplayInfo(record);
+                const rowColorClass = 
+                  displayInfo.type === 'visitor' ? 'bg-orange-50 hover:bg-orange-100' :
+                  displayInfo.type === 'teacher' ? 'bg-purple-50 hover:bg-purple-100' :
+                  displayInfo.type === 'ibed' ? 'bg-blue-50 hover:bg-blue-100' :
+                  'bg-green-50 hover:bg-green-100';
+                
                 return (
-                  <TableRow key={record.id}>
+                  <TableRow key={record.id} className={rowColorClass}>
                     <TableCell className="font-medium">{record.studentName}</TableCell>
                     <TableCell>
-                      {displayInfo.type === 'visitor' && <span className="text-orange-600">Purpose: {displayInfo.field1}</span>}
-                      {displayInfo.type === 'teacher' && <span className="text-purple-600">Dept: {displayInfo.field1}</span>}
-                      {displayInfo.type === 'ibed' && <span className="text-blue-600">Level: {displayInfo.field1}</span>}
-                      {displayInfo.type === 'college' && <span>Course: {displayInfo.field1}</span>}
+                      {displayInfo.type === 'visitor' && <span className="text-orange-700 font-medium">Purpose: {displayInfo.field1}</span>}
+                      {displayInfo.type === 'teacher' && <span className="text-purple-700 font-medium">Dept: {displayInfo.field1}</span>}
+                      {displayInfo.type === 'ibed' && <span className="text-blue-700 font-medium">Level: {displayInfo.field1}</span>}
+                      {displayInfo.type === 'college' && <span className="text-green-700 font-medium">Course: {displayInfo.field1}</span>}
                     </TableCell>
                     <TableCell>
-                      {displayInfo.type === 'visitor' && <span className="text-orange-600">Contact: {displayInfo.field2}</span>}
-                      {displayInfo.type === 'teacher' && <span className="text-purple-600">Role: {displayInfo.field2}</span>}
-                      {displayInfo.type === 'ibed' && <span className="text-blue-600">Year: {displayInfo.field2}</span>}
-                      {displayInfo.type === 'college' && <span>Year: {displayInfo.field2}</span>}
+                      {displayInfo.type === 'visitor' && <span className="text-orange-700 font-medium">Contact: {displayInfo.field2}</span>}
+                      {displayInfo.type === 'teacher' && <span className="text-purple-700 font-medium">Role: {displayInfo.field2}</span>}
+                      {displayInfo.type === 'ibed' && <span className="text-blue-700 font-medium">Year: {displayInfo.field2}</span>}
+                      {displayInfo.type === 'college' && <span className="text-green-700 font-medium">Year: {displayInfo.field2}</span>}
                     </TableCell>
                     <TableCell>{format(new Date(record.timestamp), 'HH:mm:ss')}</TableCell>
                     <TableCell>{format(new Date(record.timestamp), 'MMM dd, yyyy')}</TableCell>
