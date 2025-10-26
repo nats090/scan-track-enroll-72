@@ -151,10 +151,9 @@ export const studentService = {
     // For now, we'll store the combined department info in the course field
     let courseInfo = student.department || '';
     if (student.level) {
-      if (student.level === 'senior-high' && (student as any).strand) {
-        courseInfo = `${student.level} - ${(student as any).strand}`;
-      } else {
-        courseInfo = student.level + (student.department ? ` - ${student.department}` : '');
+      courseInfo = student.level + (student.department ? ` - ${student.department}` : '');
+      if (student.shift && student.level === 'senior-high') {
+        courseInfo += ` (${student.shift} shift)`;
       }
     }
 
