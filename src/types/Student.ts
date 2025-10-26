@@ -9,6 +9,7 @@ export interface Student {
   year?: string;
   level?: 'elementary' | 'junior-high' | 'senior-high' | 'college' | 'graduated' | 'transferred-out';
   shift?: 'morning' | 'afternoon'; // For SHS students
+  strand?: string; // For SHS students (Grade 11-12)
   lastScan?: Date;
   profilePicture?: string;
   biometricData?: string;

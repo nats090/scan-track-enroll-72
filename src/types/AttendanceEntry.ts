@@ -16,4 +16,5 @@ export interface AttendanceEntry {
   userType?: 'student' | 'teacher'; // User type
   studentType?: 'ibed' | 'college'; // Student type: IBED or COLLEGE
   level?: string; // Education level
+  strand?: string; // For SHS students (Grade 11-12)
 }

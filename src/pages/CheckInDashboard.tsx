@@ -183,7 +183,8 @@ const CheckInDashboard = () => {
           year: student.year,
           userType: student.userType || 'student',
           studentType: student.studentType,
-          level: student.level
+          level: student.level,
+          strand: student.strand
         };
         
         try {
@@ -243,7 +244,8 @@ const CheckInDashboard = () => {
         year: student.year,
         userType: student.userType || 'student',
         studentType: student.studentType,
-        level: student.level
+        level: student.level,
+        strand: student.strand
       };
 
       try {

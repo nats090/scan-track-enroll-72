@@ -29,7 +29,8 @@ const AttendanceTable: React.FC<AttendanceTableProps> = ({ records, students, ty
       studentType: record.studentType,
       level: record.level,
       course: record.course,
-      year: record.year
+      year: record.year,
+      strand: record.strand
     });
 
     // Check if it's a visitor (starts with VISITOR_)
@@ -52,9 +53,15 @@ const AttendanceTable: React.FC<AttendanceTableProps> = ({ records, students, ty
 
     // Check if it's an IBED student - check studentType OR presence of level field
     if (record.studentType === 'ibed' || (record.level && record.level !== 'N/A')) {
+      // For Grade 11-12 (SHS), show strand instead of level
+      const isGrade11or12 = record.year === 'Grade 11' || record.year === 'Grade 12' || 
+                            record.year === '11' || record.year === '12';
+      
       return {
         type: 'ibed',
-        field1: record.level && record.level !== 'N/A' ? record.level : null,
+        field1: isGrade11or12 && record.strand && record.strand !== 'N/A' 
+          ? record.strand 
+          : (record.level && record.level !== 'N/A' ? record.level : null),
         field2: record.year && record.year !== 'N/A' ? record.year : null
       };
     }
@@ -101,7 +108,12 @@ const AttendanceTable: React.FC<AttendanceTableProps> = ({ records, students, ty
                         <span className="text-purple-700 font-medium">Dept: {displayInfo.field1}</span>
                       )}
                       {displayInfo.type === 'ibed' && displayInfo.field1 && (
-                        <span className="text-blue-700 font-medium">Level: {displayInfo.field1}</span>
+                        <span className="text-blue-700 font-medium">
+                          {displayInfo.field1.includes('STEM') || displayInfo.field1.includes('HUMSS') || 
+                           displayInfo.field1.includes('ABM') || displayInfo.field1.includes('TVL') ||
+                           displayInfo.field1.includes('GAS') ? 'Strand: ' : 'Level: '}
+                          {displayInfo.field1}
+                        </span>
                       )}
                       {displayInfo.type === 'college' && displayInfo.field1 && (
                         <span className="text-green-700 font-medium">Course: {displayInfo.field1}</span>
