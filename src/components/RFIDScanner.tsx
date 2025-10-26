@@ -338,7 +338,7 @@ const RFIDScanner: React.FC<RFIDScannerProps> = ({
       
       if (student) {
         // Check current status before allowing check-in
-        const currentStatus = await attendanceService.getStudentCurrentStatus(student.studentId);
+        const currentStatus = await attendanceService.getStudentCurrentStatus(student.id);
         
         if (currentStatus === 'checked-in') {
           toast({
@@ -350,11 +350,17 @@ const RFIDScanner: React.FC<RFIDScannerProps> = ({
         }
 
         const newRecord = {
+          studentDatabaseId: student.id,
           studentId: student.studentId,
           studentName: student.name,
           timestamp: new Date(),
           type: 'check-in' as const,
-          method: 'rfid' as const
+          method: 'rfid' as const,
+          course: student.course,
+          year: student.year,
+          userType: (student.userType || 'student') as 'student' | 'teacher',
+          studentType: student.studentType,
+          level: student.level
         };
         
         await attendanceService.addAttendanceRecord(newRecord);
@@ -386,7 +392,7 @@ const RFIDScanner: React.FC<RFIDScannerProps> = ({
       
       if (student) {
         // Check current status before allowing check-out
-        const currentStatus = await attendanceService.getStudentCurrentStatus(student.studentId);
+        const currentStatus = await attendanceService.getStudentCurrentStatus(student.id);
         
         if (currentStatus === 'checked-out') {
           toast({
@@ -407,11 +413,17 @@ const RFIDScanner: React.FC<RFIDScannerProps> = ({
         }
 
         const newRecord = {
+          studentDatabaseId: student.id,
           studentId: student.studentId,
           studentName: student.name,
           timestamp: new Date(),
           type: 'check-out' as const,
-          method: 'rfid' as const
+          method: 'rfid' as const,
+          course: student.course,
+          year: student.year,
+          userType: (student.userType || 'student') as 'student' | 'teacher',
+          studentType: student.studentType,
+          level: student.level
         };
         
         await attendanceService.addAttendanceRecord(newRecord);

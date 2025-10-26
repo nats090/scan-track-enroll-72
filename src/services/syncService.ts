@@ -48,14 +48,15 @@ export const syncService = {
         const timestamp = typeof record.timestamp === 'string' ? new Date(record.timestamp) : record.timestamp;
         
         // Check if this record already exists in Supabase to prevent duplicates
-        const existingStatus = await attendanceService.getStudentCurrentStatus(record.studentId);
-        const { data: recentRecords } = await supabase
+        const existingStatus = await attendanceService.getStudentCurrentStatus(record.studentDatabaseId || record.studentId);
+        const queryBuilder = supabase
           .from('attendance_records')
           .select('*')
-          .eq('student_id', record.studentId)
+          .eq(record.studentDatabaseId ? 'student_database_id' : 'student_id', record.studentDatabaseId || record.studentId)
           .eq('type', record.type)
           .gte('timestamp', new Date(timestamp.getTime() - 60000).toISOString()) // Check within 1 minute window
           .lte('timestamp', new Date(timestamp.getTime() + 60000).toISOString());
+        const { data: recentRecords } = await queryBuilder;
         
         if (recentRecords && recentRecords.length > 0) {
           console.log(`⚠️ Attendance record already exists for ${record.studentName} at ${timestamp} - skipping duplicate`);
