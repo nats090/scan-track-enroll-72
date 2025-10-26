@@ -337,18 +337,6 @@ const RFIDScanner: React.FC<RFIDScannerProps> = ({
       const student = await findStudent(rfidUID);
       
       if (student) {
-        // Check current status before allowing check-in
-        const currentStatus = await attendanceService.getStudentCurrentStatus(student.id);
-        
-        if (currentStatus === 'checked-in') {
-          toast({
-            title: "Already Checked In",
-            description: `${student.name} is already checked in. Please check out first.`,
-            variant: "destructive",
-          });
-          return;
-        }
-
         const newRecord = {
           studentDatabaseId: student.id,
           studentId: student.studentId,
@@ -363,13 +351,27 @@ const RFIDScanner: React.FC<RFIDScannerProps> = ({
           level: student.level
         };
         
-        await attendanceService.addAttendanceRecord(newRecord);
-        
-        toast({
-          title: "Welcome!",
-          description: `${student.name} checked in successfully via RFID`,
-          duration: 3000,
-        });
+        try {
+          await attendanceService.addAttendanceRecord(newRecord);
+          
+          toast({
+            title: "Welcome!",
+            description: `${student.name} checked in successfully via RFID`,
+            duration: 3000,
+          });
+        } catch (error: any) {
+          if (error.message?.startsWith('COOLDOWN:')) {
+            const remainingSeconds = error.message.split(':')[1];
+            toast({
+              title: "⏱️ Please wait",
+              description: `Please wait ${remainingSeconds} more seconds before checking in again`,
+              variant: "destructive",
+            });
+            return;
+          } else {
+            throw error;
+          }
+        }
       } else {
         toast({
           title: "Student Not Found",
@@ -391,27 +393,6 @@ const RFIDScanner: React.FC<RFIDScannerProps> = ({
       const student = await findStudent(rfidUID);
       
       if (student) {
-        // Check current status before allowing check-out
-        const currentStatus = await attendanceService.getStudentCurrentStatus(student.id);
-        
-        if (currentStatus === 'checked-out') {
-          toast({
-            title: "Already Checked Out",
-            description: `${student.name} is not currently checked in.`,
-            variant: "destructive",
-          });
-          return;
-        }
-        
-        if (currentStatus === 'unknown') {
-          toast({
-            title: "No Check-in Record",
-            description: `${student.name} has no active check-in record.`,
-            variant: "destructive",
-          });
-          return;
-        }
-
         const newRecord = {
           studentDatabaseId: student.id,
           studentId: student.studentId,
@@ -426,13 +407,27 @@ const RFIDScanner: React.FC<RFIDScannerProps> = ({
           level: student.level
         };
         
-        await attendanceService.addAttendanceRecord(newRecord);
-        
-        toast({
-          title: "Goodbye!",
-          description: `${student.name} checked out successfully via RFID`,
-          duration: 3000,
-        });
+        try {
+          await attendanceService.addAttendanceRecord(newRecord);
+          
+          toast({
+            title: "Goodbye!",
+            description: `${student.name} checked out successfully via RFID`,
+            duration: 3000,
+          });
+        } catch (error: any) {
+          if (error.message?.startsWith('COOLDOWN:')) {
+            const remainingSeconds = error.message.split(':')[1];
+            toast({
+              title: "⏱️ Please wait",
+              description: `Please wait ${remainingSeconds} more seconds before checking out again`,
+              variant: "destructive",
+            });
+            return;
+          } else {
+            throw error;
+          }
+        }
       } else {
         toast({
           title: "Student Not Found",

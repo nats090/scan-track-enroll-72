@@ -68,15 +68,21 @@ export const attendanceService = {
   },
 
   async addAttendanceRecord(record: Omit<AttendanceEntry, 'id'>): Promise<AttendanceEntry> {
-    // Enforce alternating check-in/check-out per student using unique database ID
-    const currentStatus = await this.getStudentCurrentStatus(record.studentDatabaseId || record.studentId);
-    if (record.type === 'check-in' && currentStatus === 'checked-in') {
-      throw new Error('Student is already checked in. Please check out first.');
-    }
-    if (record.type === 'check-out' && (currentStatus === 'checked-out' || currentStatus === 'unknown')) {
-      throw new Error(currentStatus === 'unknown'
-        ? 'No active check-in found for this student.'
-        : 'Student is already checked out.');
+    const COOLDOWN_SECONDS = 10;
+
+    // Check for cooldown period
+    const lastTimestamp = await this.getLastAttendanceTimestamp(
+      record.studentDatabaseId || record.studentId,
+      record.type
+    );
+
+    if (lastTimestamp) {
+      const secondsSinceLastAction = (Date.now() - lastTimestamp.getTime()) / 1000;
+      
+      if (secondsSinceLastAction < COOLDOWN_SECONDS) {
+        const remainingSeconds = Math.ceil(COOLDOWN_SECONDS - secondsSinceLastAction);
+        throw new Error(`COOLDOWN:${remainingSeconds}`);
+      }
     }
 
     const newRecord: AttendanceEntry = {
@@ -160,6 +166,59 @@ export const attendanceService = {
     if (error || !data) return undefined;
 
     return new Date(data.timestamp);
+  },
+
+  async getLastAttendanceTimestamp(studentIdentifier: string, actionType: 'check-in' | 'check-out'): Promise<Date | null> {
+    // Get local records for this specific action type
+    const localData = await getFromLocalStorage();
+    const localRecords = (localData.attendanceRecords || [])
+      .filter(record => 
+        (record.studentDatabaseId === studentIdentifier || record.studentId === studentIdentifier) &&
+        record.type === actionType
+      );
+
+    let allRecords = [...localRecords];
+
+    // Try to get records from Supabase if online
+    try {
+      if (navigator.onLine) {
+        const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(studentIdentifier);
+        
+        let query = supabase
+          .from('attendance_records')
+          .select('*')
+          .eq('type', actionType)
+          .order('timestamp', { ascending: false })
+          .limit(1);
+        
+        if (isUUID) {
+          query = query.eq('student_database_id', studentIdentifier);
+        } else {
+          query = query.eq('student_id', studentIdentifier);
+        }
+        
+        const { data, error } = await query;
+
+        if (!error && data && data.length > 0) {
+          const serverRecord = {
+            timestamp: new Date(data[0].timestamp)
+          };
+          allRecords.push(serverRecord as any);
+        }
+      }
+    } catch (error) {
+      console.log('Using local data only for cooldown check');
+    }
+
+    // Find the most recent timestamp
+    if (allRecords.length > 0) {
+      const sortedRecords = allRecords.sort((a, b) => 
+        new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+      );
+      return new Date(sortedRecords[0].timestamp);
+    }
+
+    return null;
   },
 
   async getStudentCurrentStatus(studentIdentifier: string): Promise<'checked-in' | 'checked-out' | 'unknown'> {

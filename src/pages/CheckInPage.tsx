@@ -73,19 +73,6 @@ const CheckInPage = () => {
       const student = await findStudent(rfidValue.trim());
       
       if (student) {
-        // Check current status before allowing check-in (using unique database ID)
-        const currentStatus = await attendanceService.getStudentCurrentStatus(student.id);
-        
-        if (currentStatus === 'checked-in') {
-          toast({
-            title: "Already Checked In",
-            description: `${student.name} is already checked in. Please check out first.`,
-            variant: "destructive",
-          });
-          setRfidInput(''); // Clear input
-          return;
-        }
-
         const newRecord: Omit<AttendanceEntry, 'id'> = {
           studentDatabaseId: student.id,
           studentId: student.studentId,
@@ -132,18 +119,6 @@ const CheckInPage = () => {
       const student = await findStudent(barcode);
       
       if (student) {
-        // Check current status before allowing check-in (using unique database ID)
-        const currentStatus = await attendanceService.getStudentCurrentStatus(student.id);
-        
-        if (currentStatus === 'checked-in') {
-          toast({
-            title: "Already Checked In",
-            description: `${student.name} is already checked in. Please check out first.`,
-            variant: "destructive",
-          });
-          return;
-        }
-
         const newRecord: Omit<AttendanceEntry, 'id'> = {
           studentDatabaseId: student.id,
           studentId: student.studentId,
@@ -159,13 +134,27 @@ const CheckInPage = () => {
           level: student.level
         };
         
-        await attendanceService.addAttendanceRecord(newRecord);
-        
-        toast({
-          title: "Welcome!",
-          description: `${student.name} checked in successfully`,
-          duration: 3000,
-        });
+        try {
+          await attendanceService.addAttendanceRecord(newRecord);
+          
+          toast({
+            title: "Welcome!",
+            description: `${student.name} checked in successfully`,
+            duration: 3000,
+          });
+        } catch (error: any) {
+          if (error.message?.startsWith('COOLDOWN:')) {
+            const remainingSeconds = error.message.split(':')[1];
+            toast({
+              title: "⏱️ Please wait",
+              description: `Please wait ${remainingSeconds} more seconds before checking in again`,
+              variant: "destructive",
+            });
+            return;
+          } else {
+            throw error;
+          }
+        }
       } else {
         toast({
           title: "Student Not Found",
@@ -198,18 +187,6 @@ const CheckInPage = () => {
       
       if (student) {
         finalStudentName = student.name;
-        
-        // Check current status before allowing check-in (using unique database ID)
-        const currentStatus = await attendanceService.getStudentCurrentStatus(student.id);
-        
-        if (currentStatus === 'checked-in') {
-          toast({
-            title: "Already Checked In",
-            description: `${student.name} is already checked in. Please check out first.`,
-            variant: "destructive",
-          });
-          return;
-        }
       } else {
         // Student not found - require registration first
         toast({
@@ -234,22 +211,35 @@ const CheckInPage = () => {
         level: student?.level
       };
       
-      await attendanceService.addAttendanceRecord(newRecord);
-      
-      toast({
-        title: "Welcome!",
-        description: `${finalStudentName} checked in successfully`,
-        duration: 2000,
-      });
+      try {
+        await attendanceService.addAttendanceRecord(newRecord);
+        
+        toast({
+          title: "Welcome!",
+          description: `${finalStudentName} checked in successfully`,
+          duration: 2000,
+        });
 
-      // Switch to RFID mode and focus input for next user
-      setStudentId('');
-      setStudentName('');
-      setScannerMode('rfid');
-      setRfidInput('');
-      setTimeout(() => {
-        rfidInputRef.current?.focus();
-      }, 100);
+        // Switch to RFID mode and focus input for next user
+        setStudentId('');
+        setStudentName('');
+        setScannerMode('rfid');
+        setRfidInput('');
+        setTimeout(() => {
+          rfidInputRef.current?.focus();
+        }, 100);
+      } catch (recordError: any) {
+        if (recordError.message?.startsWith('COOLDOWN:')) {
+          const remainingSeconds = recordError.message.split(':')[1];
+          toast({
+            title: "⏱️ Please wait",
+            description: `Please wait ${remainingSeconds} more seconds before checking in again`,
+            variant: "destructive",
+          });
+        } else {
+          throw recordError;
+        }
+      }
     } catch (error) {
       toast({
         title: "Error",
