@@ -694,13 +694,13 @@ const EnhancedLibraryStaffPage = () => {
                           <div>
                             <Label>Level</Label>
                             <Select
-                              value={editingStudent?.level || 'college'}
+                              value={editingStudent?.level || ''}
                               onValueChange={(value) => 
                                 setEditingStudent(editingStudent ? {...editingStudent, level: value as any} : null)
                               }
                             >
                               <SelectTrigger>
-                                <SelectValue />
+                                <SelectValue placeholder="Select level" />
                               </SelectTrigger>
                               <SelectContent>
                                 {editingStudent?.studentType === 'ibed' ? (
