@@ -22,12 +22,22 @@ const AttendanceTable: React.FC<AttendanceTableProps> = ({ records, students, ty
   const endIndex = startIndex + ITEMS_PER_PAGE;
   const currentRecords = records.slice(startIndex, endIndex);
   const getDisplayInfo = (record: AttendanceEntry) => {
-    // Check if it's a visitor (starts with VISITOR_ or has no userType)
+    // Debug log to see what data we're receiving
+    console.log('Record data:', {
+      name: record.studentName,
+      userType: record.userType,
+      studentType: record.studentType,
+      level: record.level,
+      course: record.course,
+      year: record.year
+    });
+
+    // Check if it's a visitor (starts with VISITOR_)
     if (record.studentId.startsWith('VISITOR_')) {
       return {
         type: 'visitor',
         field1: record.purpose || 'Visit',
-        field2: record.contact || 'N/A'
+        field2: record.contact || null
       };
     }
 
@@ -35,25 +45,25 @@ const AttendanceTable: React.FC<AttendanceTableProps> = ({ records, students, ty
     if (record.userType === 'teacher') {
       return {
         type: 'teacher',
-        field1: record.course || 'N/A',
+        field1: record.course && record.course !== 'N/A' ? record.course : null,
         field2: 'Teacher'
       };
     }
 
     // Check if it's an IBED student - check studentType OR presence of level field
-    if (record.studentType === 'ibed' || record.level) {
+    if (record.studentType === 'ibed' || (record.level && record.level !== 'N/A')) {
       return {
         type: 'ibed',
-        field1: record.level || 'N/A',
-        field2: record.year || 'N/A'
+        field1: record.level && record.level !== 'N/A' ? record.level : null,
+        field2: record.year && record.year !== 'N/A' ? record.year : null
       };
     }
 
     // Default to college student - show course and year
     return {
       type: 'college',
-      field1: record.course || 'N/A',
-      field2: record.year || 'N/A'
+      field1: record.course && record.course !== 'N/A' ? record.course : null,
+      field2: record.year && record.year !== 'N/A' ? record.year : null
     };
   };
 
@@ -84,16 +94,32 @@ const AttendanceTable: React.FC<AttendanceTableProps> = ({ records, students, ty
                   <TableRow key={record.id} className={rowColorClass}>
                     <TableCell className="font-medium">{record.studentName}</TableCell>
                     <TableCell>
-                      {displayInfo.type === 'visitor' && <span className="text-orange-700 font-medium">Purpose: {displayInfo.field1}</span>}
-                      {displayInfo.type === 'teacher' && displayInfo.field1 !== 'N/A' && <span className="text-purple-700 font-medium">Dept: {displayInfo.field1}</span>}
-                      {displayInfo.type === 'ibed' && displayInfo.field1 !== 'N/A' && <span className="text-blue-700 font-medium">Level: {displayInfo.field1}</span>}
-                      {displayInfo.type === 'college' && <span className="text-green-700 font-medium">Course: {displayInfo.field1}</span>}
+                      {displayInfo.type === 'visitor' && displayInfo.field1 && (
+                        <span className="text-orange-700 font-medium">Purpose: {displayInfo.field1}</span>
+                      )}
+                      {displayInfo.type === 'teacher' && displayInfo.field1 && (
+                        <span className="text-purple-700 font-medium">Dept: {displayInfo.field1}</span>
+                      )}
+                      {displayInfo.type === 'ibed' && displayInfo.field1 && (
+                        <span className="text-blue-700 font-medium">Level: {displayInfo.field1}</span>
+                      )}
+                      {displayInfo.type === 'college' && displayInfo.field1 && (
+                        <span className="text-green-700 font-medium">Course: {displayInfo.field1}</span>
+                      )}
                     </TableCell>
                     <TableCell>
-                      {displayInfo.type === 'visitor' && <span className="text-orange-700 font-medium">Contact: {displayInfo.field2}</span>}
-                      {displayInfo.type === 'teacher' && <span className="text-purple-700 font-medium">Role: {displayInfo.field2}</span>}
-                      {displayInfo.type === 'ibed' && <span className="text-blue-700 font-medium">Year: {displayInfo.field2}</span>}
-                      {displayInfo.type === 'college' && <span className="text-green-700 font-medium">Year: {displayInfo.field2}</span>}
+                      {displayInfo.type === 'visitor' && displayInfo.field2 && (
+                        <span className="text-orange-700 font-medium">Contact: {displayInfo.field2}</span>
+                      )}
+                      {displayInfo.type === 'teacher' && (
+                        <span className="text-purple-700 font-medium">Role: {displayInfo.field2}</span>
+                      )}
+                      {displayInfo.type === 'ibed' && displayInfo.field2 && (
+                        <span className="text-blue-700 font-medium">Year: {displayInfo.field2}</span>
+                      )}
+                      {displayInfo.type === 'college' && displayInfo.field2 && (
+                        <span className="text-green-700 font-medium">Year: {displayInfo.field2}</span>
+                      )}
                     </TableCell>
                     <TableCell>{format(new Date(record.timestamp), 'HH:mm:ss')}</TableCell>
                     <TableCell>{format(new Date(record.timestamp), 'MMM dd, yyyy')}</TableCell>
