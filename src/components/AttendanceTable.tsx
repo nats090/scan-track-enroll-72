@@ -42,13 +42,14 @@ const AttendanceTable: React.FC<AttendanceTableProps> = ({ records, students, ty
 
     // Check if it's an IBED student - check studentType OR presence of level field
     if (record.studentType === 'ibed' || (record.level && record.level !== 'N/A')) {
-      // For Grade 11-12 (SHS), show strand instead of level
-      const isGrade11or12 = record.year === 'Grade 11' || record.year === 'Grade 12' || 
-                            record.year === '11' || record.year === '12';
+      // For Senior High students (level='senior-high' OR Grade 11-12), show strand instead of level
+      const isSeniorHigh = record.level === 'senior-high' || 
+                           record.year === 'Grade 11' || record.year === 'Grade 12' || 
+                           record.year === '11' || record.year === '12';
       
       return {
         type: 'ibed',
-        field1: isGrade11or12 && record.strand && record.strand !== 'N/A' 
+        field1: isSeniorHigh && record.strand && record.strand !== 'N/A' 
           ? record.strand 
           : (record.level && record.level !== 'N/A' ? record.level : null),
         field2: record.year && record.year !== 'N/A' ? record.year : null
