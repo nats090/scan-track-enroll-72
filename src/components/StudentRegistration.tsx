@@ -13,7 +13,8 @@ import ImageUpload from './ImageUpload';
 import OfflineIndicator from './OfflineIndicator';
 import RFIDScanner from './RFIDScanner';
 import { studentService } from '@/services/studentService';
-import { toast } from '@/components/ui/use-toast';
+import { toast } from '@/hooks/use-toast';
+import { useLibrary } from '@/contexts/LibraryContext';
 
 interface StudentRegistrationProps {
   onStudentRegistered: (student: Student) => void;
@@ -40,6 +41,7 @@ const StudentRegistration: React.FC<StudentRegistrationProps> = ({
   onClose, 
   initialData 
 }) => {
+  const { currentLibrary } = useLibrary();
   const [profilePicture, setProfilePicture] = useState<string | null>(null);
   const [rfidData, setRfidData] = useState<string>('');
   
@@ -177,13 +179,14 @@ const form = useForm<RegistrationForm>({
       department: (data.level !== 'senior-high' && data.department !== 'none') ? data.department : undefined,
       level: data.level === 'none' ? undefined : data.level as 'elementary' | 'junior-high' | 'senior-high' | 'college',
       strand: data.level === 'senior-high' && data.department !== 'none' ? data.department : undefined,
-      shift: undefined, // Removed shift field as requested
+      // shift intentionally omitted
       course: data.userType === 'teacher' ? 'Teacher' : (data.course || undefined),
       year: data.year,
       profilePicture: profilePicture || undefined,
       rfid: rfidData || undefined,
       userType: data.userType,
-      studentType: data.userType === 'student' ? data.studentType : undefined
+      studentType: data.userType === 'student' ? data.studentType : undefined,
+      library: currentLibrary
     };
 
     try {
@@ -198,12 +201,12 @@ const form = useForm<RegistrationForm>({
       
       onStudentRegistered(newStudent);
       onClose();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Registration failed:', error);
       toast({
-        title: "Registration Failed",
-        description: "Failed to register. Please try again.",
-        variant: "destructive",
+        title: 'Registration Failed',
+        description: (error?.message || 'Failed to register. Please try again.'),
+        variant: 'destructive',
       });
     }
   };
