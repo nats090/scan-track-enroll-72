@@ -210,9 +210,13 @@ export const attendanceService = {
             year: (record as any).year
           }));
 
-          // IMPORTANT: Always include local records too to avoid race conditions
-          // where the latest local record hasn't propagated to the server yet.
-          allRecords = [...serverRecords, ...localRecords];
+          // Properly merge: use server records + any local records not yet synced
+          // Remove duplicates by keeping server version when ID matches
+          const serverIds = new Set(serverRecords.map(r => r.id));
+          const unsyncedLocal = localRecords.filter(r => 
+            r.id?.toString().startsWith('local_') || !serverIds.has(r.id)
+          );
+          allRecords = [...serverRecords, ...unsyncedLocal];
         }
       }
     } catch (error) {
