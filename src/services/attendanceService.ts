@@ -210,9 +210,13 @@ export const attendanceService = {
             year: (record as any).year
           }));
 
-          // Merge server records with local-only records (those with local_ prefix)
-          const localOnly = localRecords.filter(r => r.id?.toString().startsWith('local_'));
-          allRecords = [...serverRecords, ...localOnly];
+          // Properly merge: use server records + any local records not yet synced
+          // Remove duplicates by keeping server version when ID matches
+          const serverIds = new Set(serverRecords.map(r => r.id));
+          const unsyncedLocal = localRecords.filter(r => 
+            r.id?.toString().startsWith('local_') || !serverIds.has(r.id)
+          );
+          allRecords = [...serverRecords, ...unsyncedLocal];
         }
       }
     } catch (error) {
