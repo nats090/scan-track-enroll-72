@@ -106,7 +106,7 @@ const AttendanceTable: React.FC<AttendanceTableProps> = ({ records, students, ty
                         </span>
                       )}
                       {displayInfo.type === 'college' && displayInfo.field1 && (
-                        <span className="text-green-700 font-medium">Course: {displayInfo.field1}</span>
+                        <span className="text-green-700 font-medium">{displayInfo.field1}</span>
                       )}
                     </TableCell>
                     <TableCell>
@@ -117,10 +117,10 @@ const AttendanceTable: React.FC<AttendanceTableProps> = ({ records, students, ty
                         <span className="text-purple-700 font-medium">Role: {displayInfo.field2}</span>
                       )}
                       {displayInfo.type === 'ibed' && displayInfo.field2 && (
-                        <span className="text-blue-700 font-medium">Year: {displayInfo.field2}</span>
+                        <span className="text-blue-700 font-medium">{displayInfo.field2}</span>
                       )}
                       {displayInfo.type === 'college' && displayInfo.field2 && (
-                        <span className="text-green-700 font-medium">Year: {displayInfo.field2}</span>
+                        <span className="text-green-700 font-medium">{displayInfo.field2}</span>
                       )}
                     </TableCell>
                     <TableCell>{format(new Date(record.timestamp), 'HH:mm:ss')}</TableCell>
