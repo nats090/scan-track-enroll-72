@@ -16,18 +16,77 @@ const isElectron = () => {
 };
 
 export const saveToLocalStorage = async (data: Partial<OfflineData>) => {
-  // Filter to keep only recent data (last 30 days) to prevent browser storage limits
+  // Aggressive cleanup: Keep only last 30 days of attendance records
   const thirtyDaysAgo = new Date();
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+  
+  // Keep only recent records OR unsynced local records from last 7 days
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
   
   const filteredData = {
     ...data,
     attendanceRecords: data.attendanceRecords?.filter(record => {
       const recordDate = record.timestamp instanceof Date ? record.timestamp : new Date(record.timestamp);
-      // Keep recent records OR unsynced local records
-      return recordDate >= thirtyDaysAgo || record.id?.toString().startsWith('local_');
+      
+      // Keep all records from last 30 days
+      if (recordDate >= thirtyDaysAgo) {
+        return true;
+      }
+      
+      // Keep unsynced local records from last 7 days
+      if (record.id?.toString().startsWith('local_') && recordDate >= sevenDaysAgo) {
+        return true;
+      }
+      
+      return false;
     })
   };
+  
+  // Cleanup: Remove students that have no recent attendance (90+ days)
+  if (filteredData.students && filteredData.attendanceRecords) {
+    const ninetyDaysAgo = new Date();
+    ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
+    
+    // Get list of students with recent activity
+    const activeStudentIds = new Set(
+      filteredData.attendanceRecords
+        .filter(r => {
+          const rDate = r.timestamp instanceof Date ? r.timestamp : new Date(r.timestamp);
+          return rDate >= ninetyDaysAgo;
+        })
+        .map(r => r.studentId)
+    );
+    
+    // Keep students with recent activity OR created in last 90 days OR unsynced local students
+    const beforeCount = filteredData.students.length;
+    filteredData.students = filteredData.students.filter(student => {
+      // Keep if has recent attendance
+      if (activeStudentIds.has(student.studentId)) {
+        return true;
+      }
+      
+      // Keep if created recently
+      if (student.registrationDate) {
+        const regDate = student.registrationDate instanceof Date ? student.registrationDate : new Date(student.registrationDate);
+        if (regDate >= ninetyDaysAgo) {
+          return true;
+        }
+      }
+      
+      // Keep unsynced local students
+      if (student.id?.toString().startsWith('local_')) {
+        return true;
+      }
+      
+      return false;
+    });
+    
+    const removedCount = beforeCount - filteredData.students.length;
+    if (removedCount > 0) {
+      console.log(`Storage cleanup: Removed ${removedCount} inactive students`);
+    }
+  }
 
   // Use file system storage if in Electron, otherwise fallback to localStorage
   if (isElectron()) {

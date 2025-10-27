@@ -62,6 +62,10 @@ class AutoSyncService {
   private async syncLocalToSupabase() {
     const localData = await getFromLocalStorage();
     let syncCount = 0;
+    
+    // Only sync records from the last 7 days to reduce payload
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
     // Sync students with local_ prefix (offline-created items)
     const localStudents = localData.students.filter(s => s.id.toString().startsWith('local_'));
@@ -108,8 +112,15 @@ class AutoSyncService {
       }
     }
 
-    // Sync attendance records with local_ prefix
-    const localRecords = localData.attendanceRecords.filter(r => r.id.toString().startsWith('local_'));
+    // Sync only recent attendance records with local_ prefix (last 7 days)
+    const localRecords = localData.attendanceRecords.filter(r => {
+      const isLocal = r.id.toString().startsWith('local_');
+      const recordDate = r.timestamp instanceof Date ? r.timestamp : new Date(r.timestamp);
+      return isLocal && recordDate >= sevenDaysAgo;
+    });
+    
+    console.log(`📤 Syncing ${localRecords.length} recent attendance records to Supabase...`);
+    
     for (const record of localRecords) {
       try {
         console.log(`📤 Uploading attendance record: ${record.studentName} (${record.type}) at ${record.timestamp}`);
@@ -172,6 +183,7 @@ class AutoSyncService {
         // Keep the record in local storage for retry
       }
     }
+    
     // Sync updates to existing students that were edited offline (_dirty flag)
     const dirtyStudents = (localData.students || []).filter((s: any) => !s.id?.toString().startsWith('local_') && (s as any)._dirty);
     for (const s of dirtyStudents) {
@@ -226,10 +238,18 @@ class AutoSyncService {
 
   private async syncSupabaseToLocal() {
     try {
-      // Get fresh data from server
-        const [studentsResponse, attendanceResponse] = await Promise.all([
+      // Only fetch records from the last 30 days to reduce memory usage
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      const isoDate = thirtyDaysAgo.toISOString();
+      
+      // Get fresh data from server - students (all) and recent attendance (30 days)
+      const [studentsResponse, attendanceResponse] = await Promise.all([
         supabase.from('students').select('*').order('created_at', { ascending: false }),
-        supabase.from('attendance_records').select('*').order('timestamp', { ascending: false })
+        supabase.from('attendance_records')
+          .select('*')
+          .gte('timestamp', isoDate)
+          .order('timestamp', { ascending: false })
       ]);
 
       if (!studentsResponse.error && !attendanceResponse.error) {
@@ -263,10 +283,14 @@ class AutoSyncService {
           level: r.level
         })) || [];
 
-        // Merge with local data (keep local-only items and preserve local edits until uploaded)
+        // Merge with local data (keep local-only items from last 30 days)
         const localData = await getFromLocalStorage();
         const localOnlyStudents = (localData.students || []).filter((s: any) => s.id?.toString().startsWith('local_'));
-        const localOnlyRecords = (localData.attendanceRecords || []).filter((r: any) => r.id?.toString().startsWith('local_'));
+        const localOnlyRecords = (localData.attendanceRecords || []).filter((r: any) => {
+          const isLocal = r.id?.toString().startsWith('local_');
+          const recordDate = r.timestamp instanceof Date ? r.timestamp : new Date(r.timestamp);
+          return isLocal && recordDate >= thirtyDaysAgo;
+        });
         const dirtyStudents = (localData.students || []).filter((s: any) => !s.id?.toString().startsWith('local_') && (s as any)._dirty);
         const dirtyMap = Object.fromEntries(dirtyStudents.map((s: any) => [s.id, s]));
 
@@ -277,6 +301,8 @@ class AutoSyncService {
           attendanceRecords: [...attendanceRecords, ...localOnlyRecords],
           lastSync: new Date().toISOString()
         });
+        
+        console.log(`Synced ${students.length} students and ${attendanceRecords.length} recent attendance records from Supabase`);
       }
     } catch (error) {
       console.error('Failed to sync from server:', error);

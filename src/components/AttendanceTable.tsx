@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, memo } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
@@ -14,7 +14,7 @@ interface AttendanceTableProps {
 
 const ITEMS_PER_PAGE = 50;
 
-const AttendanceTable: React.FC<AttendanceTableProps> = ({ records, students, type }) => {
+const AttendanceTable: React.FC<AttendanceTableProps> = memo(({ records, students, type }) => {
   const [currentPage, setCurrentPage] = useState(1);
 
   const totalPages = Math.ceil(records.length / ITEMS_PER_PAGE);
@@ -172,6 +172,13 @@ const AttendanceTable: React.FC<AttendanceTableProps> = ({ records, students, ty
       )}
     </div>
   );
-};
+}, (prevProps, nextProps) => {
+  // Custom comparison function for memo
+  // Only re-render if records length or type changes
+  return prevProps.records.length === nextProps.records.length && 
+         prevProps.type === nextProps.type;
+});
+
+AttendanceTable.displayName = 'AttendanceTable';
 
 export default AttendanceTable;
